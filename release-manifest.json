@@ -1,10 +1,10 @@
 {
   "files": [
     {
-      "bytes": 3859,
+      "bytes": 3876,
       "mime_type": "application/yaml",
       "path": ".github/workflows/privacy-gate.yml",
-      "sha256": "401870db365ab63217f4d9c25da0922d6e4717dd8d8f84b5be14a0f37d90b0e3"
+      "sha256": "9b21a61a676ae03d5186b17dbb27ce87514854f656d6244c035172022d51e809"
     },
     {
       "bytes": 63,
@@ -52,7 +52,7 @@
       "bytes": 3437,
       "mime_type": "application/json",
       "path": "release-allowlist.json",
-      "sha256": "bfa13b288dcdc834263af5e0eab440795ddc4941d33bd64d8c703fb9a75ebe8b"
+      "sha256": "6d2fb5538b06c5deb4eb6f9fdab4847e1fddcaa6f3da3942c0dc58cc7e6061e7"
     },
     {
       "bytes": 3427,
@@ -139,7 +139,7 @@
       "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
     }
   ],
-  "generated_at_utc": "2026-09-20T12:39:01+00:00",
+  "generated_at_utc": "2026-09-20T12:41:43+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

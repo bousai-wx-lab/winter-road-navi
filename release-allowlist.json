@@ -101,7 +101,7 @@
     "https://github.com/bousai-wx-lab/winter-road-navi.git"
   ],
   "max_file_bytes": 250000,
-  "required_checkout_sha": "11d5960a326750d5838078e36cf38b85af677262",
+  "required_checkout_sha": "3d3c42e5aac5ba805825da76410c181273ba90b1",
   "large_text_files": {
     "release-allowlist.json": 100000,
     "release-manifest.json": 100000,

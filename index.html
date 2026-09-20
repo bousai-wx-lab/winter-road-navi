@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp; connect-src 'self' https://cyberjapandata.gsi.go.jp; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
+    <title>冬道そなえナビ | Bousai Wx Lab</title>
+    <meta name="description" content="全国の高速道路と一般道路を地図で確認する、冬道そなえナビの初期公開版です。">
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./vendor/maplibre-gl.css">
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./app.js" referrerpolicy="no-referrer"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="brand-mark" aria-hidden="true">冬</div>
+      <div class="brand-copy">
+        <p class="brand-owner">Bousai Wx Lab</p>
+        <h1>冬道そなえナビ</h1>
+        <p>Winter Road Navi</p>
+      </div>
+      <p class="release-badge">初期公開版</p>
+    </header>
+
+    <main>
+      <section class="map-shell" aria-labelledby="map-heading">
+        <h2 id="map-heading" class="visually-hidden">全国の道路地図</h2>
+        <div id="map" role="application" aria-label="全国の高速道路と一般道路を表示する地図"></div>
+
+        <section class="control-panel" aria-label="道路表示の設定">
+          <div class="control-heading">
+            <div>
+              <p class="eyebrow">ROAD LAYERS</p>
+              <h2>道路を表示</h2>
+            </div>
+            <button id="resetView" type="button">全国表示</button>
+          </div>
+
+          <label class="layer-toggle highway-toggle">
+            <input id="highwayToggle" type="checkbox" checked>
+            <span class="legend-line highway-line" aria-hidden="true"></span>
+            <span><strong>高速道路</strong><small>緑色の太い線</small></span>
+          </label>
+          <label class="layer-toggle general-toggle">
+            <input id="generalToggle" type="checkbox" checked>
+            <span class="legend-line general-line" aria-hidden="true"></span>
+            <span><strong>一般道路</strong><small>青色の線。拡大すると細い道路も表示</small></span>
+          </label>
+
+          <p id="mapStatus" class="map-status" role="status" aria-live="polite">道路データを読み込んでいます</p>
+        </section>
+
+        <aside id="roadDetails" class="road-details" hidden aria-live="polite">
+          <button id="closeDetails" type="button" aria-label="道路情報を閉じる">×</button>
+          <p class="eyebrow">SELECTED ROAD</p>
+          <h2 id="roadType">道路</h2>
+          <p id="roadNote">周辺の道路区分を表示しています。</p>
+        </aside>
+      </section>
+
+      <section class="scope-note" aria-label="この版で確認できること">
+        <strong>現在は道路表示までの初期版です。</strong>
+        <span>気温・積雪・凍結・通行規制・経路案内は、まだ表示していません。現在の道路状況や安全を示す地図ではありません。</span>
+      </section>
+    </main>
+
+    <footer>
+      <p>道路・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a></p>
+      <p>国土地理院のデータをBousai Wx Labが独自に区分・着色して表示しています。データは試験提供で、最新状況と異なる場合があります。</p>
+      <p class="privacy-note">このツールは現在地を取得せず、入力欄・Cookie・ブラウザ保存・アクセス解析を使用しません。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。</p>
+    </footer>
+  </body>
+</html>

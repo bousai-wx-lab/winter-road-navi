@@ -1,0 +1,145 @@
+{
+  "files": [
+    {
+      "bytes": 3859,
+      "mime_type": "application/yaml",
+      "path": ".github/workflows/privacy-gate.yml",
+      "sha256": "401870db365ab63217f4d9c25da0922d6e4717dd8d8f84b5be14a0f37d90b0e3"
+    },
+    {
+      "bytes": 63,
+      "mime_type": "application/octet-stream",
+      "path": ".gitignore",
+      "sha256": "0c9c159276060aca0df367280b063d12b43ff804a1fc82b8a8d69f3eb9c00959"
+    },
+    {
+      "bytes": 1,
+      "mime_type": "application/octet-stream",
+      "path": ".nojekyll",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "bytes": 3155,
+      "mime_type": "text/markdown",
+      "path": "README.md",
+      "sha256": "1c42d9372c398218338ddd145f150a46c4533608923e8af43c6028576230561c"
+    },
+    {
+      "bytes": 1298,
+      "mime_type": "text/markdown",
+      "path": "SECURITY.md",
+      "sha256": "732472f1859e857b5e764b2f8765294cbfedf8cd3adac2f422d3d5436efb61ce"
+    },
+    {
+      "bytes": 3729,
+      "mime_type": "text/javascript",
+      "path": "app.js",
+      "sha256": "a5d8b3103f6d2db7eaf87ed04a362ef63fbdb36efe3b2649aa3e12c54ce2acbf"
+    },
+    {
+      "bytes": 431,
+      "mime_type": "image/svg+xml",
+      "path": "favicon.svg",
+      "sha256": "7704fbd5a1bcee94880257656eaf7b3baf0425e82ad785a27ba1fc52b1bf299a"
+    },
+    {
+      "bytes": 4315,
+      "mime_type": "text/html",
+      "path": "index.html",
+      "sha256": "da9cc59d52647553eadaccfdee8d73e2c76b1f0a3e706fb41e4771084c942c6b"
+    },
+    {
+      "bytes": 3437,
+      "mime_type": "application/json",
+      "path": "release-allowlist.json",
+      "sha256": "bfa13b288dcdc834263af5e0eab440795ddc4941d33bd64d8c703fb9a75ebe8b"
+    },
+    {
+      "bytes": 3427,
+      "mime_type": "text/javascript",
+      "path": "road-style.js",
+      "sha256": "9b6ba524a30f3996519738516aaa9238e7cac6987eb7935ca9ae390d03703656"
+    },
+    {
+      "bytes": 4716,
+      "mime_type": "text/x-python",
+      "path": "scripts/build_pages_artifact.py",
+      "sha256": "1d719bd9835b5d31d9574289edbb72b0cea9f82e0f299ef6c22dd09979a8b81e"
+    },
+    {
+      "bytes": 1814,
+      "mime_type": "text/x-python",
+      "path": "scripts/build_release_manifest.py",
+      "sha256": "84f7fafdb1650eb48826df16393b895a26820be4de28ebec10318c0554d2643c"
+    },
+    {
+      "bytes": 29750,
+      "mime_type": "text/x-python",
+      "path": "scripts/privacy_gate.py",
+      "sha256": "46612d82485bc18055df584a1af8b90236a9f9bc413bc88c7cb3f5388d956674"
+    },
+    {
+      "bytes": 4878,
+      "mime_type": "text/x-python",
+      "path": "scripts/test_pages_release.py",
+      "sha256": "e6a504bd0a36b6d58831de6b11a3eefd20fb31b362caf6b632267e9939be1f11"
+    },
+    {
+      "bytes": 5155,
+      "mime_type": "text/x-python",
+      "path": "scripts/test_privacy_gate.py",
+      "sha256": "9f544f26670c083702e2b3dbfab18af621d78832b52498cf7e0e819df1909604"
+    },
+    {
+      "bytes": 7239,
+      "mime_type": "text/css",
+      "path": "styles.css",
+      "sha256": "16f4012b4a976f091f9b1a716472024a0cac81a0c030ca823f39ec4f42204009"
+    },
+    {
+      "bytes": 1356,
+      "mime_type": "text/javascript",
+      "path": "tests/page-contract.test.mjs",
+      "sha256": "3d57d61f300f9c002c50e487e277364fcb16200695013687b0bda71140458b20"
+    },
+    {
+      "bytes": 2046,
+      "mime_type": "text/javascript",
+      "path": "tests/road-style.test.mjs",
+      "sha256": "e30a3c81286be99e15742b459d16118f1f349737bdfdfeb946c89dbbf05cc67c"
+    },
+    {
+      "bytes": 5984,
+      "mime_type": "text/plain",
+      "path": "vendor/maplibre-gl-LICENSE.txt",
+      "sha256": "ee5fc05a0677eaf69601d2c7db0d9ecd6cc27c3abc1d0733bc9ed34707cf8ef2"
+    },
+    {
+      "bytes": 513898,
+      "mime_type": "text/javascript",
+      "path": "vendor/maplibre-gl-shared.mjs",
+      "sha256": "0996a0ff2ecb2807afc3f053992539ff7fe45c1678a02304b2b33120136f81f3"
+    },
+    {
+      "bytes": 19007,
+      "mime_type": "text/javascript",
+      "path": "vendor/maplibre-gl-worker.mjs",
+      "sha256": "7d5ebf88ec25a72cc48cc320d374f41d921e5105d2f1fc774d463a4b68164227"
+    },
+    {
+      "bytes": 83195,
+      "mime_type": "text/css",
+      "path": "vendor/maplibre-gl.css",
+      "sha256": "8e2dbbab312dc57656fbb76e9fa5308c75c9d7c7ba5808a7d55bcdb64cc813fa"
+    },
+    {
+      "bytes": 584394,
+      "mime_type": "text/javascript",
+      "path": "vendor/maplibre-gl.mjs",
+      "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
+    }
+  ],
+  "generated_at_utc": "2026-09-20T12:39:01+00:00",
+  "schema_version": 1,
+  "tool_slug": "winter-road-navi"
+}

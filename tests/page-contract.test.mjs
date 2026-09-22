@@ -4,6 +4,7 @@ import test from "node:test";
 
 const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const app = await readFile(new URL("../app.js", import.meta.url), "utf8");
+const styles = await readFile(new URL("../styles.css", import.meta.url), "utf8");
 
 test("page explains the intentionally limited first release", () => {
   for (const phrase of [
@@ -30,6 +31,11 @@ test("branded winter header and footer link to the blog and X without a usage gu
   assert.equal(html.includes('href="https://bousai-wx-lab.com/"'), true);
   assert.equal(html.includes('href="https://x.com/bousai_wx_lab"'), true);
   assert.equal(html.includes("使い方"), false);
+});
+
+test("header stays compact and map focus does not add a second full frame", () => {
+  assert.match(styles, /\.topbar\s*\{[^}]*min-height:\s*60px/s);
+  assert.match(styles, /\.maplibregl-canvas:focus-visible\s*\{[^}]*outline:\s*none/s);
 });
 
 test("application does not use location, storage, cookies, or HTML injection", () => {

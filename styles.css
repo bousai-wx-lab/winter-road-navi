@@ -765,6 +765,33 @@ main {
   border: 0;
 }
 
+.temperature-controls { margin: 12px 0; padding: 12px 4px; border-block: 1px solid #abcbd8; }
+.temperature-controls h3 { margin: 0; font-size: 15px; color: #113b59; }
+.temperature-controls h3 span { font-size: 10px; padding: 2px 5px; background: #e0edf5; border-radius: 3px; }
+.baseline-label { margin: 5px 0 12px; color: #456077; font-size: 11px; }
+.date-row, .date-selects, .play-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.date-selects { justify-content: center; font-size: 14px; }
+.temperature-controls button, .temperature-controls select { min-height: 40px; border: 1px solid #88abbf; border-radius: 5px; background: #fff; color: #153d58; cursor: pointer; }
+.date-row > button { min-width: 40px; font-size: 25px; }
+.date-selects select { min-width: 57px; padding: 3px; font-size: 18px; font-weight: 700; }
+#dateSlider { width: 100%; height: 28px; accent-color: #146a98; }
+.month-ticks, .legend-ticks { display: flex; justify-content: space-between; font-size: 11px; color: #36566b; }
+.month-ticks { margin-bottom: 12px; }
+.play-row button { flex: 1; font-size: 13px; font-weight: 700; }
+.play-row select { width: 112px; font-size: 12px; }
+.temperature-status, .temperature-point { font-size: 11px; line-height: 1.5; color: #38586d; margin: 8px 0; }
+.temperature-status[data-state="error"] { color: #a12524; font-weight: 700; }
+.temperature-legend { margin-top: 12px; }
+.legend-gradient { display: block; width: 100%; height: 18px; border: 1px solid #789aaa; }
+.temperature-legend small { display: block; margin-top: 4px; font-size: 10px; color: #466175; }
+.temperature-options { display: grid; gap: 6px; font-size: 12px; padding: 5px; }
+.temperature-options input[type="range"] { width: 100%; }
+.temperature-options input[type="checkbox"] { width: 18px; height: 18px; vertical-align: middle; accent-color: #146a98; }
+.temperature-options output { float: right; }
+.map-temperature-label { position: absolute; left: 10px; top: 8px; z-index: 4; margin: 0; padding: 7px 9px; max-width: calc(100% - 66px); background: rgba(255,255,255,.92); color: #173b53; font-size: 12px; font-weight: 700; border: 1px solid #b8ccd7; border-radius: 4px; pointer-events: none; }
+.temperature-controls button:focus-visible, .temperature-controls select:focus-visible, input:focus-visible { outline: 3px solid #087da2; outline-offset: 2px; }
+.temperature-controls button:disabled, .temperature-controls select:disabled { opacity: .5; cursor: wait; }
+
 @media (max-width: 760px) {
   .topbar {
     min-height: 44px;
@@ -959,6 +986,38 @@ main {
     margin-top: 14px;
     justify-content: flex-start;
   }
+}
+
+@media (max-width: 760px) {
+  .tool-layout { height: auto; min-height: 0; display: flex; flex-direction: column; overflow: visible; }
+  .control-panel { position: relative; inset: auto; width: 100%; max-height: none; border-radius: 0; padding: 8px 10px; box-shadow: none; overflow: visible; }
+  .control-heading { margin: 0; }
+  .control-heading h2 { font-size: 14px; }
+  .control-heading .eyebrow { display: none; }
+  .temperature-controls { margin: 6px 0 0; padding: 6px 0 0; display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; border-bottom: 0; }
+  .temperature-controls h3, .baseline-label, .temperature-status, .temperature-point, #retryTemperature { grid-column: 1 / -1; }
+  .temperature-controls h3 { font-size: 13px; }
+  .baseline-label { margin: 3px 0 5px; font-size: 10px; }
+  .date-row { grid-row: 3; grid-column: 1; gap: 2px; }
+  .date-row > button { min-width: 32px; }
+  .date-selects { gap: 2px; font-size: 11px; }
+  .date-selects select { min-width: 38px; font-size: 15px; }
+  .play-row { grid-row: 3; grid-column: 2; gap: 3px; }
+  .play-row button { font-size: 11px; }
+  .play-row select { width: 82px; font-size: 10px; }
+  #dateSlider { grid-column: 1 / -1; height: 25px; margin: 0; }
+  .month-ticks { grid-column: 1 / -1; margin-bottom: 2px; font-size: 9px; }
+  .temperature-legend { grid-column: 1 / -1; margin-top: 3px; }
+  .legend-gradient { height: 12px; }
+  .temperature-legend small { font-size: 9px; margin-top: 1px; }
+  .temperature-status { margin: 3px 0; font-size: 10px; }
+  .temperature-point { margin: 4px 0; font-size: 10px; }
+  #clearTemperaturePoint { grid-column: 1 / -1; min-height: 32px; }
+  .control-panel .panel-collapsible { max-height: 220px; overflow-y: auto; }
+  .map-column { height: auto; }
+  .map-shell { height: max(340px, calc(100svh - 390px)); min-height: 340px; }
+  .road-details { bottom: 35px; }
+  .map-temperature-label { font-size: 10px; }
 }
 
 @media (max-width: 360px) {

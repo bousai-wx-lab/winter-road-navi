@@ -1,5 +1,6 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js";
+import { initTemperature } from "./temperature-control.js";
 
 maplibregl.setWorkerUrl(new URL("./vendor/maplibre-gl-worker.mjs", import.meta.url).href);
 
@@ -80,6 +81,7 @@ document.querySelector("#closeDetails").addEventListener("click", () => {
 
 map.on("load", () => {
   setStatus("道路を表示中。細い一般道路は地図を拡大すると現れます", "ready");
+  initTemperature(map);
 });
 
 map.on("idle", () => {

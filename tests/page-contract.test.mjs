@@ -6,11 +6,12 @@ const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const app = await readFile(new URL("../app.js", import.meta.url), "utf8");
 const styles = await readFile(new URL("../styles.css", import.meta.url), "utf8");
 
-test("page explains the road-only scope and safety limits", () => {
+test("page explains independent climate estimates and safety limits", () => {
   for (const phrase of [
-    "現在は道路表示までの初期版です",
-    "気温・積雪・凍結・通行規制・経路案内",
-    "現在の道路状況や安全を示す地図ではありません",
+    "独自算出・独自内挿",
+    "予報・実況・路面温度ではありません",
+    "凍結・積雪・通行規制や安全は判定しません",
+    "公式の日別1kmメッシュではありません",
     "現在地を取得せず",
     "アクセス解析を使用しません",
   ]) {
@@ -40,11 +41,14 @@ test("header stays compact and map focus does not add a second full frame", () =
   assert.match(styles, /\.maplibregl-canvas:focus-visible\s*\{[^}]*outline:\s*none/s);
 });
 
-test("road controls remain and the removed station layer is absent", () => {
+test("road controls and mesh calendar exist, old station blur remains absent", () => {
   for (const contract of ['id="highwayToggle"', 'id="generalToggle"', 'id="resetView"']) {
     assert.equal(html.includes(contract), true, contract);
   }
-  for (const removed of ["dateSlider", "temperatureToggle", "TEMPERATURE_DAY_COUNT", "temperature-data.js", "代表180地点"]) {
+  for (const control of ['id="dateSlider"', 'id="temperatureToggle"', 'id="playYear"', 'id="previousDay"', 'id="nextDay"']) {
+    assert.equal(html.includes(control), true, control);
+  }
+  for (const removed of ["temperature-data.js", "代表180地点"]) {
     assert.equal(html.includes(removed) || app.includes(removed), false, removed);
   }
 });

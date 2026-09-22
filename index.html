@@ -6,10 +6,10 @@
     <meta name="referrer" content="no-referrer">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp; connect-src 'self' https://cyberjapandata.gsi.go.jp; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
     <title>冬道そなえナビ | Bousai Wx Lab</title>
-    <meta name="description" content="全国の高速道路・一般道路を地図で確認できる、冬道そなえナビの初期公開版です。">
+    <meta name="description" content="1991〜2020年の日別最低気温を独自内挿した1kmメッシュと道路を重ね、季節ごとの寒さの傾向を確認できます。予報や凍結判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20260922-6">
+    <link rel="stylesheet" href="./styles.css?v=20260922-mesh1">
     <script type="module" src="./app.js" referrerpolicy="no-referrer"></script>
   </head>
   <body>
@@ -41,16 +41,39 @@
     </header>
 
     <main class="tool-layout">
-      <aside class="control-panel" aria-label="道路表示の設定">
+      <aside class="control-panel" aria-label="気温と道路表示の設定">
         <div class="control-heading">
           <div>
-            <p class="eyebrow">ROAD LAYERS</p>
-            <h2>道路を表示</h2>
+            <p class="eyebrow">CLIMATE &amp; ROADS</p>
+            <h2>平年の寒さと道路</h2>
           </div>
           <button id="panelToggle" type="button" aria-expanded="true">詳細を閉じる</button>
         </div>
 
+        <section class="temperature-controls" aria-labelledby="temperature-title">
+          <h3 id="temperature-title">日別の平均最低気温 <span>独自算出</span></h3>
+          <p class="baseline-label">1991〜2020年の日別平年値を基に内挿</p>
+          <div class="date-row">
+            <button id="previousDay" type="button" aria-label="前の日" disabled>‹</button>
+            <div class="date-selects"><label><span class="visually-hidden">月</span><select id="monthSelect" disabled></select></label><span>月</span><label><span class="visually-hidden">日</span><select id="daySelect" disabled></select></label><span>日</span></div>
+            <button id="nextDay" type="button" aria-label="次の日" disabled>›</button>
+          </div>
+          <label for="dateSlider" class="visually-hidden">表示する暦日</label>
+          <input id="dateSlider" type="range" min="0" max="365" value="14" disabled>
+          <div class="month-ticks" aria-hidden="true"><span>1月</span><span>4月</span><span>7月</span><span>10月</span><span>12月</span></div>
+          <div class="play-row"><button id="playYear" type="button" disabled>▶ 1年を再生</button><label><span class="visually-hidden">再生速度</span><select id="playSpeed"><option value="12000">1周 約12秒</option><option value="36000">1周 約36秒</option></select></label></div>
+          <p id="temperatureStatus" class="temperature-status" role="status">気温データを読み込んでいます</p>
+          <button id="retryTemperature" type="button" hidden>気温データを再読込</button>
+          <div class="temperature-legend" aria-label="最低気温の色の凡例">
+            <canvas class="legend-gradient" width="324" height="18" aria-label="寒い紫・青から、0度付近の薄緑、暖かい黄・赤へ"></canvas><div class="legend-ticks"><span>−40</span><span>−20</span><span>0</span><span>20</span><span>40℃</span></div>
+            <small>1℃ごとの色分け・欠測／未収録は無色</small>
+          </div>
+          <p id="temperaturePoint" class="temperature-point">地図をクリックすると、その格子の気温帯を確認できます。</p>
+          <button id="clearTemperaturePoint" type="button" hidden>地点選択を解除</button>
+        </section>
+
         <div class="panel-collapsible">
+          <div class="temperature-options"><label><input id="temperatureToggle" type="checkbox" checked> 気温を重ねる</label><label for="temperatureOpacity">濃さ <output id="opacityValue">65%</output></label><input id="temperatureOpacity" type="range" min="0" max="100" value="65"></div>
           <section class="panel-section road-section" aria-labelledby="road-section-title">
             <div class="section-title road-title-row">
               <span>01</span>
@@ -75,8 +98,9 @@
 
       <div class="map-column">
         <section class="map-shell" aria-labelledby="map-heading">
-          <h2 id="map-heading" class="visually-hidden">全国の道路地図</h2>
-          <div id="map" role="application" aria-label="全国の高速道路・一般道路を表示する地図"></div>
+          <h2 id="map-heading" class="visually-hidden">全国の1km気温メッシュと道路地図</h2>
+          <div id="map" role="application" aria-label="日別の平均最低気温と全国の道路を表示する地図"></div>
+          <p id="mapTemperatureLabel" class="map-temperature-label">気温を準備中</p>
 
           <aside id="roadDetails" class="road-details" hidden aria-live="polite">
             <button id="closeDetails" type="button" aria-label="道路情報を閉じる">×</button>
@@ -89,8 +113,8 @@
         <section class="scope-note" aria-label="データの意味と注意">
           <span class="scope-icon" aria-hidden="true">i</span>
           <div>
-            <strong>現在は道路表示までの初期版です。</strong>
-            <span>気温・積雪・凍結・通行規制・経路案内は、まだ表示していません。現在の道路状況や安全を示す地図ではありません。</span>
+            <strong>平年の気候分布です。予報・実況・路面温度ではありません。</strong>
+            <span>凍結・積雪・通行規制や安全は判定しません。出発前は最新の気象情報と道路管理者の情報を確認してください。</span>
           </div>
         </section>
       </div>
@@ -114,7 +138,10 @@
         <div class="footer-copy">
           <p>道路・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a></p>
           <p>国土地理院のデータをBousai Wx Labが独自に区分・着色して表示しています。データは試験提供で、最新状況と異なる場合があります。</p>
-          <p class="privacy-note">このツールは現在地を取得せず、入力欄・Cookie・ブラウザ保存・アクセス解析を使用しません。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。</p>
+          <p>気温：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年日別平年値</a>・国土数値情報標高データを基に独自算出・独自内挿。公式の日別1kmメッシュではありません。</p>
+          <p>1kmは格子の大きさであり精度の保証ではありません。917観測地点から推定し、383,497格子を着色、4,220格子は欠測。地点を除いて検証した日別RMSEは約0.49〜1.30℃ですが、盆地・沿岸・高標高などでは数℃の誤差が残ります。全陸地の網羅は保証しません。</p>
+          <p>2月29日を含む366日を表示します。気象庁の元の2月29日値は前後日の平均です。一部の観測地点は30年未満の統計を含みます。<a href="https://www.jma.go.jp/bosai/" target="_blank" rel="noopener noreferrer">最新の気象情報（気象庁）</a></p>
+          <p class="privacy-note">このツールは現在地を取得せず、住所入力・Cookie・ブラウザ保存・アクセス解析を使用しません。地点選択は画面内だけで処理します。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。</p>
         </div>
         <p class="footer-copyright">© 2026 Bousai Wx Lab.</p>
       </div>

@@ -16,6 +16,8 @@ import zlib
 from pathlib import Path
 from urllib.parse import urlparse
 
+from verify_temperature_display import validate_temperature_gzip
+
 
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWLIST_PATH = ROOT / "release-allowlist.json"
@@ -223,6 +225,12 @@ def validate_binary_asset(path_label: str, data: bytes, record: dict) -> list[st
     if digest_bytes(data) != record.get("sha256"):
         findings.append(f"binary asset hash mismatch: {path_label}")
     if record.get("mime_type") == "application/gzip":
+        if path_label.startswith("data/temperature/"):
+            try:
+                validate_temperature_gzip(path_label, data, record)
+            except (ValueError, TypeError, KeyError, zlib.error):
+                findings.append(f"invalid daily temperature data: {path_label}")
+            return findings
         # Only metadata-free, bounded, numeric terrain summaries are permitted.
         # Arbitrary compressed files, filenames, comments and extra members fail.
         match = re.fullmatch(r"data/(area|global)-v1/([5-9]|10)/(\d+)/(\d+)\.json\.gz", path_label)

@@ -382,6 +382,24 @@ main {
   border-top-color: #258b82;
 }
 
+.road-temperature-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 8px;
+  padding-top: 9px;
+  border-top: 1px solid #d8e7ed;
+  font-size: 11px;
+}
+
+.road-temperature-legend span { display: flex; align-items: center; gap: 6px; }
+.road-temperature-legend i { width: 24px; height: 5px; border-radius: 2px; box-shadow: 0 0 0 1px #586b78; }
+.road-red { background: #da3434; }
+.road-orange { background: #f08020; }
+.road-yellow { background: #e8bd20; }
+.road-missing { background: #75838c; }
+.road-temperature-note { margin: 7px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+#roadTemperatureStatus[data-state="error"] { color: #a82e29; }
+
 .section-title {
   display: flex;
   align-items: center;

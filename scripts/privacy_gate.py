@@ -218,7 +218,7 @@ def inspect_png(data: bytes) -> tuple[dict[str, int], list[str]]:
     return header, findings
 
 
-def validate_binary_asset(path_label: str, data: bytes, record: dict) -> list[str]:
+def validate_binary_asset(path_label: str, data: bytes, record: dict, *, historical: bool = False) -> list[str]:
     findings: list[str] = []
     if len(data) != record.get("bytes"):
         findings.append(f"binary asset byte count mismatch: {path_label}")
@@ -227,7 +227,9 @@ def validate_binary_asset(path_label: str, data: bytes, record: dict) -> list[st
     if record.get("mime_type") == "application/gzip":
         if path_label.startswith("data/temperature/"):
             try:
-                validate_temperature_gzip(path_label, data, record)
+                # Mesh-only payloads are permitted solely for an explicitly
+                # hash-allowlisted historical Git blob, never the worktree.
+                validate_temperature_gzip(path_label, data, record, allow_legacy_mesh_only=historical)
             except (ValueError, TypeError, KeyError, zlib.error):
                 findings.append(f"invalid daily temperature data: {path_label}")
             return findings
@@ -539,7 +541,8 @@ def _validate_git(allowlist: dict) -> list[str]:
                         binary_ids.add(object_id)
                         binary_digests[object_id] = digest
                         record = binary_records[digest]
-                        findings.extend(validate_binary_asset(record["path"], data, record))
+                        findings.extend(validate_binary_asset(record["path"], data, record,
+                                                             historical=digest in historical_binary_records))
                 else:
                     findings.extend(scan_text(label, text, emails, hosts, scan_browser_apis=kind != "blob"))
                     if kind == "blob":

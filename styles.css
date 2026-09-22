@@ -49,8 +49,8 @@ label {
 .topbar {
   position: relative;
   z-index: 10;
-  min-height: 60px;
-  padding: 5px clamp(10px, 1.6vw, 22px);
+  min-height: 44px;
+  padding: 3px clamp(8px, 1.2vw, 18px);
   overflow: hidden;
   color: #fff;
   background:
@@ -97,26 +97,26 @@ label {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 10px;
 }
 
 .header-identity {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .brand-home {
-  min-width: 196px;
-  min-height: 48px;
-  padding: 4px 10px 4px 5px;
+  min-width: 174px;
+  min-height: 36px;
+  padding: 2px 8px 2px 3px;
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   border: 1px solid rgba(193, 235, 248, 0.44);
-  border-radius: 9px;
+  border-radius: 6px;
   color: #fff;
   background: rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07), 0 4px 14px rgba(2, 20, 37, 0.16);
@@ -138,9 +138,9 @@ label {
 }
 
 .brand-logo {
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
   display: block;
   border-radius: 5px;
   object-fit: cover;
@@ -155,21 +155,21 @@ label {
 }
 
 .brand-home-copy strong {
-  font-size: 14px;
+  font-size: 12px;
   letter-spacing: 0.015em;
   white-space: nowrap;
 }
 
 .brand-home-copy small {
-  margin-top: 2px;
+  margin-top: 1px;
   color: #c8ecf5;
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 700;
 }
 
 .title-row {
   min-width: 0;
-  padding-left: 15px;
+  padding-left: 12px;
   border-left: 1px solid rgba(185, 231, 243, 0.36);
 }
 
@@ -179,11 +179,11 @@ label {
 }
 
 .product-kicker {
-  margin-bottom: 1px !important;
+  margin-bottom: 0 !important;
   color: #8fe6f3;
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 900;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
 }
 
 .tool-title-line {
@@ -194,7 +194,7 @@ label {
 
 .tool-title-line h1 {
   color: #fff;
-  font-size: clamp(21px, 1.8vw, 27px);
+  font-size: clamp(20px, 1.55vw, 24px);
   line-height: 1;
   letter-spacing: 0.025em;
   text-shadow: 0 2px 8px rgba(1, 24, 43, 0.34);
@@ -202,11 +202,7 @@ label {
 }
 
 .tool-subtitle {
-  margin-top: 2px !important;
-  color: #d7f1f7;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.025em;
+  display: none;
 }
 
 .header-actions {
@@ -216,8 +212,8 @@ label {
 }
 
 .sns-link {
-  min-height: 42px;
-  padding: 5px 11px 5px 6px;
+  min-height: 34px;
+  padding: 3px 8px 3px 4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -239,8 +235,8 @@ label {
 }
 
 .x-mark {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: grid;
   place-items: center;
   color: #fff;
@@ -251,19 +247,18 @@ label {
 }
 
 main {
-  padding: 10px 12px 0;
+  padding: 0;
 }
 
 .map-shell {
   position: relative;
-  height: min(720px, calc(100svh - 132px));
+  height: calc(100svh - 98px);
   min-height: 520px;
   overflow: hidden;
   background: #d9ebf3;
-  border: 1px solid #7eb8ce;
-  border-top: 4px solid #1597c1;
-  border-radius: 13px 13px 0 0;
-  box-shadow: 0 8px 28px rgba(8, 49, 78, 0.18);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .map-shell::before {
@@ -272,7 +267,7 @@ main {
   top: 0;
   right: 0;
   left: 0;
-  height: 32px;
+  height: 18px;
   content: "";
   pointer-events: none;
   background: linear-gradient(180deg, rgba(224, 249, 255, 0.3), transparent);
@@ -480,10 +475,10 @@ main {
   align-items: flex-start;
   color: #153d58;
   background: linear-gradient(90deg, #d6f1f7 0%, #eaf8fb 52%, #d8eef7 100%);
-  border: 1px solid #9ecbd9;
-  border-top: 0;
-  border-radius: 0 0 12px 12px;
-  box-shadow: 0 8px 24px rgba(8, 49, 78, 0.1);
+  border: 0;
+  border-top: 1px solid #9ecbd9;
+  border-radius: 0;
+  box-shadow: none;
   font-size: 12px;
   line-height: 1.55;
 }
@@ -512,7 +507,7 @@ main {
 
 .site-footer {
   position: relative;
-  margin-top: 12px;
+  margin-top: 0;
   overflow: hidden;
   color: #c6dce8;
   background:
@@ -687,8 +682,8 @@ main {
 
 @media (max-width: 760px) {
   .topbar {
-    min-height: 50px;
-    padding: 3px 6px;
+    min-height: 44px;
+    padding: 3px 5px;
   }
 
   .topbar-inner {
@@ -701,15 +696,15 @@ main {
 
   .brand-home {
     min-width: 0;
-    min-height: 42px;
-    padding: 4px;
-    border-radius: 8px;
+    min-height: 36px;
+    padding: 3px;
+    border-radius: 6px;
   }
 
   .brand-logo {
-    width: 34px;
-    height: 34px;
-    flex-basis: 34px;
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
   }
 
   .brand-home-copy,
@@ -719,21 +714,21 @@ main {
   }
 
   .title-row {
-    padding-left: 10px;
+    padding-left: 8px;
   }
 
   .tool-title-line h1 {
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .sns-link {
-    min-height: 38px;
-    padding: 4px;
+    min-height: 34px;
+    padding: 3px;
   }
 
   .x-mark {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
   }
 
   .sns-label {
@@ -741,13 +736,13 @@ main {
   }
 
   main {
-    padding: 6px 6px 0;
+    padding: 0;
   }
 
   .map-shell {
-    height: calc(100svh - 98px);
+    height: calc(100svh - 84px);
     min-height: 570px;
-    border-radius: 10px 10px 0 0;
+    border-radius: 0;
   }
 
   .control-panel {
@@ -847,13 +842,13 @@ main {
   }
 
   .brand-logo {
-    width: 32px;
-    height: 32px;
-    flex-basis: 32px;
+    width: 26px;
+    height: 26px;
+    flex-basis: 26px;
   }
 
   .brand-home {
-    min-height: 40px;
+    min-height: 34px;
   }
 
   .title-row {
@@ -865,12 +860,12 @@ main {
   }
 
   .sns-link {
-    min-height: 36px;
+    min-height: 32px;
   }
 
   .x-mark {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
   }
 }
 

@@ -52,7 +52,7 @@
       "bytes": 6506,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "1d4d4caac77701a12acea8c29c0179e322704e9c43525dddb053e3de9c10cce8"
+      "sha256": "2e504517ef70579fe793d9f06bd07047c0b3d82d27715c65c586f34237b473e7"
     },
     {
       "bytes": 3804,
@@ -97,16 +97,16 @@
       "sha256": "9f544f26670c083702e2b3dbfab18af621d78832b52498cf7e0e819df1909604"
     },
     {
-      "bytes": 15251,
+      "bytes": 14973,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "72dd7c2d13b2fd5f181d746a310b85b75f5fbe9c937bdcdf376bfc30fdfe09de"
+      "sha256": "70868d112e83a83bd06a3cc9ea1c1563c0db521f521e255310d04d653eadb07a"
     },
     {
-      "bytes": 2180,
+      "bytes": 2322,
       "mime_type": "text/javascript",
       "path": "tests/page-contract.test.mjs",
-      "sha256": "d4ae49250a98fbfe5c2d49d96705cb62adaa6acbefc463f8c4bc8d22aa38adaa"
+      "sha256": "ea3300196e8b8374664a7ce4221328dbe95fa6232df72c6e7e1836bcd7b65aff"
     },
     {
       "bytes": 2046,
@@ -145,7 +145,7 @@
       "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
     }
   ],
-  "generated_at_utc": "2026-09-22T07:29:07+00:00",
+  "generated_at_utc": "2026-09-22T07:41:55+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

@@ -1,5 +1,13 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js";
+import { TEMPERATURE_DAY_COUNT } from "./temperature-data.js";
+import {
+  TEMPERATURE_LAYER_IDS,
+  buildTemperatureFeatures,
+  decodeTemperatureValues,
+  formatCalendarDate,
+  normalizeDayIndex,
+} from "./temperature-layer.js";
 
 maplibregl.setWorkerUrl(new URL("./vendor/maplibre-gl-worker.mjs", import.meta.url).href);
 
@@ -9,10 +17,27 @@ const details = document.querySelector("#roadDetails");
 const roadType = document.querySelector("#roadType");
 const roadNote = document.querySelector("#roadNote");
 const interactiveLayers = ["highway", "general-road"];
+const dateSlider = document.querySelector("#dateSlider");
+const dateLabel = document.querySelector("#dateLabel");
+const playButton = document.querySelector("#playButton");
+const speedSelect = document.querySelector("#speedSelect");
+const temperatureValues = decodeTemperatureValues();
+let currentDay = 0;
+let animationFrame = 0;
+let playStartedAt = 0;
+let playStartedDay = 0;
+
+if (window.matchMedia("(max-width: 760px)").matches) {
+  const panel = document.querySelector(".control-panel");
+  const toggle = document.querySelector("#panelToggle");
+  panel.classList.add("is-collapsed");
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.textContent = "詳細を開く";
+}
 
 const map = new maplibregl.Map({
   container: "map",
-  style: createMapStyle(),
+  style: createMapStyle(buildTemperatureFeatures(temperatureValues, currentDay)),
   center: JAPAN_VIEW.center,
   zoom: JAPAN_VIEW.zoom,
   minZoom: 4.7,
@@ -46,6 +71,98 @@ function setLayerGroup(ids, visible) {
   }
 }
 
+function updateTemperatureLayer(dayIndex) {
+  currentDay = normalizeDayIndex(dayIndex);
+  const label = formatCalendarDate(currentDay);
+  dateSlider.value = String(currentDay);
+  dateSlider.setAttribute("aria-valuetext", label);
+  dateLabel.textContent = label;
+  document.querySelector(".control-panel").dataset.dayIndex = String(currentDay);
+  const source = map.getSource("temperatureNormals");
+  if (source) {
+    source.setData(buildTemperatureFeatures(temperatureValues, currentDay));
+  }
+}
+
+function pausePlayback() {
+  if (animationFrame) {
+    cancelAnimationFrame(animationFrame);
+    animationFrame = 0;
+  }
+  playButton.dataset.playing = "false";
+  playButton.setAttribute("aria-label", "一年を自動再生");
+  playButton.querySelector(".play-icon").textContent = "▶";
+  playButton.querySelector(".play-label").textContent = "再生";
+}
+
+function playbackTick(now) {
+  if (!animationFrame) {
+    return;
+  }
+  const cycleMilliseconds = Number(speedSelect.value) * 1000;
+  const elapsedDays = Math.floor((now - playStartedAt) * TEMPERATURE_DAY_COUNT / cycleMilliseconds);
+  updateTemperatureLayer(playStartedDay + elapsedDays);
+  animationFrame = requestAnimationFrame(playbackTick);
+}
+
+function startPlayback() {
+  pausePlayback();
+  playStartedAt = performance.now();
+  playStartedDay = currentDay;
+  playButton.dataset.playing = "true";
+  playButton.setAttribute("aria-label", "自動再生を一時停止");
+  playButton.querySelector(".play-icon").textContent = "Ⅱ";
+  playButton.querySelector(".play-label").textContent = "停止";
+  animationFrame = requestAnimationFrame(playbackTick);
+}
+
+function stepDay(amount) {
+  pausePlayback();
+  updateTemperatureLayer(currentDay + amount);
+}
+
+dateSlider.addEventListener("input", (event) => {
+  pausePlayback();
+  updateTemperatureLayer(event.currentTarget.value);
+});
+
+document.querySelector("#previousDay").addEventListener("click", () => stepDay(-1));
+document.querySelector("#nextDay").addEventListener("click", () => stepDay(1));
+playButton.addEventListener("click", () => {
+  if (animationFrame) {
+    pausePlayback();
+  } else {
+    startPlayback();
+  }
+});
+
+speedSelect.addEventListener("change", () => {
+  if (animationFrame) {
+    startPlayback();
+  }
+});
+
+document.querySelector("#temperatureToggle").addEventListener("change", (event) => {
+  setLayerGroup(TEMPERATURE_LAYER_IDS, event.currentTarget.checked);
+});
+
+document.querySelector("#temperatureOpacity").addEventListener("input", (event) => {
+  const opacity = Number(event.currentTarget.value) / 100;
+  document.querySelector("#temperatureOpacityValue").textContent = `${event.currentTarget.value}%`;
+  if (map.getLayer("temperature-normal-halo")) {
+    map.setPaintProperty("temperature-normal-halo", "circle-opacity", opacity * 0.72);
+    map.setPaintProperty("temperature-normal-core", "circle-opacity", opacity * 0.92);
+  }
+});
+
+document.querySelector("#panelToggle").addEventListener("click", (event) => {
+  const panel = document.querySelector(".control-panel");
+  const expanded = event.currentTarget.getAttribute("aria-expanded") === "true";
+  event.currentTarget.setAttribute("aria-expanded", String(!expanded));
+  event.currentTarget.textContent = expanded ? "詳細を開く" : "詳細を閉じる";
+  panel.classList.toggle("is-collapsed", expanded);
+});
+
 document.querySelector("#highwayToggle").addEventListener("change", (event) => {
   setLayerGroup(["highway-casing", "highway"], event.currentTarget.checked);
 });
@@ -63,7 +180,8 @@ document.querySelector("#closeDetails").addEventListener("click", () => {
 });
 
 map.on("load", () => {
-  setStatus("道路を表示しています。細い一般道路は地図を拡大すると現れます", "ready");
+  updateTemperatureLayer(currentDay);
+  setStatus("日別平年値と道路を表示中。細い一般道路は拡大すると現れます", "ready");
 });
 
 map.on("idle", () => {
@@ -97,4 +215,24 @@ map.on("click", (event) => {
     ? "高速道路として区分された道路です。現在の通行可否や規制は示していません。"
     : "一般道路として区分された道路です。車両通行の可否や道路名は保証していません。";
   details.hidden = false;
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement || event.target instanceof HTMLButtonElement) {
+    return;
+  }
+  if (event.key === "ArrowLeft") {
+    stepDay(-1);
+  } else if (event.key === "ArrowRight") {
+    stepDay(1);
+  } else if (event.key === " ") {
+    event.preventDefault();
+    animationFrame ? pausePlayback() : startPlayback();
+  }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    pausePlayback();
+  }
 });

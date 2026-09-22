@@ -19,10 +19,10 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "bytes": 3155,
+      "bytes": 3464,
       "mime_type": "text/markdown",
       "path": "README.md",
-      "sha256": "1c42d9372c398218338ddd145f150a46c4533608923e8af43c6028576230561c"
+      "sha256": "ec28c27bf99f65eac0ebacbd1735c9cc8486d73df00a41bb41ced4f290ddac66"
     },
     {
       "bytes": 1298,
@@ -43,16 +43,16 @@
       "sha256": "7704fbd5a1bcee94880257656eaf7b3baf0425e82ad785a27ba1fc52b1bf299a"
     },
     {
-      "bytes": 4315,
+      "bytes": 5114,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "da9cc59d52647553eadaccfdee8d73e2c76b1f0a3e706fb41e4771084c942c6b"
+      "sha256": "6a77503de0131188af7dce4cbf2a5f2a19e13dfebaf6649eb32a0be8c0153d10"
     },
     {
-      "bytes": 3437,
+      "bytes": 3475,
       "mime_type": "application/json",
       "path": "release-allowlist.json",
-      "sha256": "6d2fb5538b06c5deb4eb6f9fdab4847e1fddcaa6f3da3942c0dc58cc7e6061e7"
+      "sha256": "66ed41055b7a765796412c00acad6931fa53946e4d6281d68cc27c6f0d26de2f"
     },
     {
       "bytes": 3427,
@@ -91,16 +91,16 @@
       "sha256": "9f544f26670c083702e2b3dbfab18af621d78832b52498cf7e0e819df1909604"
     },
     {
-      "bytes": 7239,
+      "bytes": 8788,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "16f4012b4a976f091f9b1a716472024a0cac81a0c030ca823f39ec4f42204009"
+      "sha256": "110d36676ee7ecc5f66b3c68d15afcaabb2d7ed94fdc29ea5b45ffafa2a68a84"
     },
     {
-      "bytes": 1356,
+      "bytes": 1696,
       "mime_type": "text/javascript",
       "path": "tests/page-contract.test.mjs",
-      "sha256": "3d57d61f300f9c002c50e487e277364fcb16200695013687b0bda71140458b20"
+      "sha256": "5c855d851fae73cfc3690638cad0d448ebbe86fe453213352c60eb0cb086b298"
     },
     {
       "bytes": 2046,
@@ -139,7 +139,7 @@
       "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
     }
   ],
-  "generated_at_utc": "2026-09-20T12:41:43+00:00",
+  "generated_at_utc": "2026-09-22T06:51:13+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

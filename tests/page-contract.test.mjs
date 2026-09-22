@@ -23,6 +23,13 @@ test("page has no inline event handlers or executable inline scripts", () => {
   assert.equal(html.includes("javascript:"), false);
 });
 
+test("thin header links to the blog and X without a usage guide", () => {
+  assert.equal(html.includes('class="header-inner"'), true);
+  assert.equal(html.includes('href="https://bousai-wx-lab.com/"'), true);
+  assert.equal(html.includes('href="https://x.com/bousai_wx_lab"'), true);
+  assert.equal(html.includes("使い方"), false);
+});
+
 test("application does not use location, storage, cookies, or HTML injection", () => {
   for (const token of [
     "geo" + "location",

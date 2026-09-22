@@ -20,7 +20,7 @@ export const GENERAL_ROAD_FILTER = Object.freeze([
 
 const roadWidth = (small, large) => ["interpolate", ["linear"], ["zoom"], 5, small, 15, large];
 
-export function createMapStyle(temperatureData = { type: "FeatureCollection", features: [] }) {
+export function createMapStyle() {
   return {
     version: 8,
     sources: {
@@ -40,38 +40,9 @@ export function createMapStyle(temperatureData = { type: "FeatureCollection", fe
         bounds: [122, 20, 154, 47],
         attribution: '<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">地理院地図Vector</a>',
       },
-      temperatureNormals: {
-        type: "geojson",
-        data: temperatureData,
-        attribution: '<a href="https://www.data.jma.go.jp/obd/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁 日別平年値</a>を加工',
-      },
     },
     layers: [
       { id: "background-map", type: "raster", source: "background", minzoom: 4, paint: { "raster-opacity": 0.75, "raster-saturation": -0.55, "raster-contrast": 0.05 } },
-      {
-        id: "temperature-normal-halo",
-        type: "circle",
-        source: "temperatureNormals",
-        minzoom: 4,
-        paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 4.7, 34, 8, 52, 12, 76],
-          "circle-color": ["interpolate", ["linear"], ["get", "temperature"], -30, "#281052", -20, "#3a3f9e", -10, "#397fd0", 0, "#80d9eb", 10, "#e8f4cf", 20, "#ffc36d", 30, "#ef6b5b"],
-          "circle-opacity": 0.58,
-          "circle-blur": 0.82,
-        },
-      },
-      {
-        id: "temperature-normal-core",
-        type: "circle",
-        source: "temperatureNormals",
-        minzoom: 4,
-        paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 4.7, 8, 8, 13, 12, 18],
-          "circle-color": ["interpolate", ["linear"], ["get", "temperature"], -30, "#281052", -20, "#3a3f9e", -10, "#397fd0", 0, "#80d9eb", 10, "#e8f4cf", 20, "#ffc36d", 30, "#ef6b5b"],
-          "circle-opacity": 0.74,
-          "circle-blur": 0.5,
-        },
-      },
       {
         id: "general-road-casing",
         type: "line",

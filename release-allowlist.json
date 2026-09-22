@@ -8,6 +8,7 @@
     "README.md",
     "SECURITY.md",
     "app.js",
+    "assets/bousaiwxlab-site-icon.png",
     "favicon.svg",
     "index.html",
     "release-allowlist.json",
@@ -40,7 +41,18 @@
     "x.com"
   ],
   "allowed_browser_api_fragments": {},
-  "allowed_binary_assets": [],
+  "allowed_binary_assets": [
+    {
+      "path": "assets/bousaiwxlab-site-icon.png",
+      "bytes": 266670,
+      "sha256": "f2258fc48adea8bdcf175699fb08b434b039c0aee83a4439c181741f3c2a4c9e",
+      "mime_type": "image/png",
+      "width": 512,
+      "height": 512,
+      "bit_depth": 8,
+      "color_type": 2
+    }
+  ],
   "allowed_historical_binary_assets": [],
   "allowed_vendored_files": [
     {

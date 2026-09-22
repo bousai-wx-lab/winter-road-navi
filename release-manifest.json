@@ -19,10 +19,10 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "bytes": 5604,
+      "bytes": 3678,
       "mime_type": "text/markdown",
       "path": "README.md",
-      "sha256": "d6faa8911bdcb6027627a1b074f4c75ec2a15c698409c79c595437e972876196"
+      "sha256": "0083c6b5ea3dcb1c931f973a180b4b2151b0a8c18e5bae7f8c7f9a1edde80557"
     },
     {
       "bytes": 1298,
@@ -31,10 +31,10 @@
       "sha256": "732472f1859e857b5e764b2f8765294cbfedf8cd3adac2f422d3d5436efb61ce"
     },
     {
-      "bytes": 8585,
+      "bytes": 4455,
       "mime_type": "text/javascript",
       "path": "app.js",
-      "sha256": "e5a84d3e176632b8c117895ef164e91d261d182f22caa18f1bb6db9f6e7b7a05"
+      "sha256": "da67e2a1e970d32e480eba43f3e70d5a392fbba1d64d87ae17e280dc69c8aebc"
     },
     {
       "bytes": 266670,
@@ -49,22 +49,22 @@
       "sha256": "7704fbd5a1bcee94880257656eaf7b3baf0425e82ad785a27ba1fc52b1bf299a"
     },
     {
-      "bytes": 10398,
+      "bytes": 7031,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "5cf48a8c8248d6c323a033146fe75ff358b71e72ada972d3753717767939bb7d"
+      "sha256": "c8e31cef3868008786bcbd0d04220ed0375a9bfdd50046e1f503668f5132f66b"
     },
     {
-      "bytes": 4012,
+      "bytes": 3876,
       "mime_type": "application/json",
       "path": "release-allowlist.json",
-      "sha256": "ad5bf0ed57ac73eaaf5c2ad1188684fb550d1892fb513504cc3dde2f64650935"
+      "sha256": "53d300e9c783fd1d67f0e061ba7d9e4b83d260c61a61269deafc137d1e56aa14"
     },
     {
-      "bytes": 4797,
+      "bytes": 3451,
       "mime_type": "text/javascript",
       "path": "road-style.js",
-      "sha256": "1a29e282f56e36b8e4f82e7b0ed354c545933eb6938771f6b836e848ea1dfe51"
+      "sha256": "3e48de798c88331891334bacb6efcb06a31c8416b57502429e030c4515fcbe9c"
     },
     {
       "bytes": 4716,
@@ -77,12 +77,6 @@
       "mime_type": "text/x-python",
       "path": "scripts/build_release_manifest.py",
       "sha256": "84f7fafdb1650eb48826df16393b895a26820be4de28ebec10318c0554d2643c"
-    },
-    {
-      "bytes": 7339,
-      "mime_type": "text/x-python",
-      "path": "scripts/build_temperature_data.py",
-      "sha256": "c0bbb22a4f496891566e395336721831c7de8d095006f25d9fbfe83d912a0e8f"
     },
     {
       "bytes": 29750,
@@ -103,40 +97,22 @@
       "sha256": "9f544f26670c083702e2b3dbfab18af621d78832b52498cf7e0e819df1909604"
     },
     {
-      "bytes": 20624,
+      "bytes": 17408,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "5780c31e6a5295f5e727924a9c61479a958c8e2082fd7a8159787c531c19287b"
+      "sha256": "69e67e011f12bfa80e031c556f97e94075599d7fee884194d87006e9c6c9b751"
     },
     {
-      "bytes": 191841,
-      "mime_type": "text/javascript",
-      "path": "temperature-data.js",
-      "sha256": "caac1edacc19343ce1885e77efbcf257cd463e02426d3afbbd319a94a32cea10"
-    },
-    {
-      "bytes": 2648,
-      "mime_type": "text/javascript",
-      "path": "temperature-layer.js",
-      "sha256": "acfa07e0e3ca4fc3aebb382b14f05bc39d288620f5d4b0dbae1dea9bd2689d8a"
-    },
-    {
-      "bytes": 2911,
+      "bytes": 2773,
       "mime_type": "text/javascript",
       "path": "tests/page-contract.test.mjs",
-      "sha256": "6b57db482c06ceb536a76f3968077bffe808b2443cb086aa90de5f36e6d78f20"
+      "sha256": "7fb0cd256e6cee2884da5c4377cb500ee29e92006a236e9fd1179c93075ec84e"
     },
     {
-      "bytes": 2074,
+      "bytes": 2052,
       "mime_type": "text/javascript",
       "path": "tests/road-style.test.mjs",
-      "sha256": "45e803c104d0380c3574db6aa2dc8851b3d8eeee70ef78c942687b8af83ccfda"
-    },
-    {
-      "bytes": 2462,
-      "mime_type": "text/javascript",
-      "path": "tests/temperature-layer.test.mjs",
-      "sha256": "e03c835b327b745f77f100030a74f7fa151335710455baae3c1434cf177c10f2"
+      "sha256": "68c0f9cd51cd0599ab1cc490d4bd2427d63b2a0554c5b9cb7855b61937b6f85b"
     },
     {
       "bytes": 5984,
@@ -169,7 +145,7 @@
       "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
     }
   ],
-  "generated_at_utc": "2026-09-22T08:17:50+00:00",
+  "generated_at_utc": "2026-09-22T09:13:41+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

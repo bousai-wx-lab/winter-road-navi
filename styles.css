@@ -378,10 +378,6 @@ main {
   box-shadow: 0 3px 11px rgba(12, 60, 88, 0.06);
 }
 
-.temperature-section {
-  border-top-color: #608bd3;
-}
-
 .road-section {
   border-top-color: #258b82;
 }
@@ -411,186 +407,10 @@ main {
   font-size: 15px;
 }
 
-.date-display {
-  margin-bottom: 9px;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.date-display strong {
-  color: #073f65;
-  font-size: 28px;
-  line-height: 1;
-  letter-spacing: 0.02em;
-}
-
-.date-display small {
-  color: var(--muted);
-  font-size: 9px;
-}
-
-.date-slider,
-.opacity-control input {
-  width: 100%;
-  accent-color: #087e9e;
-  cursor: pointer;
-}
-
-.date-slider {
-  height: 20px;
-  margin: 0;
-}
-
-.month-scale {
-  margin: -2px 0 9px;
-  display: flex;
-  justify-content: space-between;
-  color: #617b8d;
-  font-size: 9px;
-}
-
-.transport-controls {
-  display: grid;
-  grid-template-columns: 1fr 1.3fr 1fr;
-  gap: 7px;
-}
-
-.transport-controls button {
-  min-height: 42px;
-  padding: 4px 8px;
-  border: 1px solid #8eb6c8;
-  border-radius: 8px;
-  color: #0b4d70;
-  background: linear-gradient(180deg, #fff, #eaf6fa);
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.transport-controls button:hover,
-.transport-controls button:focus-visible,
 #resetView:hover,
 #resetView:focus-visible {
   border-color: #168baa;
   outline: 3px solid rgba(27, 164, 191, 0.18);
-}
-
-.transport-controls button span,
-.transport-controls button small {
-  display: block;
-}
-
-.transport-controls button small {
-  margin-top: 1px;
-  font-size: 9px;
-}
-
-.transport-controls .play-button {
-  color: #fff;
-  background: linear-gradient(135deg, #07527b, #098fa5);
-  border-color: #08758f;
-}
-
-.play-icon {
-  font-size: 15px;
-}
-
-.play-label {
-  margin-top: 2px;
-  font-size: 10px;
-}
-
-.speed-control,
-.opacity-control {
-  margin-top: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  color: #425f71;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.speed-control select {
-  min-height: 32px;
-  padding: 3px 26px 3px 9px;
-  border: 1px solid #9bbccc;
-  border-radius: 7px;
-  color: #153f5b;
-  background: #fff;
-  font-weight: 800;
-}
-
-.simple-toggle {
-  display: grid;
-  grid-template-columns: 22px 1fr;
-  gap: 8px;
-  align-items: flex-start;
-  cursor: pointer;
-}
-
-.simple-toggle input {
-  width: 18px;
-  height: 18px;
-  accent-color: #087e9e;
-}
-
-.simple-toggle strong,
-.simple-toggle small {
-  display: block;
-}
-
-.simple-toggle strong {
-  color: #173e56;
-  font-size: 13px;
-}
-
-.simple-toggle small {
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: 10px;
-}
-
-.opacity-control {
-  display: block;
-}
-
-.opacity-control > span {
-  margin-bottom: 2px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.temperature-legend {
-  margin-top: 7px;
-}
-
-.temperature-gradient {
-  height: 12px;
-  border: 1px solid rgba(34, 70, 101, 0.28);
-  border-radius: 4px;
-  background: linear-gradient(90deg, #281052, #3a3f9e, #397fd0, #80d9eb, #e8f4cf, #ffc36d, #ef6b5b);
-}
-
-.temperature-labels {
-  display: flex;
-  justify-content: space-between;
-  color: #5b7180;
-  font-size: 8px;
-}
-
-.freezing-mark {
-  color: #073f65;
-  font-weight: 900;
-}
-
-.temperature-note {
-  margin: 7px 0 0;
-  color: #6c4b43;
-  font-size: 9px;
-  line-height: 1.45;
 }
 
 .road-title-row {
@@ -1051,19 +871,12 @@ main {
   }
 
   .control-panel.is-collapsed .panel-collapsible,
-  .control-panel.is-collapsed .speed-control,
-  .control-panel.is-collapsed .map-status,
-  .control-panel.is-collapsed .date-section .section-title {
+  .control-panel.is-collapsed .map-status {
     display: none;
   }
 
   .control-panel.is-collapsed {
     max-height: none;
-  }
-
-  .control-panel.is-collapsed .date-section {
-    margin-top: 5px;
-    padding-top: 9px;
   }
 
   .control-heading {
@@ -1077,14 +890,6 @@ main {
   .panel-section {
     margin-top: 7px;
     padding: 10px;
-  }
-
-  .date-display strong {
-    font-size: 25px;
-  }
-
-  .transport-controls button {
-    min-height: 38px;
   }
 
   .layer-toggle {

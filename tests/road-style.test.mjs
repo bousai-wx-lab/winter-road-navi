@@ -54,5 +54,5 @@ test("style has no third-party glyph, sprite, terrain, or analytics source", () 
   assert.equal(style.glyphs, undefined);
   assert.equal(style.sprite, undefined);
   assert.equal(style.terrain, undefined);
-  assert.deepEqual(Object.keys(style.sources).sort(), ["background", "roads", "temperatureNormals"].sort());
+  assert.deepEqual(Object.keys(style.sources).sort(), ["background", "roads"].sort());
 });

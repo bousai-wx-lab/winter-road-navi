@@ -381,7 +381,10 @@
     "index.html",
     "release-allowlist.json",
     "release-manifest.json",
+    "road-geometry-worker.js",
+    "road-geometry.js",
     "road-style.js",
+    "road-temperature.js",
     "scripts/build_pages_artifact.py",
     "scripts/build_release_manifest.py",
     "scripts/privacy_gate.py",
@@ -391,10 +394,14 @@
     "scripts/verify_temperature_display.py",
     "styles.css",
     "temperature-control.js",
+    "temperature-display-data.js",
     "temperature-layer.js",
     "tests/page-contract.test.mjs",
+    "tests/road-geometry.test.mjs",
     "tests/road-style.test.mjs",
+    "tests/road-temperature.test.mjs",
     "tests/temperature-control.test.mjs",
+    "tests/temperature-data.test.mjs",
     "tests/temperature-layer.test.mjs",
     "vendor/maplibre-gl-LICENSE.txt",
     "vendor/maplibre-gl-shared.mjs",
@@ -430,6 +437,2570 @@
       "bit_depth": 8,
       "color_type": 2
     },
+    {
+      "path": "data/temperature/01-01.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 130355,
+      "sha256": "8a589746b4f9c8c597b19e8a5ac42b8ea7902d02aacd49af3003c9a4e57777fe",
+      "uncompressed_bytes": 752076
+    },
+    {
+      "path": "data/temperature/01-02.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 129875,
+      "sha256": "971eb536e650ce28365eeedcf616bf04a275f173f5389f1a7da9f5274e91eecb",
+      "uncompressed_bytes": 749724
+    },
+    {
+      "path": "data/temperature/01-03.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 129623,
+      "sha256": "9f377d58b551178e8f698c55abf141ac833a981e97954d43bfa7c149961564e7",
+      "uncompressed_bytes": 748995
+    },
+    {
+      "path": "data/temperature/01-04.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 129254,
+      "sha256": "ab6d6038385423a37ba9a4cfb2476259921d080d02380cab616f45c0d6c08ca4",
+      "uncompressed_bytes": 746381
+    },
+    {
+      "path": "data/temperature/01-05.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 129231,
+      "sha256": "6995946d532baa169d980b0727ecc70d1955fba7685af536e672b593377e3404",
+      "uncompressed_bytes": 745704
+    },
+    {
+      "path": "data/temperature/01-06.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 128994,
+      "sha256": "23f03f26b41bf739713d57a5a183a195459a8cd7ae86fe0fd2de26aa10d0715d",
+      "uncompressed_bytes": 745317
+    },
+    {
+      "path": "data/temperature/01-07.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 129017,
+      "sha256": "00ffa6731b08a1c20ef09d17acafcb84ea561f858ec988ed2fa0c4ca8c71dedd",
+      "uncompressed_bytes": 746448
+    },
+    {
+      "path": "data/temperature/01-08.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 129057,
+      "sha256": "2caa941d981ed21751620cfb7ddf4b2521e4969e000b12d19d1973e28f550534",
+      "uncompressed_bytes": 747539
+    },
+    {
+      "path": "data/temperature/01-09.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 128660,
+      "sha256": "1b316fd96b3aa8f0e041d8eabceac5df75df2ee77d5e7d1b79dc059ee2bb8176",
+      "uncompressed_bytes": 745972
+    },
+    {
+      "path": "data/temperature/01-10.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 128950,
+      "sha256": "861d4c86e5620e7c7fca883bbf4018839a0944d05c1ea8d702e6f5e115006f78",
+      "uncompressed_bytes": 746587
+    },
+    {
+      "path": "data/temperature/01-11.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 128556,
+      "sha256": "4dc3346c1e80fcc73d9d8252d75597cf1beb4640b25f0859efb6840a7bb49000",
+      "uncompressed_bytes": 745609
+    },
+    {
+      "path": "data/temperature/01-12.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 128523,
+      "sha256": "16d71b784adcee9e6e3fe70d5600c6eaec3f3739a51f0e9f15d650e69dd27d4a",
+      "uncompressed_bytes": 745153
+    },
+    {
+      "path": "data/temperature/01-13.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 128209,
+      "sha256": "a88ff13e01808da24c0842289c6263b0100e486a90fe79641abbc963414f419e",
+      "uncompressed_bytes": 743912
+    },
+    {
+      "path": "data/temperature/01-14.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127925,
+      "sha256": "c79fce087a81db8068c5ccff5f59333f51cc8d4dec73533761ebe24ca39b174c",
+      "uncompressed_bytes": 742115
+    },
+    {
+      "path": "data/temperature/01-15.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127654,
+      "sha256": "9f3ab26d68ea9f4ad9d6a9907f0ab1602eab91a2afd7ca7f40a55bb505faec38",
+      "uncompressed_bytes": 742302
+    },
+    {
+      "path": "data/temperature/01-16.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127508,
+      "sha256": "dc9fed95a3c3726d6bbc35395628d872fdb59e54cb35ca8d415c41e4c76db1cb",
+      "uncompressed_bytes": 741375
+    },
+    {
+      "path": "data/temperature/01-17.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127634,
+      "sha256": "2041763dc9f7cf5c62e540c62eb8573d787a704b71d85ec53f18f6653b6bd688",
+      "uncompressed_bytes": 740780
+    },
+    {
+      "path": "data/temperature/01-18.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127266,
+      "sha256": "94176a311bb80bd1b08a9fc86d2bedc795d07ed7f0aab456baaae5251924fdd0",
+      "uncompressed_bytes": 739640
+    },
+    {
+      "path": "data/temperature/01-19.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127265,
+      "sha256": "4c64ba5b78896025421771a9a72e12ddc98bc1034515458496590b2c49cd759a",
+      "uncompressed_bytes": 739208
+    },
+    {
+      "path": "data/temperature/01-20.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127279,
+      "sha256": "35ab21ea33785054b1d1a7ed40af9422b084fe2e396101e1e1e3a8c3eb70643a",
+      "uncompressed_bytes": 738704
+    },
+    {
+      "path": "data/temperature/01-21.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127216,
+      "sha256": "8a768728d532638a9eb79b66b33dfe2576d599fe71ffecfd1b0a519214aca02a",
+      "uncompressed_bytes": 738576
+    },
+    {
+      "path": "data/temperature/01-22.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126813,
+      "sha256": "07a805ad44786d0cd526051a5da40d3af32573b3dde28fb036fd8d3b714d0d02",
+      "uncompressed_bytes": 737757
+    },
+    {
+      "path": "data/temperature/01-23.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127197,
+      "sha256": "29b94dabc7e36d7fe836355a6ea54fd7235de7180e85369bc1bdfa18428c9a6a",
+      "uncompressed_bytes": 738052
+    },
+    {
+      "path": "data/temperature/01-24.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126909,
+      "sha256": "3a8bd8e1b27627dad071a8c71e8986554e35a182a928c35cffc3fe35dacf9da5",
+      "uncompressed_bytes": 737239
+    },
+    {
+      "path": "data/temperature/01-25.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126932,
+      "sha256": "997e071c7a291499ad75f375fd9b0f3170880c2349a32992d5e832e9b6e3b301",
+      "uncompressed_bytes": 737256
+    },
+    {
+      "path": "data/temperature/01-26.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126818,
+      "sha256": "57b0727d443b6f32c33bf0a3d7df4aed801c4dd0d430cf921641a05e3b828e86",
+      "uncompressed_bytes": 736308
+    },
+    {
+      "path": "data/temperature/01-27.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126687,
+      "sha256": "f337cbd4b50b87fe9a0a5e4b0067e12d5e2440587f767eb445e824f87bfecbe3",
+      "uncompressed_bytes": 735860
+    },
+    {
+      "path": "data/temperature/01-28.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126654,
+      "sha256": "c39248819e5754983249460757984ecac4ce3eb8a93c1a707d4e35f427f4d47f",
+      "uncompressed_bytes": 734629
+    },
+    {
+      "path": "data/temperature/01-29.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126616,
+      "sha256": "e4c4e00675dcada58622c1ebd504be51aa7dd5045078b9712d6440d9c7eebf7e",
+      "uncompressed_bytes": 734431
+    },
+    {
+      "path": "data/temperature/01-30.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126464,
+      "sha256": "9d8f919fe41b14c14cf20415d84f1a955b357a168d64dae0210ce4c0a867e80d",
+      "uncompressed_bytes": 734219
+    },
+    {
+      "path": "data/temperature/01-31.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126579,
+      "sha256": "e2a6413935855085f535d7da4a4f76c4eccf45f59b7cea9a04332b045201ed4a",
+      "uncompressed_bytes": 734574
+    },
+    {
+      "path": "data/temperature/02-01.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126570,
+      "sha256": "22106b9e6838963ed18ba6019040c0c081d5bb654b6b49f7074f4c3240bff713",
+      "uncompressed_bytes": 734641
+    },
+    {
+      "path": "data/temperature/02-02.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126730,
+      "sha256": "1e0ae9d3ab8c41b2f3217f4d75e0a424fa9240a60aa3117ea0128ae642a055d3",
+      "uncompressed_bytes": 735217
+    },
+    {
+      "path": "data/temperature/02-03.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126646,
+      "sha256": "610e443a9a68186bbfa2fbfed9b20e833b47fa6dafe856a6c894e10134cd69b7",
+      "uncompressed_bytes": 735193
+    },
+    {
+      "path": "data/temperature/02-04.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126567,
+      "sha256": "fa7948484b535823dcd239ac62e6fdb760b4a6cffcc41d27b7cbae3f6a16d780",
+      "uncompressed_bytes": 735171
+    },
+    {
+      "path": "data/temperature/02-05.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126513,
+      "sha256": "12fd430d55edee703efff7370cc6601edf10176b9682f5f5ef0c0c1b08b1a10f",
+      "uncompressed_bytes": 734421
+    },
+    {
+      "path": "data/temperature/02-06.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126692,
+      "sha256": "e142142ecc4a7c917f60a11962fbc617287295f8e7c21098cf406ea952268c2c",
+      "uncompressed_bytes": 736793
+    },
+    {
+      "path": "data/temperature/02-07.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126740,
+      "sha256": "dc6f0d2aa946e3316760a1289c5804790b5d02c4443441331675078479497e2c",
+      "uncompressed_bytes": 738154
+    },
+    {
+      "path": "data/temperature/02-08.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127054,
+      "sha256": "ab2b6eb7c13cd26c25506655066ddc143287d0bb00adfbf9cce94d9c52f5d8ff",
+      "uncompressed_bytes": 738442
+    },
+    {
+      "path": "data/temperature/02-09.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127328,
+      "sha256": "1de61c57942bc87ef04b67262f571fdf1aed58177b113d40c99efc816d1e1005",
+      "uncompressed_bytes": 739751
+    },
+    {
+      "path": "data/temperature/02-10.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127257,
+      "sha256": "6faeb6922c283f8bfe143f19d39830895b9757fe6cef0a70d1bef7a6719def1a",
+      "uncompressed_bytes": 740377
+    },
+    {
+      "path": "data/temperature/02-11.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127467,
+      "sha256": "cac722ee8c458e4c428d1d7e62d36fa985d61efd053bee3af4fab2d7fa3c932c",
+      "uncompressed_bytes": 741036
+    },
+    {
+      "path": "data/temperature/02-12.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127552,
+      "sha256": "35c48f4dac43a9ae19bc809fe121572aaf7822815400b581c20b9c19f0873e86",
+      "uncompressed_bytes": 742399
+    },
+    {
+      "path": "data/temperature/02-13.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127714,
+      "sha256": "5ef42ea5b2095623449c9c7decee279276ff976b1d24b5d8765ba6a7b9517a61",
+      "uncompressed_bytes": 741194
+    },
+    {
+      "path": "data/temperature/02-14.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127808,
+      "sha256": "276d1ca7ab4233c2608fd6d3377b074c94c518782ec95a4ff0e730967e183e39",
+      "uncompressed_bytes": 743523
+    },
+    {
+      "path": "data/temperature/02-15.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127739,
+      "sha256": "9c67401811488531680a92357408d7e6fc8be5abcba71506cd6090dce67f09e0",
+      "uncompressed_bytes": 743583
+    },
+    {
+      "path": "data/temperature/02-16.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 128156,
+      "sha256": "5e193eef9b8750a5b6dadfa4abdfc34d64f3b9ada08aa207f8edb8bf5425ab40",
+      "uncompressed_bytes": 743792
+    },
+    {
+      "path": "data/temperature/02-17.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 128614,
+      "sha256": "36f92bffb93319d8699bee775d17fea90cbc34b4e7f994ba75425e65e3ec4c56",
+      "uncompressed_bytes": 746141
+    },
+    {
+      "path": "data/temperature/02-18.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 128949,
+      "sha256": "b3ba456f8c2d4756c7e5b7ea1edde4ca5deb730358744ba4035b91f30b4030b2",
+      "uncompressed_bytes": 749363
+    },
+    {
+      "path": "data/temperature/02-19.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 129376,
+      "sha256": "dc9603ea5c975797310e0dbdb182e7ba2ff05d35a158bf4f1fdaa8dac5d7e774",
+      "uncompressed_bytes": 750229
+    },
+    {
+      "path": "data/temperature/02-20.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 129448,
+      "sha256": "b5b8c85c0353b13da0bc594175ebb9b8d98a0bfdf9588d48a753990007c1c243",
+      "uncompressed_bytes": 751362
+    },
+    {
+      "path": "data/temperature/02-21.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 129655,
+      "sha256": "742d77a7b052d72f68420b5d4af05443601bd9bd0d51bdd6458d39a84f5a8d97",
+      "uncompressed_bytes": 751878
+    },
+    {
+      "path": "data/temperature/02-22.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 129791,
+      "sha256": "b6f930440571223a6183a9403e3d1d55da6e5bf2b776061eeee8d62b0ef55219",
+      "uncompressed_bytes": 752872
+    },
+    {
+      "path": "data/temperature/02-23.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 130219,
+      "sha256": "774a98ce278ee51c9f0f5d8749881edcf6bc2c03c1eff41e5703ec0c1b18f7c0",
+      "uncompressed_bytes": 756056
+    },
+    {
+      "path": "data/temperature/02-24.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 130860,
+      "sha256": "6f450589705316d7fc3edae58f20beee3242f5f6a10ef89541f763e1efe1071f",
+      "uncompressed_bytes": 761128
+    },
+    {
+      "path": "data/temperature/02-25.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 131408,
+      "sha256": "f570bd9cd265331691c08966fa666236600b6088baac3693f007cffe3096257e",
+      "uncompressed_bytes": 762159
+    },
+    {
+      "path": "data/temperature/02-26.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 131583,
+      "sha256": "3f79047e14946d7934e7cd20b600c8f931ea63537c30423c0d250a6cb9c9bc57",
+      "uncompressed_bytes": 763407
+    },
+    {
+      "path": "data/temperature/02-27.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 131911,
+      "sha256": "62a6dbb47b742b0753b1d105aab17ca3ebaa4fd61792dd511448b22cde421e18",
+      "uncompressed_bytes": 764994
+    },
+    {
+      "path": "data/temperature/02-28.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132285,
+      "sha256": "644643119918b7080f4d4968da494155ed1e25987e6e9ed0cc5f381597c991c0",
+      "uncompressed_bytes": 766932
+    },
+    {
+      "path": "data/temperature/02-29.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132303,
+      "sha256": "39a88aa8fb9ad6804060d8b26d8b09e61dda17f74d47e413addffb7e71a09012",
+      "uncompressed_bytes": 768028
+    },
+    {
+      "path": "data/temperature/03-01.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132047,
+      "sha256": "9caf0d571477a9a245397076b67b7838d86f1d3a1b97713e6886a5357b591541",
+      "uncompressed_bytes": 767843
+    },
+    {
+      "path": "data/temperature/03-02.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132298,
+      "sha256": "7d4ae39f843a57fe6dff2ab0f13f9347088a0be1665dfe239d6588797ec5d939",
+      "uncompressed_bytes": 768637
+    },
+    {
+      "path": "data/temperature/03-03.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132407,
+      "sha256": "38c5aaac50e04c26cc68c38d50912fb7e5d919beaa1b25e1ff8b9a66ae13ddea",
+      "uncompressed_bytes": 768077
+    },
+    {
+      "path": "data/temperature/03-04.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132432,
+      "sha256": "d9e144aec323765b8d8844907c884483478be539e992785ad10bf338aeb2e72c",
+      "uncompressed_bytes": 769268
+    },
+    {
+      "path": "data/temperature/03-05.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132538,
+      "sha256": "265e269f75686023675a767204a2bc3c7acd95386701e1c44b5b1b0053c13055",
+      "uncompressed_bytes": 768916
+    },
+    {
+      "path": "data/temperature/03-06.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132536,
+      "sha256": "3bac1defd08e75c78e18e52d3e988aa92fed75ae6b7f8bd56757c673f831f243",
+      "uncompressed_bytes": 768512
+    },
+    {
+      "path": "data/temperature/03-07.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132788,
+      "sha256": "ed90bdb53aac587d6cd86f2565fae5814369434d3c11565de8d3b255f982c7fb",
+      "uncompressed_bytes": 770407
+    },
+    {
+      "path": "data/temperature/03-08.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133095,
+      "sha256": "b89815e62810e3d581feaf8a8c9278ce420d9c30d8ae328ea768933b494010ec",
+      "uncompressed_bytes": 772683
+    },
+    {
+      "path": "data/temperature/03-09.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133180,
+      "sha256": "c0b8a1c965e45dc1a06d9f98d9348125355b99811e1d89691709a523d31b66de",
+      "uncompressed_bytes": 773828
+    },
+    {
+      "path": "data/temperature/03-10.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133486,
+      "sha256": "ce5b7faaa183af2dd3d031cfdcb4155e74d59ff47623861a184c367ba86d34ac",
+      "uncompressed_bytes": 773801
+    },
+    {
+      "path": "data/temperature/03-11.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133701,
+      "sha256": "dd71fcf9c83aa6bc9afb9ba308cd4cb32e9dc532d5365f5bac64151febed8ffe",
+      "uncompressed_bytes": 775839
+    },
+    {
+      "path": "data/temperature/03-12.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133810,
+      "sha256": "7397ad79ddf7ff39a9a769008999f365898e049390dcf64d30b607d7804a5840",
+      "uncompressed_bytes": 777518
+    },
+    {
+      "path": "data/temperature/03-13.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133937,
+      "sha256": "fad43e6be0442cc36416fbf6f1a10074ebcabb865635248748433b09de962718",
+      "uncompressed_bytes": 778471
+    },
+    {
+      "path": "data/temperature/03-14.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133927,
+      "sha256": "e696a0710370fa80e65fdad75284026369bad8ebd59fb1320e7408989cb6e1d4",
+      "uncompressed_bytes": 777876
+    },
+    {
+      "path": "data/temperature/03-15.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 134236,
+      "sha256": "fe2b146c883d99f1b090924e95dc36535c35d9b1b627f613281f198e78b64afc",
+      "uncompressed_bytes": 779269
+    },
+    {
+      "path": "data/temperature/03-16.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 134433,
+      "sha256": "5b0a45d829f1d12b96665053fa19048bfaf2756a3c4f73639bc89724b4613ec8",
+      "uncompressed_bytes": 779183
+    },
+    {
+      "path": "data/temperature/03-17.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 134971,
+      "sha256": "3397e9279bb3d8fe9edf5e96a0fa5b6c417aed16bd9a885a76f9c0877d04d871",
+      "uncompressed_bytes": 782531
+    },
+    {
+      "path": "data/temperature/03-18.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 135264,
+      "sha256": "8eedcb3bb61d33a868c14905ed048d7e9bb8dc0c5a272760a67b234ea8b6da16",
+      "uncompressed_bytes": 784784
+    },
+    {
+      "path": "data/temperature/03-19.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 135342,
+      "sha256": "efeef90a5b904953f45b48283674fce0a19cea43ff79d4de106965d95e82984b",
+      "uncompressed_bytes": 784776
+    },
+    {
+      "path": "data/temperature/03-20.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 135544,
+      "sha256": "0914a808b2218fbc5f81f9bc331e351c8cba2815674ae4d898cdb2d1d8050ab0",
+      "uncompressed_bytes": 787099
+    },
+    {
+      "path": "data/temperature/03-21.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 135661,
+      "sha256": "1b179938235ef93eb1218a7829c9116dcdc187f0719a161080d57da2ba2e5e0d",
+      "uncompressed_bytes": 787915
+    },
+    {
+      "path": "data/temperature/03-22.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 135858,
+      "sha256": "c200988aec8268187a032efd71dc119bb8a0fe29f8d154c275f13e27ee2c16ff",
+      "uncompressed_bytes": 788532
+    },
+    {
+      "path": "data/temperature/03-23.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 136155,
+      "sha256": "644efd4874c82e0b447fe3585512d9634c4d4624cc83710d074945e507a8c020",
+      "uncompressed_bytes": 788837
+    },
+    {
+      "path": "data/temperature/03-24.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 136403,
+      "sha256": "eecd575d1ea026d07835564231e1d0325485bed27cd997651201e06ee6899757",
+      "uncompressed_bytes": 790569
+    },
+    {
+      "path": "data/temperature/03-25.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 136564,
+      "sha256": "b0c500aa9620afd38aa58a84aae48396a12840bb5cc3b7ec8d2ffde5afb8e7b4",
+      "uncompressed_bytes": 791320
+    },
+    {
+      "path": "data/temperature/03-26.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 136864,
+      "sha256": "836bdc8f84966f1f9e959c19542cd37ab118869d17b021c55cfb4f82dff71929",
+      "uncompressed_bytes": 794503
+    },
+    {
+      "path": "data/temperature/03-27.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 137360,
+      "sha256": "f7cd223ce9c98e22d586e8b9056a3206a288f5cb4d3d8e854dc9fcf8cee402fb",
+      "uncompressed_bytes": 795669
+    },
+    {
+      "path": "data/temperature/03-28.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 137420,
+      "sha256": "7883d0c649dcc815504e1483bb16cde40c658682d03eb62450e599dbaf1ed718",
+      "uncompressed_bytes": 797262
+    },
+    {
+      "path": "data/temperature/03-29.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 137507,
+      "sha256": "91e3bba440f5b7d5c34fb4d7b20a371ceefac46c6d2a1610ce21fe6367737975",
+      "uncompressed_bytes": 797629
+    },
+    {
+      "path": "data/temperature/03-30.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 137710,
+      "sha256": "8d13c35f3a6df269077f723a38bc3b7558b3ee73a7ba6e3ff5b8c0ce3587c4e7",
+      "uncompressed_bytes": 799237
+    },
+    {
+      "path": "data/temperature/03-31.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138406,
+      "sha256": "31ba968eb7a52226cdc69cbebda69f11645d0eb33cb08e52157b690db9e0257d",
+      "uncompressed_bytes": 802097
+    },
+    {
+      "path": "data/temperature/04-01.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138896,
+      "sha256": "1604ed9a8c52effe6cdca8cf1e5d240e85fde11ab9704dbec4acdee9a01501e7",
+      "uncompressed_bytes": 804750
+    },
+    {
+      "path": "data/temperature/04-02.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138774,
+      "sha256": "2240d06f3c3b85def9118fad903fcb4f82e38a4eaf5d387d07eb84aa41265e61",
+      "uncompressed_bytes": 805337
+    },
+    {
+      "path": "data/temperature/04-03.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138197,
+      "sha256": "92b046df641338b0886ef60965dbc3e1e51bb4306f6b17b53f7157ba63c9723f",
+      "uncompressed_bytes": 802330
+    },
+    {
+      "path": "data/temperature/04-04.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138620,
+      "sha256": "8c532fc67faa5004567be9e3b59ccc531812c2484738bf54dbe1ba580013e40b",
+      "uncompressed_bytes": 805798
+    },
+    {
+      "path": "data/temperature/04-05.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138993,
+      "sha256": "90db56f414cd7316f9455ed4b7119d6fc3accdee5e091dfdf82b6b25396c1b1e",
+      "uncompressed_bytes": 805628
+    },
+    {
+      "path": "data/temperature/04-06.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139280,
+      "sha256": "c878675a7b71d5f15a745260447d8f05e38138b59c43d50ee95817c4d6ccff4d",
+      "uncompressed_bytes": 807821
+    },
+    {
+      "path": "data/temperature/04-07.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139636,
+      "sha256": "cbcd366db9b59758979eb1cc204cc2e73174aa3b62bdbf09fd39b02878ea01de",
+      "uncompressed_bytes": 810380
+    },
+    {
+      "path": "data/temperature/04-08.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139279,
+      "sha256": "99dfd4a01042830bb59a80ac80dcec7ac43190b175300dbb6b6e2867da518607",
+      "uncompressed_bytes": 809570
+    },
+    {
+      "path": "data/temperature/04-09.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139565,
+      "sha256": "b56445231bc9ddfb9a3c2429b54fabf0cc75f8df10acfcbcef7670c3772cee76",
+      "uncompressed_bytes": 810615
+    },
+    {
+      "path": "data/temperature/04-10.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139969,
+      "sha256": "520b26d7f86d844106fd9584b550a11729ae0f0c595180852b7be8aa2811c21e",
+      "uncompressed_bytes": 814335
+    },
+    {
+      "path": "data/temperature/04-11.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 140230,
+      "sha256": "7c75ea8c079e2d6c92571b5b240240c3c19a3308662fd6b927acac299c84a9e4",
+      "uncompressed_bytes": 813893
+    },
+    {
+      "path": "data/temperature/04-12.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139951,
+      "sha256": "3e64ea3f12e3b2caf12640bee6ffbf4a36264ec1a81654b1d99fe89c607a7c69",
+      "uncompressed_bytes": 815121
+    },
+    {
+      "path": "data/temperature/04-13.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 140171,
+      "sha256": "5fdf48d6dc965b3377f645d052804079bf30c85c3c91f2993c313a310a803afb",
+      "uncompressed_bytes": 815496
+    },
+    {
+      "path": "data/temperature/04-14.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139848,
+      "sha256": "1d8eca7442f256adaf75796a07f5b2440e7d5457336d51beb50c5276f543ade4",
+      "uncompressed_bytes": 813600
+    },
+    {
+      "path": "data/temperature/04-15.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 140159,
+      "sha256": "358af4da2d7810677ec19ae3443ff23aa8b973405593703f297d67042418a887",
+      "uncompressed_bytes": 815844
+    },
+    {
+      "path": "data/temperature/04-16.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139970,
+      "sha256": "950da741d921d0ee5ee997a368e5f0ae0c8f60527d937fb067f43bc0cf4e2a4b",
+      "uncompressed_bytes": 815008
+    },
+    {
+      "path": "data/temperature/04-17.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139840,
+      "sha256": "87b30663f128f3ffc7c0f874690412be60a875878dc2a0d746d5f46a6e960519",
+      "uncompressed_bytes": 814343
+    },
+    {
+      "path": "data/temperature/04-18.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139217,
+      "sha256": "3e560793cbc17f98128a12af2d162e74efe8e9386f6e1398a781b6466cd8c49c",
+      "uncompressed_bytes": 812308
+    },
+    {
+      "path": "data/temperature/04-19.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139303,
+      "sha256": "888419bdd041a46bfaf7ddf4ef002331ca3d871a9359a1035bcf2252b6057f8c",
+      "uncompressed_bytes": 812532
+    },
+    {
+      "path": "data/temperature/04-20.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139541,
+      "sha256": "738e748b9200563d8779189b0d1ed744bbe901830b9a7f0e4ef7e947860ae3bc",
+      "uncompressed_bytes": 813304
+    },
+    {
+      "path": "data/temperature/04-21.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139596,
+      "sha256": "b8434aecd36c272d83b3c328441482c753c638be6563fd50fdd869860b48f279",
+      "uncompressed_bytes": 815986
+    },
+    {
+      "path": "data/temperature/04-22.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139396,
+      "sha256": "df4d270f5f867c97ca86772c4b7df339cf24caa770b21c5dc6a7b9e49710b790",
+      "uncompressed_bytes": 812329
+    },
+    {
+      "path": "data/temperature/04-23.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139221,
+      "sha256": "da49be6708ffc37e7da24c7498437fbafe8ab729976c05616ad13f05d3194b8d",
+      "uncompressed_bytes": 813206
+    },
+    {
+      "path": "data/temperature/04-24.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138876,
+      "sha256": "f3aff11043dfc466bb8a5a53d488469e4cd5468cede246f9dedb4229c6702438",
+      "uncompressed_bytes": 809634
+    },
+    {
+      "path": "data/temperature/04-25.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138442,
+      "sha256": "31475828ff578946be9bdc60e561bbc3cbef6c5c4fecde7cd23fd48d7d87fa6a",
+      "uncompressed_bytes": 807460
+    },
+    {
+      "path": "data/temperature/04-26.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138358,
+      "sha256": "8904d403cbb97ae815de0b994536f9b370a95409d1a466bc06cd4a5cc0018c35",
+      "uncompressed_bytes": 806761
+    },
+    {
+      "path": "data/temperature/04-27.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138367,
+      "sha256": "a815213083d80bac31d2fa49b8d64d940bfe2333d4060db209f120c270a702aa",
+      "uncompressed_bytes": 807091
+    },
+    {
+      "path": "data/temperature/04-28.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 137856,
+      "sha256": "36afca0a60921ae6c549ec1eb02f89cab3e0c4e7ee49e1ee5bb243a3b669a672",
+      "uncompressed_bytes": 805222
+    },
+    {
+      "path": "data/temperature/04-29.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 137404,
+      "sha256": "e4f13a96b4f4371a18b85b9fb73a43ec4db3132142f7cabb2a765d9b9f78dcbe",
+      "uncompressed_bytes": 801546
+    },
+    {
+      "path": "data/temperature/04-30.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 137372,
+      "sha256": "daae352c2c7c9c60937b6aa6c85059744d81d937d3035dfe22f6a310eea48355",
+      "uncompressed_bytes": 802583
+    },
+    {
+      "path": "data/temperature/05-01.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 136824,
+      "sha256": "fc4f303fe8fef1c13ae89e2394c4b59677926fd5c24b88506d42cc18ace62b69",
+      "uncompressed_bytes": 800553
+    },
+    {
+      "path": "data/temperature/05-02.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 136219,
+      "sha256": "9ce4ff041c058fa5b3fdac450c0fec423216c988a24a9fc1d6eea6b2b9ff1364",
+      "uncompressed_bytes": 797941
+    },
+    {
+      "path": "data/temperature/05-03.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 135292,
+      "sha256": "e0ac855d681b6d7aaa119de4aa4d53eb8abc91838343c9253fd754064efae3de",
+      "uncompressed_bytes": 793384
+    },
+    {
+      "path": "data/temperature/05-04.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 134559,
+      "sha256": "b144aa38af9e7c3920afd21638a38c65eda5dc69e1ee6c2f1a7c4f70ce9775c0",
+      "uncompressed_bytes": 789248
+    },
+    {
+      "path": "data/temperature/05-05.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133995,
+      "sha256": "a7695fd5d36cc2d385fc787fa12d0973e9cfe26c5a05078d048d66fbd1180299",
+      "uncompressed_bytes": 788170
+    },
+    {
+      "path": "data/temperature/05-06.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133674,
+      "sha256": "0f3b9978386b0912a89fc76cfce2a59429173a20da883c55a556062c049660d8",
+      "uncompressed_bytes": 785457
+    },
+    {
+      "path": "data/temperature/05-07.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132946,
+      "sha256": "ab12feeedb0c513e4f9bf8d1cfb1a89f8d7e12e4cea694205a67eaff600ed3cc",
+      "uncompressed_bytes": 783765
+    },
+    {
+      "path": "data/temperature/05-08.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132263,
+      "sha256": "bc68cca74ca2363b3ce782b4768c686854036770bd718e3782e324e130508463",
+      "uncompressed_bytes": 780529
+    },
+    {
+      "path": "data/temperature/05-09.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 131807,
+      "sha256": "38f2290520fafe9c94bf9dc1d3ee719dc2ac8e3b9cfacefde47006a9a9de31a8",
+      "uncompressed_bytes": 776697
+    },
+    {
+      "path": "data/temperature/05-10.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 130764,
+      "sha256": "faf76ef6978a66ab972ac486985221bc1bdfb5129becb87bfde7dd2ad367f2d6",
+      "uncompressed_bytes": 772343
+    },
+    {
+      "path": "data/temperature/05-11.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 130474,
+      "sha256": "a77313227a09013ac7265e640ea34cd536ed887e3b046d109793f274ac48db8c",
+      "uncompressed_bytes": 770264
+    },
+    {
+      "path": "data/temperature/05-12.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 129609,
+      "sha256": "7ce15580f44493f9f7965acc9810152db2b15d27c95f73941f9c6da9c3895867",
+      "uncompressed_bytes": 766813
+    },
+    {
+      "path": "data/temperature/05-13.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 128669,
+      "sha256": "8f7b5b24bcef8bd61352f76d4ac27af4f5ac0f090596538555ec843199938c0b",
+      "uncompressed_bytes": 760913
+    },
+    {
+      "path": "data/temperature/05-14.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 128478,
+      "sha256": "fa6d0daf134d32b2bbdee4b6e4de3d066d1f4d992e18a4b1b0a4d3fe9b9cb222",
+      "uncompressed_bytes": 761223
+    },
+    {
+      "path": "data/temperature/05-15.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127629,
+      "sha256": "cb08891ca7b7611b35aa36884f705f1ae8b3453f3961f688ab8bda3af42dbad0",
+      "uncompressed_bytes": 755658
+    },
+    {
+      "path": "data/temperature/05-16.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127431,
+      "sha256": "2456ab302b0d32f707492730fd1c43b65ef9ea4ac46b835cb4979867cea9180a",
+      "uncompressed_bytes": 754616
+    },
+    {
+      "path": "data/temperature/05-17.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126443,
+      "sha256": "75d0b54166dd36663038f70bccc4338b2115fcfcb04e606dde7bbcd437961fbf",
+      "uncompressed_bytes": 751000
+    },
+    {
+      "path": "data/temperature/05-18.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126308,
+      "sha256": "14f2bb79c6567f367c5ef975af027fd8903569b2e4890020e2ebc52cf8864d5a",
+      "uncompressed_bytes": 749300
+    },
+    {
+      "path": "data/temperature/05-19.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 125542,
+      "sha256": "4b7fda32cc0bccfe953b837e5c1d40778feaf420700fc3b27412979ca2910bc8",
+      "uncompressed_bytes": 746631
+    },
+    {
+      "path": "data/temperature/05-20.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 125361,
+      "sha256": "4966ed787e9733c9d8981355c8e789b470ace2a8837525c1963173c03a02e598",
+      "uncompressed_bytes": 744771
+    },
+    {
+      "path": "data/temperature/05-21.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 124611,
+      "sha256": "531f99459ff394a5802a15adc5dbb37120c9c2225c0b1add1867fa34f7fa71ea",
+      "uncompressed_bytes": 742426
+    },
+    {
+      "path": "data/temperature/05-22.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 123717,
+      "sha256": "e3be437c409c722db27a645e2ab892cd113379cb7e374bb4d3a0e944fc3e44de",
+      "uncompressed_bytes": 737870
+    },
+    {
+      "path": "data/temperature/05-23.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 123135,
+      "sha256": "27ca2b4fc033e4633385edbec1e2dec7b2c0c32d739c79a0175b4efe276b7d5a",
+      "uncompressed_bytes": 734941
+    },
+    {
+      "path": "data/temperature/05-24.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 122585,
+      "sha256": "8b10b9a828fef8d245ce71f25e7ae124097828aea7eaae8a9293737582868057",
+      "uncompressed_bytes": 732800
+    },
+    {
+      "path": "data/temperature/05-25.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 122487,
+      "sha256": "e7bd5651b8ea136bab098f2e55f68f73f5a4ce2b4f666b903464a02c6a8cf31f",
+      "uncompressed_bytes": 732984
+    },
+    {
+      "path": "data/temperature/05-26.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 122203,
+      "sha256": "4703a5bc1345cc2523ddfda37ddddeb795269358351b6b9be988da609d288b68",
+      "uncompressed_bytes": 731654
+    },
+    {
+      "path": "data/temperature/05-27.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 121660,
+      "sha256": "e22515aed8f0533ec829a591bc812fa573ad8d892333519dfbe99c9258718c5e",
+      "uncompressed_bytes": 729315
+    },
+    {
+      "path": "data/temperature/05-28.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 120806,
+      "sha256": "14808b67e8b3d9226955df20185593463fb702fb8eac117fab1caaea3d8bc9a3",
+      "uncompressed_bytes": 725735
+    },
+    {
+      "path": "data/temperature/05-29.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 120019,
+      "sha256": "a08fd85639599c663af23ebd04c161adc624267da4e9d07cb38814ca7864c546",
+      "uncompressed_bytes": 722545
+    },
+    {
+      "path": "data/temperature/05-30.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 119601,
+      "sha256": "080ecfb79f70f704812f8fa9032c3ac2fb5651be44747927ef9b13f4ff053b02",
+      "uncompressed_bytes": 720178
+    },
+    {
+      "path": "data/temperature/05-31.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 119345,
+      "sha256": "9850ccd5addf1ae5a5916cf69c6a68302df69fba8b82431f6b033912d887cb67",
+      "uncompressed_bytes": 718578
+    },
+    {
+      "path": "data/temperature/06-01.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 118644,
+      "sha256": "00e0ab7e0564a39a0a49543d94fa407251f0c2f62470e348c808c4cea79702c4",
+      "uncompressed_bytes": 715693
+    },
+    {
+      "path": "data/temperature/06-02.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 117944,
+      "sha256": "c968d6bc4c0563d275facca1b61dde1e35fe08c97c2f1a75905090eb2ca9e3de",
+      "uncompressed_bytes": 711106
+    },
+    {
+      "path": "data/temperature/06-03.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 117156,
+      "sha256": "1e3925fa5e58da8272b0be0793dd9d14bc2656a3891bbc94f418c9f79b4dc006",
+      "uncompressed_bytes": 709510
+    },
+    {
+      "path": "data/temperature/06-04.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 116377,
+      "sha256": "08145993121db44dfc5cbeab0675f2378eb08c85275b22bbe9f1dadaee0a5282",
+      "uncompressed_bytes": 705241
+    },
+    {
+      "path": "data/temperature/06-05.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 115541,
+      "sha256": "9aaeb259b8825618988b69fd4817c025b39c3693d8f8525c8954ae5079e91310",
+      "uncompressed_bytes": 702037
+    },
+    {
+      "path": "data/temperature/06-06.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 114784,
+      "sha256": "b6ef5815b4ca506cd3e23dd2a5b51e3f9a79ec61bccdf3fc48f2843417c5ddb3",
+      "uncompressed_bytes": 697274
+    },
+    {
+      "path": "data/temperature/06-07.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 114279,
+      "sha256": "5e6bc1db2bc35b005138592a54ea550ee192aee4d491fb13cb85e62dbfbe5f7f",
+      "uncompressed_bytes": 695990
+    },
+    {
+      "path": "data/temperature/06-08.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 113286,
+      "sha256": "4128a27beffb6487ae93823891dddad0aa124c8084f702b92f5e3c1e13be43f5",
+      "uncompressed_bytes": 690734
+    },
+    {
+      "path": "data/temperature/06-09.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 113000,
+      "sha256": "31eddb319cb2223bd6a9c00c174b5de06f226f83f63199caf107c059904f7c9e",
+      "uncompressed_bytes": 688912
+    },
+    {
+      "path": "data/temperature/06-10.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 112343,
+      "sha256": "cd32f442f401ffc77d60c12b871f2d6bdbc3bb226223dfc6f626d5eb566161ea",
+      "uncompressed_bytes": 685612
+    },
+    {
+      "path": "data/temperature/06-11.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 111680,
+      "sha256": "e323d6364b7457fc52ba7f83259e74f1726fa8837356a3ff563bfad62f5567a4",
+      "uncompressed_bytes": 683897
+    },
+    {
+      "path": "data/temperature/06-12.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 110681,
+      "sha256": "b8973b08dc3d2ee064030f2f3f2f120325e67ec1e6389daed9b613bcca58d1fa",
+      "uncompressed_bytes": 679231
+    },
+    {
+      "path": "data/temperature/06-13.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 110297,
+      "sha256": "0a81b964992c5cfec117c7265e8d9899fe1d564d077d385e3a6a0317009219fe",
+      "uncompressed_bytes": 678701
+    },
+    {
+      "path": "data/temperature/06-14.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 110210,
+      "sha256": "98d6c0c75eef84151b122a42a42696192a64a116f0812edcbc4e9c83080babd9",
+      "uncompressed_bytes": 676121
+    },
+    {
+      "path": "data/temperature/06-15.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 109959,
+      "sha256": "9e385fdd1d2bca19ed31367570122a264443ed10813a8520e7c6cafe74793612",
+      "uncompressed_bytes": 676496
+    },
+    {
+      "path": "data/temperature/06-16.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 109734,
+      "sha256": "7443620ffd2953b0cbc650e6a7dedcc58c5402b97f2f43fa6d059ed74967d7fc",
+      "uncompressed_bytes": 675066
+    },
+    {
+      "path": "data/temperature/06-17.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 109444,
+      "sha256": "8938fc6a31c560f98bfb3a6cf196f229d4ccb8aa972235ea9e531d25cd942b92",
+      "uncompressed_bytes": 675077
+    },
+    {
+      "path": "data/temperature/06-18.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108809,
+      "sha256": "1612bb72498f1626f9d39c860c7e43e6ac8728afbb68aa2bf48ab3578a86b15b",
+      "uncompressed_bytes": 671609
+    },
+    {
+      "path": "data/temperature/06-19.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108516,
+      "sha256": "a0f62ef2efbd0aea0d7a4e6def5601ea14d4ec7ab1e2c8fc83d95ffcc3730f65",
+      "uncompressed_bytes": 669372
+    },
+    {
+      "path": "data/temperature/06-20.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108151,
+      "sha256": "e4385162c71ecca2544c7694a8a94f64b86e28a205658106a31114e633d1b366",
+      "uncompressed_bytes": 668375
+    },
+    {
+      "path": "data/temperature/06-21.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107894,
+      "sha256": "4e085c7b92040ad66fbb5b95cdf29970aae424416508097540d3296ff52ea722",
+      "uncompressed_bytes": 667516
+    },
+    {
+      "path": "data/temperature/06-22.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107589,
+      "sha256": "d4982e0f388f4c01030213af960caa9ec2a3e812189c66729108a5bdca0f2add",
+      "uncompressed_bytes": 665453
+    },
+    {
+      "path": "data/temperature/06-23.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107639,
+      "sha256": "04808f4a8d44bbcc6c5955efea0f77e898dad458b8af678763fc06cf660bd9dd",
+      "uncompressed_bytes": 665445
+    },
+    {
+      "path": "data/temperature/06-24.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107074,
+      "sha256": "de5d617f269c2a151c19218ee4b229933b3bd83e7ac3e58c2b4d550fc7882e87",
+      "uncompressed_bytes": 663956
+    },
+    {
+      "path": "data/temperature/06-25.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106806,
+      "sha256": "751daa796f999ae687c6fe4068bad6916d8bcdf386da28f9e6834b41bf32d355",
+      "uncompressed_bytes": 661527
+    },
+    {
+      "path": "data/temperature/06-26.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107077,
+      "sha256": "ee9b239c5b6b44378d4f177212cb214c0c840b4721e80dcd3d41f5073e75508c",
+      "uncompressed_bytes": 665512
+    },
+    {
+      "path": "data/temperature/06-27.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106947,
+      "sha256": "fe89406a44d941973bb302c38411514270840f5c1977d1b18df264932c04916d",
+      "uncompressed_bytes": 664048
+    },
+    {
+      "path": "data/temperature/06-28.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106887,
+      "sha256": "15efa9731a343296531465e3c293d9f292a65c0263efe5f16810b965284f1dbc",
+      "uncompressed_bytes": 663047
+    },
+    {
+      "path": "data/temperature/06-29.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106271,
+      "sha256": "c5aa435206ed91b93d39af09b5f6b5c10efd6e54a229cde15c7de008f2b40251",
+      "uncompressed_bytes": 658137
+    },
+    {
+      "path": "data/temperature/06-30.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 105991,
+      "sha256": "f114461aeec37a217b4dc842817e5e906d42f9e1a6c4bd2dba34cdb8dcd78181",
+      "uncompressed_bytes": 657355
+    },
+    {
+      "path": "data/temperature/07-01.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106039,
+      "sha256": "78e7642a15b348edc32a7cb8b4d1e7dbbf08ebfa5177ff6b536e9e46a9b2fb37",
+      "uncompressed_bytes": 658150
+    },
+    {
+      "path": "data/temperature/07-02.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106321,
+      "sha256": "5439492c48d8916fe301e94e95150dbfe707c209b243186d1a2d5a43c3bc25e1",
+      "uncompressed_bytes": 662775
+    },
+    {
+      "path": "data/temperature/07-03.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106294,
+      "sha256": "f9d400bd58c15bd2cc9343183cfbf49434bd7cf98d7d90f00f25232eb55cf9ec",
+      "uncompressed_bytes": 661052
+    },
+    {
+      "path": "data/temperature/07-04.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106233,
+      "sha256": "0c0112f34aba38f5b9f6d97b644b2b8976f2110e75e7cd3a69ecb84727f9a123",
+      "uncompressed_bytes": 659348
+    },
+    {
+      "path": "data/temperature/07-05.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106019,
+      "sha256": "bfebf0cbf5b3154aa6a2ecb057b90406fd8674984905a776008bcbb31b198d7f",
+      "uncompressed_bytes": 657366
+    },
+    {
+      "path": "data/temperature/07-06.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106132,
+      "sha256": "90e1b1de43b31420c4ea62f29a879d69e2e21db6e7e9f8359cf4f953526d2a7e",
+      "uncompressed_bytes": 657835
+    },
+    {
+      "path": "data/temperature/07-07.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 105982,
+      "sha256": "d34a7745251ebe386c831f68f9556e0acc5202774ce58aec44ece26e16b09264",
+      "uncompressed_bytes": 658460
+    },
+    {
+      "path": "data/temperature/07-08.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106142,
+      "sha256": "7bd20fb2190354e9db09e39dbe37d68a98f83adb27599af374f219e395236fa8",
+      "uncompressed_bytes": 658538
+    },
+    {
+      "path": "data/temperature/07-09.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106270,
+      "sha256": "9c58d786993a710e2791829420acbfab6229be3190923eb9b9e29e41008bf4aa",
+      "uncompressed_bytes": 659876
+    },
+    {
+      "path": "data/temperature/07-10.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106134,
+      "sha256": "02952b386f09a58ded1a9933f0a4051f44b42cebf68aa81fa2036b9379dcd1b0",
+      "uncompressed_bytes": 658692
+    },
+    {
+      "path": "data/temperature/07-11.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 105865,
+      "sha256": "7c9ad6ff6e9322374822744d761fd858131d1fef05bbd3ea8a28fa5e2cc246d8",
+      "uncompressed_bytes": 658147
+    },
+    {
+      "path": "data/temperature/07-12.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 105797,
+      "sha256": "12460e859143ddb5c7b4bd212536d6034c86a677a563df48883dbeb530131ebc",
+      "uncompressed_bytes": 657202
+    },
+    {
+      "path": "data/temperature/07-13.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106217,
+      "sha256": "1747a2a7a34ed9cc1c857303b4fc0ca245003208c9ede0d4fa03d4e9690dede6",
+      "uncompressed_bytes": 659257
+    },
+    {
+      "path": "data/temperature/07-14.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106288,
+      "sha256": "57c9ca4e8bac7c4fc8d9887bece28dd67adf9dee4b8fdcff5972a6bef94fa5f8",
+      "uncompressed_bytes": 659092
+    },
+    {
+      "path": "data/temperature/07-15.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106364,
+      "sha256": "37a7e5caa592856d51b7a7ce391d4c7df7d367143f5ef1f0196fc06a07300321",
+      "uncompressed_bytes": 659221
+    },
+    {
+      "path": "data/temperature/07-16.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106768,
+      "sha256": "7785fb9c89d855c18c32797dc16efc3dab45fea4fc023fc289efbe43cd53ea9e",
+      "uncompressed_bytes": 660545
+    },
+    {
+      "path": "data/temperature/07-17.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106868,
+      "sha256": "4c1da5fb07bad78a7072685ebfb231dd4008e574cc540c6f3bb73ce09a9eec7a",
+      "uncompressed_bytes": 660867
+    },
+    {
+      "path": "data/temperature/07-18.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106506,
+      "sha256": "0b530a5dcba37e7c2c12a541527eafa2d70a8a979a1f53353634ba99e0d3a319",
+      "uncompressed_bytes": 660848
+    },
+    {
+      "path": "data/temperature/07-19.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106166,
+      "sha256": "2d6bbdc640a04d22e9f092eebe1926ba53713be08cb977067a6515e4bce99ce1",
+      "uncompressed_bytes": 660030
+    },
+    {
+      "path": "data/temperature/07-20.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106294,
+      "sha256": "15008019e823ddd381f8ee6fccb2a797e002ce81000893190def73ab15fab454",
+      "uncompressed_bytes": 658732
+    },
+    {
+      "path": "data/temperature/07-21.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106465,
+      "sha256": "ee3f88b7d7636aecd2a928ab8c356eb594bd03421cf6d8f1d06534ecb6b51dd0",
+      "uncompressed_bytes": 659674
+    },
+    {
+      "path": "data/temperature/07-22.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106833,
+      "sha256": "2bd4b84d43e8926665c9228ffffdf8ff5994bc2accc39d3656cc6c76653cc34d",
+      "uncompressed_bytes": 661465
+    },
+    {
+      "path": "data/temperature/07-23.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106697,
+      "sha256": "566188ea5e65aa429cf3ebb8aeb5aadc2d81c320243588e8c336ac20f2a6ea94",
+      "uncompressed_bytes": 661885
+    },
+    {
+      "path": "data/temperature/07-24.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106924,
+      "sha256": "02d3cacae29f9426f045a4564442b071b19f8947b6d76756bee9f6436741bcf8",
+      "uncompressed_bytes": 663439
+    },
+    {
+      "path": "data/temperature/07-25.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106911,
+      "sha256": "ba08374504fcc8de1031655038f8d31b39d1603f5e49cb1d428a4ab2f4a0b1d7",
+      "uncompressed_bytes": 663717
+    },
+    {
+      "path": "data/temperature/07-26.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106554,
+      "sha256": "0e4d7d3b62d3382fb2188af7d3b791ace1a598e8ddf87b8c3fde04a1f4fde005",
+      "uncompressed_bytes": 659723
+    },
+    {
+      "path": "data/temperature/07-27.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106675,
+      "sha256": "82e9d78e7b011d6d1730108c11c26812e8396eb9c8dbcea0c434d777b013d5a8",
+      "uncompressed_bytes": 659635
+    },
+    {
+      "path": "data/temperature/07-28.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106916,
+      "sha256": "14b2178bb27ee85b6ff15354120351be7ebb8d8d685969318a54a52d8e9c83d0",
+      "uncompressed_bytes": 660818
+    },
+    {
+      "path": "data/temperature/07-29.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 106918,
+      "sha256": "a6e97bc4ef2d232e54965cb7c1f2fec8569db4c66e3ac8a0fd6b635a8b16428e",
+      "uncompressed_bytes": 660957
+    },
+    {
+      "path": "data/temperature/07-30.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107084,
+      "sha256": "1547fa4029053a720cbc1694835e0077ece2f9b0a356fbc89a9f1c41cd6bd519",
+      "uncompressed_bytes": 663470
+    },
+    {
+      "path": "data/temperature/07-31.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107456,
+      "sha256": "23f1d852c05f4d6fd06fb03922c19d4db02390cac022ed84a6ce8676242e4c8b",
+      "uncompressed_bytes": 665088
+    },
+    {
+      "path": "data/temperature/08-01.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107853,
+      "sha256": "b5b7e4d4a02e39ecf2879720528fa5bcea30b330b3efdf2c5085cec7eefd3891",
+      "uncompressed_bytes": 666797
+    },
+    {
+      "path": "data/temperature/08-02.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107863,
+      "sha256": "0936b868c149dc9684491e547656a61e9ab55bed96bdfa33ebb3faa0fccd24ad",
+      "uncompressed_bytes": 667070
+    },
+    {
+      "path": "data/temperature/08-03.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108201,
+      "sha256": "342ebcabc18570e5627621cbcc4c03a1b71e15873e94da95119339287feb5d8e",
+      "uncompressed_bytes": 668219
+    },
+    {
+      "path": "data/temperature/08-04.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108332,
+      "sha256": "fd9565d3c34474f3ebb79a7cec60f161490d2eb4362154141977d694b8cd7c4b",
+      "uncompressed_bytes": 668342
+    },
+    {
+      "path": "data/temperature/08-05.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108238,
+      "sha256": "4db7da94404dc6187a33993c6b0892c347c5ba7b898c8114dcdf65d458cb73b0",
+      "uncompressed_bytes": 668638
+    },
+    {
+      "path": "data/temperature/08-06.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108170,
+      "sha256": "c96e5d9ce8d4a4a482109a8f04023dffd5eebc0641b83545a9eb1c54f5ee56d6",
+      "uncompressed_bytes": 668676
+    },
+    {
+      "path": "data/temperature/08-07.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108251,
+      "sha256": "5e87acc71f6779364a1dedf806de64f9b7e431d93bc926603acbb4dbdd9679ee",
+      "uncompressed_bytes": 668203
+    },
+    {
+      "path": "data/temperature/08-08.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108369,
+      "sha256": "e27eb586912498114bd47752c71491a05d6e6e47eee284243c9d48781ebc0149",
+      "uncompressed_bytes": 668273
+    },
+    {
+      "path": "data/temperature/08-09.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108127,
+      "sha256": "0bcd3908cad91493a0bcd3f3527ccf873ce207d59512aef5202df685371f714c",
+      "uncompressed_bytes": 668169
+    },
+    {
+      "path": "data/temperature/08-10.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108067,
+      "sha256": "c3ef2efdbd5440c9d51d532f4078bbc440c5975434ce9ce4562f47c446aff9d7",
+      "uncompressed_bytes": 667847
+    },
+    {
+      "path": "data/temperature/08-11.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107936,
+      "sha256": "3eaeef83d164321fafda9cf6b9ca532b24b5059ce7a08316b7db42db739cd309",
+      "uncompressed_bytes": 666725
+    },
+    {
+      "path": "data/temperature/08-12.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107647,
+      "sha256": "b5e6b9a50abc37b593ec86ec32b67c8fff36d59f2a8aab743ce5435ff7b2c5d3",
+      "uncompressed_bytes": 665675
+    },
+    {
+      "path": "data/temperature/08-13.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107803,
+      "sha256": "3c21a7d949fab44ad6da8e462f5a570ef9db250772d31087d025474df62d6f13",
+      "uncompressed_bytes": 665708
+    },
+    {
+      "path": "data/temperature/08-14.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107433,
+      "sha256": "28440d699bc5605a06b1ec9e9990826124cfaff680a1ce5c89ff3d1b842967bf",
+      "uncompressed_bytes": 663582
+    },
+    {
+      "path": "data/temperature/08-15.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107387,
+      "sha256": "a5a82f7942fdc704aff92cc680bf5640c7ba45bb76ac88dd87daabb78af7e705",
+      "uncompressed_bytes": 664043
+    },
+    {
+      "path": "data/temperature/08-16.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107431,
+      "sha256": "4a5012651329172bfe1bf853ae002fec33b76fcccff0a2dbb896cdfad7fda367",
+      "uncompressed_bytes": 664039
+    },
+    {
+      "path": "data/temperature/08-17.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107457,
+      "sha256": "c9956e38281a8f89dc5009ac16d93ff166ee965ab322d587bb4e9286ae86037c",
+      "uncompressed_bytes": 664949
+    },
+    {
+      "path": "data/temperature/08-18.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107803,
+      "sha256": "f4d4889d254fb8e2c8971bbcd5a964123141fa56b9ad019823bef912340571e4",
+      "uncompressed_bytes": 667192
+    },
+    {
+      "path": "data/temperature/08-19.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107805,
+      "sha256": "3f06fd1825efcd835c457efe51504491850689c9e8ad5b8244948896645f1fd2",
+      "uncompressed_bytes": 667398
+    },
+    {
+      "path": "data/temperature/08-20.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108010,
+      "sha256": "94925eba5fb6f56131a39324d9a998ecd62acf204173b0d44a1b855189461c55",
+      "uncompressed_bytes": 666982
+    },
+    {
+      "path": "data/temperature/08-21.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108142,
+      "sha256": "d86cfaed3abb460a0176af465fde4c312ddf57f9baf1af8b9122612bec3f4def",
+      "uncompressed_bytes": 667173
+    },
+    {
+      "path": "data/temperature/08-22.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107920,
+      "sha256": "6d45b22626429bad0cb51210ae35439c973dbc6b863bdeabeb6bcfffbc5d07cb",
+      "uncompressed_bytes": 666171
+    },
+    {
+      "path": "data/temperature/08-23.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107920,
+      "sha256": "d4096aa21d61a662d4897b50c2a0ddd6dc3e638e979005ba5308196f2bb45406",
+      "uncompressed_bytes": 665506
+    },
+    {
+      "path": "data/temperature/08-24.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107829,
+      "sha256": "2373cf486681ca05deb7148e70ee12102eafea96e6efed32528061a15521a6b1",
+      "uncompressed_bytes": 666062
+    },
+    {
+      "path": "data/temperature/08-25.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 107835,
+      "sha256": "1fb16528f682bbccb6938316bea1d21eb6d615b7085f6c7afd8212795571de64",
+      "uncompressed_bytes": 665180
+    },
+    {
+      "path": "data/temperature/08-26.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108045,
+      "sha256": "9192c33cc5e39d417a8cfb2e8528fd8596587cf0aaddc18c92c2bd8fa848a68d",
+      "uncompressed_bytes": 666626
+    },
+    {
+      "path": "data/temperature/08-27.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108218,
+      "sha256": "22113a96361e326e43303ce6c855218668206f8aa490ad3e5c894c01f83a4ff9",
+      "uncompressed_bytes": 667880
+    },
+    {
+      "path": "data/temperature/08-28.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108309,
+      "sha256": "6a3a574e4a29c386f1096eb7949931a9e21a5020d88af1fff0a45329cb3bc5fe",
+      "uncompressed_bytes": 668931
+    },
+    {
+      "path": "data/temperature/08-29.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108380,
+      "sha256": "689142657ab0079aba6c5b77d223d0b250a232cfe37f88c7b482014e7d40ee5f",
+      "uncompressed_bytes": 667105
+    },
+    {
+      "path": "data/temperature/08-30.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108370,
+      "sha256": "596b63c77024b597001dd78e4e566207ec770bfc54dfe769ab1b50adc5cbeb63",
+      "uncompressed_bytes": 668235
+    },
+    {
+      "path": "data/temperature/08-31.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108602,
+      "sha256": "5eff47bbc5ff61856d3b6640883c21c74ef1323a76263ef61809a5bbbbd706f0",
+      "uncompressed_bytes": 668850
+    },
+    {
+      "path": "data/temperature/09-01.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108455,
+      "sha256": "1ea7ae1164dcfb8350fbb194edcdc6826fdb4565c4d6bbcb4f585c834bd7082f",
+      "uncompressed_bytes": 667042
+    },
+    {
+      "path": "data/temperature/09-02.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108403,
+      "sha256": "082894b04a5c4dedd703175f67a9ca2f870490fd27efa59178e16daecba8c677",
+      "uncompressed_bytes": 665415
+    },
+    {
+      "path": "data/temperature/09-03.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108287,
+      "sha256": "aa64b0d70755c7509e4a8bc9669cfb2af3740b2a885f2e57291269ef0a51a971",
+      "uncompressed_bytes": 666153
+    },
+    {
+      "path": "data/temperature/09-04.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108536,
+      "sha256": "e8c3276c6faffb42c84bac8c216ee8d762d3aa6bea9b805d100c3841202c8f01",
+      "uncompressed_bytes": 666625
+    },
+    {
+      "path": "data/temperature/09-05.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108586,
+      "sha256": "bddba52db9f5623862091fd1494562dd79df04d8ceca998ba750297ee4820be5",
+      "uncompressed_bytes": 669794
+    },
+    {
+      "path": "data/temperature/09-06.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108628,
+      "sha256": "48c11f2735ee74ddc04f6a16d4517368d23157984c991a3ccefe69a1ca37f050",
+      "uncompressed_bytes": 669309
+    },
+    {
+      "path": "data/temperature/09-07.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108677,
+      "sha256": "75876791cfe7ce50c3d170c4a9a987181081f8fd0b3ee31534936b3bd13c517f",
+      "uncompressed_bytes": 669525
+    },
+    {
+      "path": "data/temperature/09-08.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 108864,
+      "sha256": "5fa96345310386478337f457a2167380a40e00f55704c4ebe0f915b3e8e9dad0",
+      "uncompressed_bytes": 668596
+    },
+    {
+      "path": "data/temperature/09-09.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 109111,
+      "sha256": "6201a8a4779fd6468253ca82ffe7ec5ef173fdad85cb9bfa9524b82532cfb70b",
+      "uncompressed_bytes": 667867
+    },
+    {
+      "path": "data/temperature/09-10.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 109621,
+      "sha256": "4dc65e9ea879219571f4a3a6fc8b2319c11ceb9b6639d237df51abe111bf8b72",
+      "uncompressed_bytes": 670407
+    },
+    {
+      "path": "data/temperature/09-11.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 109663,
+      "sha256": "7729feb4f61552b5d67e1005302aeea646e6740806d18b23777dd69a409634ee",
+      "uncompressed_bytes": 671748
+    },
+    {
+      "path": "data/temperature/09-12.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 109858,
+      "sha256": "49f022799e9bd79ad632e3c0cb18019b638637ff5737f54743ed1267f5c38f0b",
+      "uncompressed_bytes": 672981
+    },
+    {
+      "path": "data/temperature/09-13.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 110001,
+      "sha256": "4a61b82d6b68b156a69979c977833c17143b6279a804eb34a5ccdc9b14de3cad",
+      "uncompressed_bytes": 671520
+    },
+    {
+      "path": "data/temperature/09-14.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 110079,
+      "sha256": "4702d782a615724bf9a07a0f63ca13bdeb1c42e805cdc24280f04a4179cf1d55",
+      "uncompressed_bytes": 670782
+    },
+    {
+      "path": "data/temperature/09-15.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 110624,
+      "sha256": "3241929930c40a77f08900e724824f42c19b311e2c4f9a2cc402ae7fd652d37c",
+      "uncompressed_bytes": 674468
+    },
+    {
+      "path": "data/temperature/09-16.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 110983,
+      "sha256": "14d59ff0d155d8d6f83da479d0fb719237eb13ee27a6f520f6686116be8a59b9",
+      "uncompressed_bytes": 677526
+    },
+    {
+      "path": "data/temperature/09-17.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 111287,
+      "sha256": "7450d8ef562695e3f2208f4dd2ad3f647c43fe3e6a41ded9619b309e0ce7d456",
+      "uncompressed_bytes": 676332
+    },
+    {
+      "path": "data/temperature/09-18.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 112089,
+      "sha256": "3744bdbcee955b6b88f06ab9aaafe48da69fafdc429e825b0f69876e4007c84d",
+      "uncompressed_bytes": 678726
+    },
+    {
+      "path": "data/temperature/09-19.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 112595,
+      "sha256": "3b8e6c0a729b3f7fcd106e935c17c94bc6958579160a8e7316ee2f76356c5ac0",
+      "uncompressed_bytes": 682864
+    },
+    {
+      "path": "data/temperature/09-20.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 112931,
+      "sha256": "e6a077e06b47e3da4f5f1b9eb316b6e035760b4c2087b1bc5f2df2cd2ef2accb",
+      "uncompressed_bytes": 682856
+    },
+    {
+      "path": "data/temperature/09-21.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 113438,
+      "sha256": "6146e542fc645fb671ba0b4c7db3612c500eec6a4764d203e0ebd7230e883ce4",
+      "uncompressed_bytes": 685442
+    },
+    {
+      "path": "data/temperature/09-22.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 114192,
+      "sha256": "ab6ccbcf65df0b7b4b984ffe9f37a7bb9cd8f8d8fc39ce4c4242949ad2ce37c4",
+      "uncompressed_bytes": 689068
+    },
+    {
+      "path": "data/temperature/09-23.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 114953,
+      "sha256": "5a0f0a0a3f8c8a541ce1fccf4e3dad8b64373e0358115a298c69aeb0d1afcf3d",
+      "uncompressed_bytes": 693295
+    },
+    {
+      "path": "data/temperature/09-24.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 115310,
+      "sha256": "6e3fca9f4229ff91e8c6f5eadfb6659220e2a1b66d5c93bb67fa89764d12149a",
+      "uncompressed_bytes": 694300
+    },
+    {
+      "path": "data/temperature/09-25.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 115877,
+      "sha256": "d28e7c1abe519eee649a68a5d8cb593ffc33f02ce9e2542b655fd3bbfb9119b6",
+      "uncompressed_bytes": 697448
+    },
+    {
+      "path": "data/temperature/09-26.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 116437,
+      "sha256": "e10d4548b06db0c67a8f4ff627ef734b3ce6d34ba30a9061982ac0dfd8e62e04",
+      "uncompressed_bytes": 698325
+    },
+    {
+      "path": "data/temperature/09-27.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 117081,
+      "sha256": "9a0e708913980851a33b96c4acc7cc81e6606d4692d39001a445e136eecf8b90",
+      "uncompressed_bytes": 700985
+    },
+    {
+      "path": "data/temperature/09-28.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 117809,
+      "sha256": "f4472a2799b717f3e315ecc96fc8a3c52c441e63a2296754775bf306af61854a",
+      "uncompressed_bytes": 706124
+    },
+    {
+      "path": "data/temperature/09-29.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 118434,
+      "sha256": "e64f3499282b809931aaa0335566e8511c2f84ac171d620262187518a556eed3",
+      "uncompressed_bytes": 707250
+    },
+    {
+      "path": "data/temperature/09-30.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 119269,
+      "sha256": "339c2fd9d33ef99b08ad8d28a93ac1450b22abce47b7c27499eb64b5cad65978",
+      "uncompressed_bytes": 711355
+    },
+    {
+      "path": "data/temperature/10-01.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 119554,
+      "sha256": "65aad31a80ca1487725782376996c6406651c80241eb13d22089623428442c42",
+      "uncompressed_bytes": 712996
+    },
+    {
+      "path": "data/temperature/10-02.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 119892,
+      "sha256": "8840de713b7f9230d939823bc419c11eb94c4c8ef755d72c91004dd4350527d1",
+      "uncompressed_bytes": 714122
+    },
+    {
+      "path": "data/temperature/10-03.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 120632,
+      "sha256": "8b6f39320b8a3ad8c55475c1844b6df8e9c2e362a2e0d0e7a2fdd4de6eb6e708",
+      "uncompressed_bytes": 716508
+    },
+    {
+      "path": "data/temperature/10-04.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 121129,
+      "sha256": "47313e7c744be2e437a23237ab5811ebb7b584d36f07e28d308d85934802e193",
+      "uncompressed_bytes": 719260
+    },
+    {
+      "path": "data/temperature/10-05.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 122149,
+      "sha256": "838bf5113450da9cdf48c907ebe1a9c79b51ddd05bc7c56ffd8c366e0f7464c3",
+      "uncompressed_bytes": 725430
+    },
+    {
+      "path": "data/temperature/10-06.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 122563,
+      "sha256": "de1d7ab05db4a0b51d4e00da85add7eed146d687987f4e545020163793cd4f6e",
+      "uncompressed_bytes": 724760
+    },
+    {
+      "path": "data/temperature/10-07.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 123412,
+      "sha256": "4a2158f57c2ec6cb7b1cafcbcb0b5ad90b5491f465d0278aaf176f2d516dfd20",
+      "uncompressed_bytes": 729504
+    },
+    {
+      "path": "data/temperature/10-08.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 123999,
+      "sha256": "b6b26a8456049a5286db4f5acdf2f6af92da611d5401cf735392159bdc19738e",
+      "uncompressed_bytes": 732120
+    },
+    {
+      "path": "data/temperature/10-09.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 125463,
+      "sha256": "be996878d668a2e33329b1ce9bb5f17667f8493a5d58378f379aef0a36cdd8ee",
+      "uncompressed_bytes": 738166
+    },
+    {
+      "path": "data/temperature/10-10.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 125382,
+      "sha256": "dabede253ae24cb681fe8560651b6f0133baf8b9e17b5effe86532d4bf6342d4",
+      "uncompressed_bytes": 737362
+    },
+    {
+      "path": "data/temperature/10-11.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 126258,
+      "sha256": "36a11f846a16169b1fa72ef9520a3b01b433d1ecbd17e55c900e44e23ec627b6",
+      "uncompressed_bytes": 742281
+    },
+    {
+      "path": "data/temperature/10-12.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 127695,
+      "sha256": "5a936100a84c73a9aa4e48cab9b8ae041cebe62a472c45743a05349c4e759f31",
+      "uncompressed_bytes": 749706
+    },
+    {
+      "path": "data/temperature/10-13.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 128584,
+      "sha256": "e61a1f2ca849ab332b093718093bb8f2ca81859f4b375e98a4640b658e295946",
+      "uncompressed_bytes": 754052
+    },
+    {
+      "path": "data/temperature/10-14.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 129594,
+      "sha256": "1c2779ece9024dce361eeed69e957bc31dbdc317db5ce65ed2120bb8b6dfcdf8",
+      "uncompressed_bytes": 755553
+    },
+    {
+      "path": "data/temperature/10-15.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 130490,
+      "sha256": "0d202170f66004783ec69c3fc8c1f261a30e38072a6f73a9388e9ce964706acd",
+      "uncompressed_bytes": 761140
+    },
+    {
+      "path": "data/temperature/10-16.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 131370,
+      "sha256": "b53a9cd809b83b0e4540a1559213015b1e0e01c2a5d24bec274b642ce40bef15",
+      "uncompressed_bytes": 767250
+    },
+    {
+      "path": "data/temperature/10-17.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132824,
+      "sha256": "64fe5ad7ea027c5eed263ecc267cc3d5a63df664cfe5ba64a133302b0b259645",
+      "uncompressed_bytes": 771670
+    },
+    {
+      "path": "data/temperature/10-18.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133560,
+      "sha256": "a218fbd92d8c61317f52b78ae8d4563dd35f0c08cf130aa2e3fd7cfd3932d938",
+      "uncompressed_bytes": 774664
+    },
+    {
+      "path": "data/temperature/10-19.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 134336,
+      "sha256": "b586822c0cede762759559f0d9fef73370dcee97846a1b5cc6a7a19f2d28b007",
+      "uncompressed_bytes": 780178
+    },
+    {
+      "path": "data/temperature/10-20.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 135377,
+      "sha256": "458eaf4eaf5ea8ede6636f33cc661aec64e0ea31db47e2ecf5e76882f5350147",
+      "uncompressed_bytes": 785427
+    },
+    {
+      "path": "data/temperature/10-21.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 136087,
+      "sha256": "77fa9b34f66da1774e3149adf058d9cd8bb62356d37a5c70eb33acb83a4d0a2e",
+      "uncompressed_bytes": 789603
+    },
+    {
+      "path": "data/temperature/10-22.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 136467,
+      "sha256": "065c3992b4a225a555567aa0a885b98da17819ee937fa96b44a17057f384a126",
+      "uncompressed_bytes": 790414
+    },
+    {
+      "path": "data/temperature/10-23.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 137165,
+      "sha256": "71d44ebc1941b9820ffd49dc2a02e8ee444f5456f376316fed9e2e8ae3a413d9",
+      "uncompressed_bytes": 792851
+    },
+    {
+      "path": "data/temperature/10-24.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138213,
+      "sha256": "078b1d6d6b67d7883addf37ab14829510743d7c5194a57de8fcdeed219f33500",
+      "uncompressed_bytes": 797694
+    },
+    {
+      "path": "data/temperature/10-25.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138500,
+      "sha256": "b6bbe87d476f8b5fd69071d4ca9042e9896d63fa656a5976d0e0317fd7d3b1af",
+      "uncompressed_bytes": 799048
+    },
+    {
+      "path": "data/temperature/10-26.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139153,
+      "sha256": "3f8c071e15c7f8ba2b5680b06807120391c858df0c63227ec24898cd49586cc1",
+      "uncompressed_bytes": 802979
+    },
+    {
+      "path": "data/temperature/10-27.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139743,
+      "sha256": "dfe09dc82a73e7dd3c51df4804f4f104ff3971268f109854dcd849291edd3ffb",
+      "uncompressed_bytes": 805060
+    },
+    {
+      "path": "data/temperature/10-28.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 140237,
+      "sha256": "a258bd5bbb122c4cab943466704e270826291390e44696e04e16501b70222d2e",
+      "uncompressed_bytes": 808697
+    },
+    {
+      "path": "data/temperature/10-29.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 140813,
+      "sha256": "eb24e374572bc06169cfbd5ab0cee7a089704e8b446f0922e21d5715537963e0",
+      "uncompressed_bytes": 810388
+    },
+    {
+      "path": "data/temperature/10-30.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 141693,
+      "sha256": "a7a843d08205cd29c894e479d13ad7628cd454276f997a739df5619df123b379",
+      "uncompressed_bytes": 814170
+    },
+    {
+      "path": "data/temperature/10-31.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142003,
+      "sha256": "c8403ed46717c9b75fa567a7a5f2eacdfd3fcc3c9bd78477663d803a9b8f0144",
+      "uncompressed_bytes": 816349
+    },
+    {
+      "path": "data/temperature/11-01.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 141930,
+      "sha256": "6635c9ecc0f64bdef8851c7d10e8074ec9c2cb6952d594946747abf496a89a21",
+      "uncompressed_bytes": 815173
+    },
+    {
+      "path": "data/temperature/11-02.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142206,
+      "sha256": "1f946f6cd86a2ff34da14811e995fcbe8a87f753b5c852d98125c1b2b7b196de",
+      "uncompressed_bytes": 816930
+    },
+    {
+      "path": "data/temperature/11-03.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142202,
+      "sha256": "8696a14a758d1b4d699a3a1dcc40078e633401b5108d96e00709cb412544dcfb",
+      "uncompressed_bytes": 816270
+    },
+    {
+      "path": "data/temperature/11-04.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142128,
+      "sha256": "c302441f0eb19878f9499d0abdee984408a8c2831faa7b73a4bfd8cf00de2894",
+      "uncompressed_bytes": 816201
+    },
+    {
+      "path": "data/temperature/11-05.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142540,
+      "sha256": "e61eb524fb607729fb5254b6f150f6cee4e533165b42f41dd33ecd979b686631",
+      "uncompressed_bytes": 818127
+    },
+    {
+      "path": "data/temperature/11-06.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142220,
+      "sha256": "ae1ba7ce438dd8c69eb0f905fbe30a46a2e0a1703e1dc52870bdae051a8da2b4",
+      "uncompressed_bytes": 817079
+    },
+    {
+      "path": "data/temperature/11-07.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142427,
+      "sha256": "13c189ac1cc3aca0d58038ba819dacb29bf677f8e0f1df1a71458a4001e4a4e5",
+      "uncompressed_bytes": 819459
+    },
+    {
+      "path": "data/temperature/11-08.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142188,
+      "sha256": "2d74d1f2ca76e478a89040e4ef32c45cf1a5ba89d37bb31dd2ac716f5ea684c0",
+      "uncompressed_bytes": 819083
+    },
+    {
+      "path": "data/temperature/11-09.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142283,
+      "sha256": "531e31fda05b65f46149dea6eb4a7cf2c2f7f713af9bb8a8832c92ac1d882f4f",
+      "uncompressed_bytes": 817331
+    },
+    {
+      "path": "data/temperature/11-10.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142410,
+      "sha256": "4c2b825e895d2304fbc0527f8909844ded8f7aa14a7d392475b5c3d840d2249a",
+      "uncompressed_bytes": 819828
+    },
+    {
+      "path": "data/temperature/11-11.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142110,
+      "sha256": "7da76467e31f7061c277ba71d2d5a2746568ad496f2ccbd7a76b9a833e4207aa",
+      "uncompressed_bytes": 818374
+    },
+    {
+      "path": "data/temperature/11-12.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142089,
+      "sha256": "50c9bb5c146c081ab1deb9442a1928573f03a3aa0f9afbd2a86bc566ff04cd89",
+      "uncompressed_bytes": 818212
+    },
+    {
+      "path": "data/temperature/11-13.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142580,
+      "sha256": "2ab616c588a7fc4d9fe96be7c497bd6236629555fe79bdf49194a3fd33e5a6b2",
+      "uncompressed_bytes": 819805
+    },
+    {
+      "path": "data/temperature/11-14.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142483,
+      "sha256": "0d8ccd7e5eccef4eb0d3a764511665c46b247a6f2f6b7d9e9bd6cfc872b62105",
+      "uncompressed_bytes": 818808
+    },
+    {
+      "path": "data/temperature/11-15.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142478,
+      "sha256": "342c80279d35b50f24d8772aa552a66e46aa904f6f04e66cbebd27857dab8ddd",
+      "uncompressed_bytes": 819491
+    },
+    {
+      "path": "data/temperature/11-16.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142964,
+      "sha256": "a20c81f6c22480e5f535f7da4c593d5d16aa9729d610719c6610938379a89890",
+      "uncompressed_bytes": 820838
+    },
+    {
+      "path": "data/temperature/11-17.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142821,
+      "sha256": "e4c63d20034f42ead5c4e95c36a5eb5c6adda830dd53244d0f45606fb87411f0",
+      "uncompressed_bytes": 819243
+    },
+    {
+      "path": "data/temperature/11-18.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142902,
+      "sha256": "4004b683cc227366a0046d304a44ab3052f60707b433f6ae50ae1e54913eb4c0",
+      "uncompressed_bytes": 819690
+    },
+    {
+      "path": "data/temperature/11-19.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142606,
+      "sha256": "086187618e10f43277c4bb86f3bc625fd3fb60a8eb11ec3454266ab8faab8578",
+      "uncompressed_bytes": 818761
+    },
+    {
+      "path": "data/temperature/11-20.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 141986,
+      "sha256": "cbae6231458430d09bd5b72dd57147628920ae2372370dba287ca938e2fb4ebe",
+      "uncompressed_bytes": 815632
+    },
+    {
+      "path": "data/temperature/11-21.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142171,
+      "sha256": "802e2bc44f7be547004ee3c7a7038c28af5a2f0ae4e1c6170b6c9ec71774a86e",
+      "uncompressed_bytes": 814811
+    },
+    {
+      "path": "data/temperature/11-22.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142728,
+      "sha256": "9c04ed51f6a79e408e8024eecb30c16283f03562b242ca40f8834c2c6dda49a7",
+      "uncompressed_bytes": 816433
+    },
+    {
+      "path": "data/temperature/11-23.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142606,
+      "sha256": "c53321205861739e3cbe39cd35403e9a34cd398cefa07acb3f71f9ba1a3ca12b",
+      "uncompressed_bytes": 816934
+    },
+    {
+      "path": "data/temperature/11-24.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142509,
+      "sha256": "359dcb1720850269249a74abcfd7fe19c4373c5ac19e0308c6390e9b4286b3fe",
+      "uncompressed_bytes": 816366
+    },
+    {
+      "path": "data/temperature/11-25.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 142116,
+      "sha256": "ab6089da87914dbb04d4b7167914dd9b15dc83060b43eb86940386fb78cd9388",
+      "uncompressed_bytes": 815417
+    },
+    {
+      "path": "data/temperature/11-26.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 141633,
+      "sha256": "1eb6c801821492290a732ea04451fc730e66d190a40fe44b5d0a5da90d3185e8",
+      "uncompressed_bytes": 811958
+    },
+    {
+      "path": "data/temperature/11-27.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 141045,
+      "sha256": "b1487e6170d9260d367d136375c1667f3473979404670cf2b961ce1305451b13",
+      "uncompressed_bytes": 809238
+    },
+    {
+      "path": "data/temperature/11-28.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 141143,
+      "sha256": "4a888127ca0abedd2b9fc8989835851a9b8a83cb42e6d82306a38ce354d36fda",
+      "uncompressed_bytes": 808661
+    },
+    {
+      "path": "data/temperature/11-29.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 140740,
+      "sha256": "f3afbc6e34e8fcaccc08b2faf6eddcafed72b037564259635de5e8fd965960f7",
+      "uncompressed_bytes": 807669
+    },
+    {
+      "path": "data/temperature/11-30.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 141224,
+      "sha256": "b42426ff50ca6a6465a60d96988be79d4c736cb75e1c104e8c7ed2824a823144",
+      "uncompressed_bytes": 808172
+    },
+    {
+      "path": "data/temperature/12-01.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 140741,
+      "sha256": "0cf3d7fdcc3f64bc8fb3df44ac0a13e2ae6886079e0b3dbcd56d54c937423961",
+      "uncompressed_bytes": 808007
+    },
+    {
+      "path": "data/temperature/12-02.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139814,
+      "sha256": "efd4a15b7c868c0d7906a56cdc79c593c7c009ba3a731818fde180910c523f61",
+      "uncompressed_bytes": 802841
+    },
+    {
+      "path": "data/temperature/12-03.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139846,
+      "sha256": "7daf7bc460ca1d684dd3ff8285bfde29c3e05844f3e0288b17e183fe873ab1db",
+      "uncompressed_bytes": 800603
+    },
+    {
+      "path": "data/temperature/12-04.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 139102,
+      "sha256": "047b484d979f4ac9f776b93f03c3df972387b8a2bbcd4935a42e07755e1af834",
+      "uncompressed_bytes": 796720
+    },
+    {
+      "path": "data/temperature/12-05.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138168,
+      "sha256": "c15865eee60ef7373fe026a7cdb47c10ec1f02a38df580fa390ec41bdc8027fc",
+      "uncompressed_bytes": 792533
+    },
+    {
+      "path": "data/temperature/12-06.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 138001,
+      "sha256": "67bc5a82b90a0e858809b6229f86072baae40a8462ba7b6be76c2644bf35c941",
+      "uncompressed_bytes": 793874
+    },
+    {
+      "path": "data/temperature/12-07.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 137789,
+      "sha256": "eb746700b935b4e76ee83752210d7ce8a4966c585ca426541f5065b208058d4f",
+      "uncompressed_bytes": 792350
+    },
+    {
+      "path": "data/temperature/12-08.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 137642,
+      "sha256": "35002b302001e150a677fdcf00d064a448d479c3a6c9df359bb63b199ede8065",
+      "uncompressed_bytes": 790298
+    },
+    {
+      "path": "data/temperature/12-09.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 136609,
+      "sha256": "6121301e68523e62eed3473657bbf68affbe31e13604cb331d5d154a3ff2023d",
+      "uncompressed_bytes": 785162
+    },
+    {
+      "path": "data/temperature/12-10.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 136260,
+      "sha256": "da961a6130439c75942fc3195c544b0f7ff094e46703b27fbb831d74a41aa7c6",
+      "uncompressed_bytes": 782604
+    },
+    {
+      "path": "data/temperature/12-11.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 135784,
+      "sha256": "a1b1ce8b3dd9c8ddb54d84018b6f3e7c00b802cf2b110eb3c5dee91a17ba4aa8",
+      "uncompressed_bytes": 781342
+    },
+    {
+      "path": "data/temperature/12-12.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 135124,
+      "sha256": "7cdc09ff1759556029d0068d4d7411b522da34719891fc4c79c606520702d1fa",
+      "uncompressed_bytes": 778759
+    },
+    {
+      "path": "data/temperature/12-13.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 134662,
+      "sha256": "f22c66a311136900fc600924014d712ae36d18caf0a550fb4dad332b6a1eeabe",
+      "uncompressed_bytes": 775838
+    },
+    {
+      "path": "data/temperature/12-14.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 134432,
+      "sha256": "718d239fec1ad04aca8d7bb9793c6f24948b9372d947949ec4b24d29d5c336c0",
+      "uncompressed_bytes": 774495
+    },
+    {
+      "path": "data/temperature/12-15.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 134363,
+      "sha256": "fc807322391a1960f975a06adcbbce93c766655b2050c18d1a819f5853658356",
+      "uncompressed_bytes": 774524
+    },
+    {
+      "path": "data/temperature/12-16.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133953,
+      "sha256": "3fc795c1b9d714e7b1f135f2de1956621aa9bc52256dd085733ddec4fd1129a5",
+      "uncompressed_bytes": 772276
+    },
+    {
+      "path": "data/temperature/12-17.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133963,
+      "sha256": "31975ce5a1753580be5da78dab6e0ad3ad5b2c4d85ce8ebd8c4829d63f966047",
+      "uncompressed_bytes": 770944
+    },
+    {
+      "path": "data/temperature/12-18.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133564,
+      "sha256": "a6e155582b3ccaeefd66ae53e1f9d6841daff3a543e1322aff024b5644154086",
+      "uncompressed_bytes": 769829
+    },
+    {
+      "path": "data/temperature/12-19.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 133073,
+      "sha256": "29a89442b516374d73a839d5b77061124660e9fc2ebb005c335334ca652da1b9",
+      "uncompressed_bytes": 766351
+    },
+    {
+      "path": "data/temperature/12-20.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132754,
+      "sha256": "5cff87373b9bb6a7f04c26930b01f965bc2cd0e1ac492ad8741413368090a900",
+      "uncompressed_bytes": 764609
+    },
+    {
+      "path": "data/temperature/12-21.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132647,
+      "sha256": "afc4f52f940fc9062bf348fa07b9a05ad23b9dd21b1968e7529f98a710bf671f",
+      "uncompressed_bytes": 764436
+    },
+    {
+      "path": "data/temperature/12-22.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132577,
+      "sha256": "6dd97e3996a412696b6bffdc000a1b5208273f8c1711ab25ee52b49edfee90e6",
+      "uncompressed_bytes": 761802
+    },
+    {
+      "path": "data/temperature/12-23.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 132006,
+      "sha256": "24f2a922867660485420696f6c9ea0031e0c803097d53343a33fb138657b99cf",
+      "uncompressed_bytes": 760485
+    },
+    {
+      "path": "data/temperature/12-24.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 131751,
+      "sha256": "f33c21119217bf34a47c2927fdd1ad3fdaacb968b23172bcd6a8217e6f9070d9",
+      "uncompressed_bytes": 759056
+    },
+    {
+      "path": "data/temperature/12-25.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 131611,
+      "sha256": "7e3eec29189944ca3beb11dd0238e4dc34a81cbdf843b709821aaac777dfafc7",
+      "uncompressed_bytes": 758911
+    },
+    {
+      "path": "data/temperature/12-26.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 131282,
+      "sha256": "6302a8ea63edb6b7d17bde0d74aecd66fab0c7d52502c3dfa22af804ef1e57d5",
+      "uncompressed_bytes": 757598
+    },
+    {
+      "path": "data/temperature/12-27.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 131106,
+      "sha256": "a86a62d0a00f6e5e1bc57e2f1fff65bfd3351eb75d3709c9b78db3a25143ef75",
+      "uncompressed_bytes": 757060
+    },
+    {
+      "path": "data/temperature/12-28.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 130840,
+      "sha256": "b9003c59d7492f6a9e8117abd3224efd247116a0c5427795d2d6b3ffda832a55",
+      "uncompressed_bytes": 754464
+    },
+    {
+      "path": "data/temperature/12-29.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 130580,
+      "sha256": "c4d6e1c5bc7f404c3ab98ca75d1c927b9f8e3aa005e5aa638d3556c90ff5afb2",
+      "uncompressed_bytes": 753313
+    },
+    {
+      "path": "data/temperature/12-30.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 130262,
+      "sha256": "416b9b1d3bcd4065294631986b0a62d53fde4a666d036415e503e7cbe58057b8",
+      "uncompressed_bytes": 750974
+    },
+    {
+      "path": "data/temperature/12-31.json.gz",
+      "mime_type": "application/gzip",
+      "bytes": 130379,
+      "sha256": "44d32492da771bbde20a56308338dc68e35abe5d2667f9c85f1f99eef58dfccb",
+      "uncompressed_bytes": 753346
+    }
+  ],
+  "allowed_historical_binary_assets": [
     {
       "path": "data/temperature/01-01.json.gz",
       "mime_type": "application/gzip",
@@ -2993,7 +5564,6 @@
       "uncompressed_bytes": 683975
     }
   ],
-  "allowed_historical_binary_assets": [],
   "allowed_vendored_files": [
     {
       "path": "vendor/maplibre-gl-LICENSE.txt",
@@ -3057,7 +5627,7 @@
   "max_file_bytes": 250000,
   "required_checkout_sha": "3d3c42e5aac5ba805825da76410c181273ba90b1",
   "large_text_files": {
-    "release-allowlist.json": 180000,
+    "release-allowlist.json": 300000,
     "release-manifest.json": 180000,
     "vendor/maplibre-gl-shared.mjs": 520000,
     "vendor/maplibre-gl.mjs": 590000,

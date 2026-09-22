@@ -1,11 +1,12 @@
-import { expandGrid, expandDay, createTemperatureLayer, lookupCell, binLabel, paletteColor } from "./temperature-layer.js";
+import { expandGrid, createTemperatureLayer, lookupCell, binLabel, paletteColor } from "./temperature-layer.js";
+import { decodeDisplayDay, unpackRoadClasses, roadClassLabel, validRoadClassContract } from "./temperature-display-data.js";
 
 const $ = (id) => document.getElementById(id);
 const ROOT = "./data/temperature/";
 
 export async function checkedJSON(record) {
   if (!/^(?:grid\.json|\d{2}-\d{2}\.json\.gz)$/.test(record.url)) throw new Error("Invalid data path");
-  const response = await fetch(ROOT + record.url);
+  const response = await fetch(ROOT + record.url, { cache: "no-cache" });
   if (!response.ok) throw new Error("Data unavailable");
   const bytes = await response.arrayBuffer();
   if (bytes.byteLength !== record.bytes) throw new Error("Data size mismatch");
@@ -18,7 +19,7 @@ export async function checkedJSON(record) {
   return JSON.parse(new TextDecoder().decode(decoded));
 }
 
-export function initTemperature(map) {
+export function initTemperature(map, hooks = {}) {
   const legend = document.querySelector(".legend-gradient").getContext("2d");
   for (let bin = 1; bin <= 81; bin++) {
     legend.fillStyle = paletteColor(bin); legend.fillRect((bin - 1) * 4, 0, 4, 18);
@@ -27,7 +28,7 @@ export function initTemperature(map) {
   const status = $("temperatureStatus"), label = $("mapTemperatureLabel"), point = $("temperaturePoint");
   const controls = [date, month, day, $("previousDay"), $("nextDay"), $("playYear")];
   const cache = new Map(), pending = new Map();
-  let manifest, grid, layer, bins, selected = 14, displayed = -1, request = 0;
+  let manifest, grid, layer, bins, roadClasses, selected = 14, displayed = -1, request = 0;
   let playing = false, preparing = false, animation = 0, selectedPoint = null, playbackGeneration = 0;
   let loadState = "loading";
   const showStatus = (text, state = "ready") => { status.textContent = text; status.dataset.state = state; };
@@ -46,7 +47,7 @@ export function initTemperature(map) {
     if (loadState === "error") { point.textContent = "選択地点：通信またはデータ確認に失敗しました"; return; }
     if (displayed !== selected || !bins) { point.textContent = "選択地点：気温を読み込み中"; return; }
     const index = lookupCell(grid, selectedPoint.lng, selectedPoint.lat);
-    point.textContent = `選択地点（${manifest.days[displayed].replace("-", "/")}）：${index < 0 ? "未収録の格子です" : bins[index] === 0 ? "欠測（推定に必要な観測が不足）" : binLabel(bins[index])}。独自内挿の参考値です。`;
+    point.textContent = `選択地点（${manifest.days[displayed].replace("-", "/")}）：${index < 0 ? "未収録の格子です" : bins[index] === 0 ? "欠測（推定に必要な観測が不足）" : binLabel(bins[index])}。道路着色：${roadClassLabel(index < 0 ? 0 : roadClasses[index])}。独自内挿の参考値です。`;
   }
   function syncDate() {
     const [m, d] = manifest.days[selected].split("-").map(Number);
@@ -63,7 +64,7 @@ export function initTemperature(map) {
     if (pending.has(index)) return pending.get(index);
     const task = checkedJSON(manifest.files[index]).then((data) => {
       if (data.day !== manifest.days[index]) throw new Error("Date mismatch");
-      const decoded = expandDay(data, grid.count);
+      const decoded = decodeDisplayDay(data, grid.count);
       cache.set(index, decoded);
       // Normal browsing retains only a month. Playback explicitly loads all days.
       if (!preparing && !playing && cache.size > 40) cache.delete(cache.keys().next().value);
@@ -74,10 +75,11 @@ export function initTemperature(map) {
   }
   function show(index, data) {
     loadState = "ready";
-    bins = data; displayed = index;
-    layer.setBins(data); layer.setVisible($("temperatureToggle").checked);
+    bins = data.bins; roadClasses = unpackRoadClasses(data); displayed = index;
+    layer.setBins(bins); layer.setVisible($("temperatureToggle").checked);
+    hooks.onDay?.(roadClasses, manifest.days[index]);
     label.textContent = `${manifest.days[index].replace("-", "月")}日 · 平均最低気温（独自算出）`;
-    if (!$("temperatureToggle").checked) label.textContent += " · 非表示";
+    if (!$("temperatureToggle").checked) label.textContent += " · 気温面は非表示";
     $("map").dataset.temperatureDay = manifest.days[index];
     $("map").dataset.temperatureCells = String(grid.count);
     refreshPoint();
@@ -90,7 +92,7 @@ export function initTemperature(map) {
     $("retryTemperature").hidden = true;
     if (!cache.has(selected)) {
       loadState = "loading";
-      layer.setVisible(false); bins = null;
+      layer.setVisible(false); bins = null; roadClasses = null; hooks.onUnavailable?.("loading");
       label.textContent = `${manifest.days[selected].replace("-", "月")}日 · 読み込み中`;
       showStatus("選択日の気温を読み込んでいます", "loading"); refreshPoint();
     }
@@ -101,7 +103,7 @@ export function initTemperature(map) {
       showStatus("1km格子・独自内挿。クリック／タップで気温帯を確認");
     } catch {
       if (token !== request) return;
-      stop(); layer.setVisible(false); bins = null;
+      stop(); layer.setVisible(false); bins = null; roadClasses = null; hooks.onUnavailable?.("error");
       loadState = "error";
       label.textContent = "気温データを表示できません";
       showStatus("気温を読み込めません。道路は引き続き操作できます", "error");
@@ -155,12 +157,13 @@ export function initTemperature(map) {
     $("retryTemperature").hidden = true;
     const started = performance.now();
     try {
-      const response = await fetch(ROOT + "manifest.json");
+      const response = await fetch(ROOT + "manifest.json", { cache: "no-cache" });
       if (!response.ok) throw new Error("Manifest unavailable");
       manifest = await response.json();
-      if (manifest.schema_version !== 1 || manifest.cell_count !== 387717 || manifest.bin_min !== -40 || manifest.bin_step !== 1 || manifest.bin_count !== 81 || manifest.missing_bin !== 0 || manifest.days.length !== 366) throw new Error("Invalid manifest");
+      if (manifest.schema_version !== 1 || manifest.cell_count !== 387717 || manifest.bin_min !== -40 || manifest.bin_step !== 1 || manifest.bin_count !== 81 || manifest.missing_bin !== 0 || manifest.days.length !== 366 || !validRoadClassContract(manifest.road_classes)) throw new Error("Invalid manifest");
       if (manifest.files.length !== 366 || manifest.files.some((f, i) => f.day !== manifest.days[i])) throw new Error("Invalid calendar");
       grid = expandGrid(await checkedJSON(manifest.grid));
+      hooks.onGrid?.(grid);
       layer = createTemperatureLayer(grid);
       map.addLayer(layer, "general-road-casing");
       layer.setOpacity(Number($("temperatureOpacity").value) / 100);
@@ -171,6 +174,7 @@ export function initTemperature(map) {
     } catch {
       if (map.getLayer("temperature-mesh")) map.removeLayer("temperature-mesh");
       layer = null;
+      bins = null; roadClasses = null; hooks.onUnavailable?.("error");
       loadState = "error";
       showStatus("気温を準備できませんでした。道路は引き続き操作できます", "error");
       label.textContent = "気温は未表示"; $("retryTemperature").hidden = false;
@@ -188,7 +192,10 @@ export function initTemperature(map) {
   $("playYear").addEventListener("click", play);
   $("retryTemperature").addEventListener("click", () => layer ? select(selected) : start());
   $("temperatureToggle").addEventListener("change", () => {
-    if (layer && bins) show(displayed, bins);
+    if (layer && bins) {
+      layer.setVisible($("temperatureToggle").checked);
+      label.textContent = `${manifest.days[displayed].replace("-", "月")}日 · 平均最低気温（独自算出）${$("temperatureToggle").checked ? "" : " · 気温面は非表示"}`;
+    }
   });
   $("temperatureOpacity").addEventListener("input", (event) => {
     $("opacityValue").textContent = `${event.target.value}%`;
@@ -199,7 +206,7 @@ export function initTemperature(map) {
     point.textContent = "地図をクリックすると、その格子の気温帯を確認できます。";
   });
   map.on("click", (event) => {
-    if (!grid || !layer || !$("temperatureToggle").checked) return;
+    if (!grid || !layer) return;
     selectedPoint = event.lngLat; $("clearTemperaturePoint").hidden = false; refreshPoint();
   });
   document.addEventListener("visibilitychange", () => { if (document.hidden) stop(); });

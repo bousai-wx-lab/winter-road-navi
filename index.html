@@ -9,8 +9,8 @@
     <meta name="description" content="1991〜2020年の日別最低気温を独自内挿した1kmメッシュと道路を重ね、季節ごとの寒さの傾向を確認できます。予報や凍結判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20260922-mesh1">
-    <script type="module" src="./app.js" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20260922-roads1">
+    <script type="module" src="./app.js?v=20260922-roads1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -83,13 +83,21 @@
             <label class="layer-toggle highway-toggle">
               <input id="highwayToggle" type="checkbox" checked>
               <span class="legend-line highway-line" aria-hidden="true"></span>
-              <span><strong>高速道路</strong><small>氷色の太い線</small></span>
+              <span><strong>高速道路</strong><small>太い線。5℃超は青緑色</small></span>
             </label>
             <label class="layer-toggle general-toggle">
               <input id="generalToggle" type="checkbox" checked>
               <span class="legend-line general-line" aria-hidden="true"></span>
-              <span><strong>一般道路</strong><small>濃い青の線。拡大すると細い道路も表示</small></span>
+              <span><strong>一般道路</strong><small>細い線。5℃超は青色。拡大で細街路も表示</small></span>
             </label>
+            <div class="road-temperature-legend" aria-label="道路の最低気温の色分け">
+              <span><i class="road-red" aria-hidden="true"></i>0℃以下</span>
+              <span><i class="road-orange" aria-hidden="true"></i>0℃超〜2℃</span>
+              <span><i class="road-yellow" aria-hidden="true"></i>2℃超〜5℃</span>
+              <span><i class="road-missing" aria-hidden="true"></i>気温なし</span>
+            </div>
+            <p class="road-temperature-note">線の色は1km格子の気温区分です。路面凍結の判定ではありません。</p>
+            <p id="roadTemperatureStatus" class="road-temperature-note" role="status">道路の着色を準備しています</p>
           </section>
         </div>
 

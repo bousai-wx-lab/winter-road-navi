@@ -19,6 +19,20 @@ CELL_COUNT = 387717
 MISSING_COUNT = 4220
 MAX_JSON_BYTES = 16_000_000
 MAX_DAILY_JSON_BYTES = 2_000_000
+ROAD_CLASSES = [
+    {"id": 0, "meaning": "missing"},
+    {"id": 1, "lower_exclusive_c": 5, "upper_inclusive_c": None, "color": "original"},
+    {"id": 2, "lower_exclusive_c": 2, "upper_inclusive_c": 5, "color": "yellow"},
+    {"id": 3, "lower_exclusive_c": 0, "upper_inclusive_c": 2, "color": "orange"},
+    {"id": 4, "lower_exclusive_c": None, "upper_inclusive_c": 0, "color": "red"},
+]
+# A 1 C mesh color cannot resolve an exact 0/2/5 C threshold. Both road
+# classes are possible only within the three corresponding boundary bins.
+ROAD_CLASSES_BY_BIN = tuple(
+    (0,) if b == 0 else (4,) if b <= 40 else (3, 4) if b == 41 else
+    (3,) if b == 42 else (2, 3) if b == 43 else (2,) if b <= 45 else
+    (1, 2) if b == 46 else (1,) for b in range(82)
+)
 
 
 def require(condition, message):
@@ -62,11 +76,11 @@ def decode_temperature_gzip(data, expected_raw_bytes):
     return value
 
 
-def validate_temperature_gzip(path_label, data, record):
+def validate_temperature_gzip(path_label, data, record, *, allow_legacy_mesh_only=False):
     match = re.fullmatch(r"data/temperature/(\d{2}-\d{2})\.json\.gz", path_label)
     require(match is not None and match[1] in DAYS, "invalid daily gzip path")
     value = decode_temperature_gzip(data, record.get("uncompressed_bytes"))
-    validate_day(value, match[1], CELL_COUNT, MISSING_COUNT)
+    validate_day(value, match[1], CELL_COUNT, MISSING_COUNT, require_road=not allow_legacy_mesh_only)
 
 
 def validate_metadata(value):
@@ -128,8 +142,10 @@ def validate_grid(grid, count):
     require(total == count, "grid runs do not cover cell count")
 
 
-def validate_day(value, day, count, missing_count):
-    require(set(value) == {"day", "cell_count", "runs"}, "unexpected daily fields")
+def validate_day(value, day, count, missing_count, *, require_road=True):
+    expected_fields = {"day", "cell_count", "runs", "road_runs"}
+    legacy_mesh_only = not require_road and set(value) == {"day", "cell_count", "runs"}
+    require(legacy_mesh_only or set(value) == expected_fields, "unexpected daily fields")
     require(value["day"] == day, "daily calendar key mismatch")
     require(integer(value["cell_count"]) and value["cell_count"] == count, "daily cell count mismatch")
     runs = value["runs"]
@@ -145,6 +161,35 @@ def validate_day(value, day, count, missing_count):
             missing += length
     require(total == count, "daily runs do not cover cell count")
     require(missing == missing_count, "daily missing count mismatch")
+    if legacy_mesh_only:
+        return
+    road_runs = value["road_runs"]
+    require(type(road_runs) is list and bool(road_runs) and len(road_runs) % 2 == 0, "invalid road runs")
+    total, missing = 0, 0
+    for i in range(0, len(road_runs), 2):
+        road_class, length = road_runs[i:i+2]
+        require(integer(road_class) and 0 <= road_class <= 4, "invalid road class")
+        require(integer(length) and 0 < length <= count, "invalid road run length")
+        total += length
+        require(total <= count, "road runs exceed cell count")
+        if road_class == 0:
+            missing += length
+    require(total == count, "road runs do not cover cell count")
+    require(missing == missing_count, "road missing count mismatch")
+    i, j, left, right = 0, 0, runs[1], road_runs[1]
+    while i < len(runs) and j < len(road_runs):
+        require(road_runs[j] in ROAD_CLASSES_BY_BIN[runs[i]], "road class/temperature bin or missing position mismatch")
+        consumed = min(left, right)
+        left, right = left - consumed, right - consumed
+        if left == 0:
+            i += 2
+            if i < len(runs):
+                left = runs[i+1]
+        if right == 0:
+            j += 2
+            if j < len(road_runs):
+                right = road_runs[j+1]
+    require(i == len(runs) and j == len(road_runs), "road/temperature coverage mismatch")
 
 
 def verify(manifest_path, *, root=ROOT, expected_count=CELL_COUNT, expected_missing=MISSING_COUNT, expected_days=DAYS):
@@ -158,6 +203,8 @@ def verify(manifest_path, *, root=ROOT, expected_count=CELL_COUNT, expected_miss
         require(integer(manifest.get(key)) and manifest[key] == value, "invalid manifest " + key)
     require(manifest.get("days") == list(expected_days), "manifest calendar incomplete or unordered")
     require(type(manifest.get("source_id")) is str and bool(manifest["source_id"].strip()), "source identity missing")
+    require(json.dumps(manifest.get("road_classes"), sort_keys=True) == json.dumps(ROAD_CLASSES, sort_keys=True),
+            "invalid road class definitions")
     for key in ("source_snapshot_id", "generated_at_utc", "unit", "baseline", "attribution", "method"):
         if key in manifest:
             require(type(manifest[key]) is str and bool(manifest[key].strip()), "invalid public metadata " + key)

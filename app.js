@@ -1,6 +1,7 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js";
-import { initTemperature } from "./temperature-control.js";
+import { initTemperature } from "./temperature-control.js?v=20260922-roads1";
+import { createRoadTemperature } from "./road-temperature.js";
 
 maplibregl.setWorkerUrl(new URL("./vendor/maplibre-gl-worker.mjs", import.meta.url).href);
 
@@ -10,6 +11,14 @@ const details = document.querySelector("#roadDetails");
 const roadType = document.querySelector("#roadType");
 const roadNote = document.querySelector("#roadNote");
 const interactiveLayers = ["highway", "general-road"];
+let roadTemperature = null;
+const roadTemperatureStatus = document.querySelector("#roadTemperatureStatus");
+function setRoadTemperatureState(state) {
+  roadTemperatureStatus.dataset.state = state;
+  roadTemperatureStatus.textContent = state === "ready" ? "選択日の格子気温で路線を着色しています"
+    : state === "loading" ? "道路の着色を準備中（未準備の区間は従来色）"
+    : "道路の気温着色を表示できません。従来色の道路を表示します";
+}
 
 if (window.matchMedia("(max-width: 760px)").matches) {
   const panel = document.querySelector(".control-panel");
@@ -65,10 +74,12 @@ document.querySelector("#panelToggle").addEventListener("click", (event) => {
 
 document.querySelector("#highwayToggle").addEventListener("change", (event) => {
   setLayerGroup(["highway-casing", "highway"], event.currentTarget.checked);
+  roadTemperature?.setHighwayVisible(event.currentTarget.checked);
 });
 
 document.querySelector("#generalToggle").addEventListener("change", (event) => {
   setLayerGroup(["general-road-casing", "general-road"], event.currentTarget.checked);
+  roadTemperature?.setGeneralVisible(event.currentTarget.checked);
 });
 
 document.querySelector("#resetView").addEventListener("click", () => {
@@ -81,7 +92,23 @@ document.querySelector("#closeDetails").addEventListener("click", () => {
 
 map.on("load", () => {
   setStatus("道路を表示中。細い一般道路は地図を拡大すると現れます", "ready");
-  initTemperature(map);
+  initTemperature(map, {
+    onGrid(grid) {
+      try {
+        roadTemperature?.destroy();
+        roadTemperature = createRoadTemperature(map, grid, setRoadTemperatureState);
+        roadTemperature.setHighwayVisible(document.querySelector("#highwayToggle").checked);
+        roadTemperature.setGeneralVisible(document.querySelector("#generalToggle").checked);
+      } catch {
+        roadTemperature = null; setRoadTemperatureState("error");
+      }
+    },
+    onDay(classes, day) {
+      try { roadTemperature?.setClasses(classes, day); }
+      catch { roadTemperature?.clear(); setRoadTemperatureState("error"); }
+    },
+    onUnavailable(state) { roadTemperature?.clear(); setRoadTemperatureState(state); },
+  });
 });
 
 map.on("idle", () => {

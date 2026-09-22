@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { setImmediate as nextTurn } from "node:timers/promises";
 import { initTemperature } from "../temperature-control.js";
+import { ROAD_CLASSES } from "../temperature-display-data.js";
 
 const CELL_COUNT = 387717;
 const DAYS = Array.from({ length: 366 }, (_, i) => new Date(Date.UTC(2000, 0, i + 1)).toISOString().slice(5, 10));
@@ -75,10 +76,14 @@ function fixture() {
     remaining -= length;
   }
   const grid = payload({ cell_count: CELL_COUNT, runs }, "grid.json");
-  const data = DAYS.map((day, index) => payload({ day, cell_count: CELL_COUNT, runs: [index % 81 + 1, CELL_COUNT] }, `${day}.json.gz`));
+  const data = DAYS.map((day, index) => {
+    const bin = index % 81 + 1;
+    const roadClass = bin <= 40 ? 4 : bin <= 42 ? 3 : bin <= 45 ? 2 : 1;
+    return payload({ day, cell_count: CELL_COUNT, runs: [bin, CELL_COUNT], road_runs: [roadClass, CELL_COUNT] }, `${day}.json.gz`);
+  });
   const manifest = {
     schema_version: 1, cell_count: CELL_COUNT, bin_min: -40, bin_step: 1, bin_count: 81, missing_bin: 0,
-    days: DAYS, grid: grid.record, files: data.map((entry, i) => ({ day: DAYS[i], ...entry.record })),
+    days: DAYS, grid: grid.record, road_classes: ROAD_CLASSES, files: data.map((entry, i) => ({ day: DAYS[i], ...entry.record })),
   };
   let manual = false;
   let closed = false;
@@ -88,6 +93,7 @@ function fixture() {
   const failures = new Set();
   const frames = new Map();
   const actions = [];
+  const roadEvents = [];
   const globals = ["document", "Option", "fetch", "requestAnimationFrame", "cancelAnimationFrame"];
   const original = globals.map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]);
   Object.assign(globalThis, {
@@ -114,8 +120,15 @@ function fixture() {
     return result;
   };
   return {
-    get, map, frames, responses, calls, failures,
-    async boot() { initTemperature(map); await waitFor(() => get("map").dataset.temperatureDay === "01-15", "initial day"); },
+    get, map, frames, responses, calls, failures, roadEvents,
+    async boot() {
+      initTemperature(map, {
+        onGrid: (grid) => roadEvents.push({ state: "grid", count: grid.count }),
+        onDay: (classes, day) => roadEvents.push({ state: "day", day, value: classes[0], count: classes.length }),
+        onUnavailable: (state) => roadEvents.push({ state }),
+      });
+      await waitFor(() => get("map").dataset.temperatureDay === "01-15", "initial day");
+    },
     hold() { manual = true; },
     automatic() { manual = false; },
     play: () => invoke("playYear", "click"),
@@ -158,6 +171,8 @@ test("a late earlier-day response cannot replace the newer selection", async () 
     assert.equal(f.get("map").dataset.temperatureDay, DAYS[17]);
     assert.match(f.get("temperaturePoint").textContent, /01\/18/);
     assert.match(f.get("temperaturePoint").textContent, /-23℃以上 -22℃未満/);
+    assert.equal(f.roadEvents.at(-1).day, DAYS[17]);
+    assert.equal(f.roadEvents.some((event) => event.day === DAYS[16]), false);
   } finally { await f.close(); }
 });
 
@@ -193,6 +208,7 @@ test("clicking after a failed day load reports failure, and retry restores the s
     await f.select(15);
     assert.equal(f.get("temperatureStatus").dataset.state, "error");
     assert.equal(f.get("retryTemperature").hidden, false);
+    assert.equal(f.roadEvents.at(-1).state, "error");
     f.map.click();
     assert.doesNotMatch(f.get("temperaturePoint").textContent, /読み込み中/);
     assert.match(f.get("temperaturePoint").textContent, /失敗|再試行|表示でき/);
@@ -201,6 +217,28 @@ test("clicking after a failed day load reports failure, and retry restores the s
     assert.equal(f.get("temperatureStatus").dataset.state, "ready");
     assert.match(f.get("temperaturePoint").textContent, /01\/16/);
     assert.equal(f.get("retryTemperature").hidden, true);
+    assert.equal(f.roadEvents.at(-1).day, DAYS[15]);
+  } finally { await f.close(); }
+});
+
+test("mesh visibility and opacity leave the selected road classes unchanged", async () => {
+  const f = fixture();
+  try {
+    await f.boot();
+    const previousEvents = f.roadEvents.length;
+    f.get("temperatureToggle").checked = false;
+    f.get("temperatureToggle").emit("change");
+    f.get("temperatureOpacity").value = "0";
+    f.get("temperatureOpacity").emit("input");
+    assert.equal(f.roadEvents.length, previousEvents);
+    f.map.click();
+    assert.match(f.get("temperaturePoint").textContent, /道路着色：0℃以下/);
+    f.hold();
+    const pending = f.select(20);
+    assert.equal(f.roadEvents.at(-1).state, "loading");
+    f.resolve(20);
+    await pending;
+    assert.equal(f.roadEvents.at(-1).day, DAYS[20]);
   } finally { await f.close(); }
 });
 

@@ -29,13 +29,15 @@
   ],
   "allowed_external_hosts": [
     "127.0.0.1",
+    "bousai-wx-lab.com",
     "bousai-wx-lab.github.io",
     "cyberjapandata.gsi.go.jp",
     "github.com",
     "localhost",
     "maps.gsi.go.jp",
     "registry.npmjs.org",
-    "www.gsi.go.jp"
+    "www.gsi.go.jp",
+    "x.com"
   ],
   "allowed_browser_api_fragments": {},
   "allowed_binary_assets": [],

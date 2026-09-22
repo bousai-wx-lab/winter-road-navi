@@ -9,18 +9,31 @@
     <meta name="description" content="全国の高速道路と一般道路を地図で確認する、冬道そなえナビの初期公開版です。">
     <link rel="icon" href="./favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./styles.css?v=20260922-1">
     <script type="module" src="./app.js" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="site-header">
-      <div class="brand-mark" aria-hidden="true">冬</div>
-      <div class="brand-copy">
-        <p class="brand-owner">Bousai Wx Lab</p>
-        <h1>冬道そなえナビ</h1>
-        <p>Winter Road Navi</p>
+      <div class="header-inner">
+        <div class="header-identity">
+          <div class="brand-mark" aria-hidden="true">冬</div>
+          <div class="brand-copy">
+            <p class="brand-owner">WINTER ROAD NAVI</p>
+            <h1>冬道そなえナビ</h1>
+            <p>高速道路・一般道路を地図で確認</p>
+          </div>
+        </div>
+        <nav class="header-links" aria-label="Bousai Wx Labの関連リンク">
+          <a class="header-link blog-link" href="https://bousai-wx-lab.com/" target="_blank" rel="noopener noreferrer" aria-label="Bousai Wx Labブログを新しいタブで開く">
+            <span class="header-link-symbol" aria-hidden="true">↗</span>
+            <span>ブログ</span>
+          </a>
+          <a class="header-link x-link" href="https://x.com/bousai_wx_lab" target="_blank" rel="noopener noreferrer" aria-label="Bousai Wx LabのXを新しいタブで開く">
+            <span class="x-mark" aria-hidden="true">X</span>
+            <span>X</span>
+          </a>
+        </nav>
       </div>
-      <p class="release-badge">初期公開版</p>
     </header>
 
     <main>

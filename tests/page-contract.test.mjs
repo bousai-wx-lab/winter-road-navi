@@ -23,8 +23,10 @@ test("page has no inline event handlers or executable inline scripts", () => {
   assert.equal(html.includes("javascript:"), false);
 });
 
-test("thin header links to the blog and X without a usage guide", () => {
-  assert.equal(html.includes('class="header-inner"'), true);
+test("branded winter header and footer link to the blog and X without a usage guide", () => {
+  assert.equal(html.includes('class="topbar-inner"'), true);
+  assert.equal(html.includes('src="./assets/bousaiwxlab-site-icon.png"'), true);
+  assert.equal(html.includes('class="site-footer"'), true);
   assert.equal(html.includes('href="https://bousai-wx-lab.com/"'), true);
   assert.equal(html.includes('href="https://x.com/bousai_wx_lab"'), true);
   assert.equal(html.includes("使い方"), false);

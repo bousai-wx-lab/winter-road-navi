@@ -7,30 +7,34 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp; connect-src 'self' https://cyberjapandata.gsi.go.jp; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
     <title>冬道そなえナビ | Bousai Wx Lab</title>
     <meta name="description" content="全国の高速道路と一般道路を地図で確認する、冬道そなえナビの初期公開版です。">
-    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20260922-1">
+    <link rel="stylesheet" href="./styles.css?v=20260922-2">
     <script type="module" src="./app.js" referrerpolicy="no-referrer"></script>
   </head>
   <body>
-    <header class="site-header">
-      <div class="header-inner">
+    <header class="topbar">
+      <div class="topbar-inner">
         <div class="header-identity">
-          <div class="brand-mark" aria-hidden="true">冬</div>
-          <div class="brand-copy">
-            <p class="brand-owner">WINTER ROAD NAVI</p>
-            <h1>冬道そなえナビ</h1>
-            <p>高速道路・一般道路を地図で確認</p>
+          <a class="brand-home" href="https://bousai-wx-lab.com/" target="_blank" rel="noopener noreferrer" aria-label="Bousai Wx Labブログを新しいタブで開く" title="ブログのホームへ">
+            <img class="brand-logo" src="./assets/bousaiwxlab-site-icon.png" width="512" height="512" alt="">
+            <span class="brand-home-copy">
+              <strong>Bousai Wx Lab</strong>
+              <small>ブログへ</small>
+            </span>
+          </a>
+          <div class="title-row">
+            <p class="product-kicker">WINTER ROAD READINESS</p>
+            <div class="tool-title-line">
+              <h1>冬道そなえナビ</h1>
+            </div>
+            <p class="tool-subtitle">高速道路・一般道路を地図で確認</p>
           </div>
         </div>
-        <nav class="header-links" aria-label="Bousai Wx Labの関連リンク">
-          <a class="header-link blog-link" href="https://bousai-wx-lab.com/" target="_blank" rel="noopener noreferrer" aria-label="Bousai Wx Labブログを新しいタブで開く">
-            <span class="header-link-symbol" aria-hidden="true">↗</span>
-            <span>ブログ</span>
-          </a>
-          <a class="header-link x-link" href="https://x.com/bousai_wx_lab" target="_blank" rel="noopener noreferrer" aria-label="Bousai Wx LabのXを新しいタブで開く">
+        <nav class="header-actions" aria-label="Bousai Wx Labの関連リンク">
+          <a class="sns-link x-link" href="https://x.com/bousai_wx_lab" target="_blank" rel="noopener noreferrer" aria-label="Bousai Wx LabのXを新しいタブで開く">
             <span class="x-mark" aria-hidden="true">X</span>
-            <span>X</span>
+            <span class="sns-label">公式X</span>
           </a>
         </nav>
       </div>
@@ -53,12 +57,12 @@
           <label class="layer-toggle highway-toggle">
             <input id="highwayToggle" type="checkbox" checked>
             <span class="legend-line highway-line" aria-hidden="true"></span>
-            <span><strong>高速道路</strong><small>緑色の太い線</small></span>
+            <span><strong>高速道路</strong><small>氷色の太い線</small></span>
           </label>
           <label class="layer-toggle general-toggle">
             <input id="generalToggle" type="checkbox" checked>
             <span class="legend-line general-line" aria-hidden="true"></span>
-            <span><strong>一般道路</strong><small>青色の線。拡大すると細い道路も表示</small></span>
+            <span><strong>一般道路</strong><small>濃い青の線。拡大すると細い道路も表示</small></span>
           </label>
 
           <p id="mapStatus" class="map-status" role="status" aria-live="polite">道路データを読み込んでいます</p>
@@ -73,15 +77,36 @@
       </section>
 
       <section class="scope-note" aria-label="この版で確認できること">
-        <strong>現在は道路表示までの初期版です。</strong>
-        <span>気温・積雪・凍結・通行規制・経路案内は、まだ表示していません。現在の道路状況や安全を示す地図ではありません。</span>
+        <span class="scope-icon" aria-hidden="true">i</span>
+        <div>
+          <strong>現在は道路表示までの初期版です。</strong>
+          <span>気温・積雪・凍結・通行規制・経路案内は、まだ表示していません。現在の道路状況や安全を示す地図ではありません。</span>
+        </div>
       </section>
     </main>
 
-    <footer>
-      <p>道路・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a></p>
-      <p>国土地理院のデータをBousai Wx Labが独自に区分・着色して表示しています。データは試験提供で、最新状況と異なる場合があります。</p>
-      <p class="privacy-note">このツールは現在地を取得せず、入力欄・Cookie・ブラウザ保存・アクセス解析を使用しません。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。</p>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-top">
+          <a class="footer-brand" href="https://bousai-wx-lab.com/" target="_blank" rel="noopener noreferrer" aria-label="Bousai Wx Labブログを新しいタブで開く">
+            <img class="footer-logo" src="./assets/bousaiwxlab-site-icon.png" width="512" height="512" alt="">
+            <span>
+              <strong>Bousai Wx Lab</strong>
+              <small>冬道そなえナビ</small>
+            </span>
+          </a>
+          <nav class="footer-links" aria-label="関連リンク">
+            <a href="https://bousai-wx-lab.com/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">↗</span> ブログ</a>
+            <a href="https://x.com/bousai_wx_lab" target="_blank" rel="noopener noreferrer"><span class="footer-x" aria-hidden="true">X</span> @bousai_wx_lab</a>
+          </nav>
+        </div>
+        <div class="footer-copy">
+          <p>道路・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a></p>
+          <p>国土地理院のデータをBousai Wx Labが独自に区分・着色して表示しています。データは試験提供で、最新状況と異なる場合があります。</p>
+          <p class="privacy-note">このツールは現在地を取得せず、入力欄・Cookie・ブラウザ保存・アクセス解析を使用しません。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。</p>
+        </div>
+        <p class="footer-copyright">© 2026 Bousai Wx Lab.</p>
+      </div>
     </footer>
   </body>
 </html>

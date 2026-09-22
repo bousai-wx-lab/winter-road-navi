@@ -19,10 +19,10 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "bytes": 3464,
+      "bytes": 3708,
       "mime_type": "text/markdown",
       "path": "README.md",
-      "sha256": "ec28c27bf99f65eac0ebacbd1735c9cc8486d73df00a41bb41ced4f290ddac66"
+      "sha256": "c444234cd5efec3737272155f1780d1657ac3d76c2123d371f7d39a60aa4bef0"
     },
     {
       "bytes": 1298,
@@ -37,28 +37,34 @@
       "sha256": "a5d8b3103f6d2db7eaf87ed04a362ef63fbdb36efe3b2649aa3e12c54ce2acbf"
     },
     {
+      "bytes": 266670,
+      "mime_type": "image/png",
+      "path": "assets/bousaiwxlab-site-icon.png",
+      "sha256": "f2258fc48adea8bdcf175699fb08b434b039c0aee83a4439c181741f3c2a4c9e"
+    },
+    {
       "bytes": 431,
       "mime_type": "image/svg+xml",
       "path": "favicon.svg",
       "sha256": "7704fbd5a1bcee94880257656eaf7b3baf0425e82ad785a27ba1fc52b1bf299a"
     },
     {
-      "bytes": 5114,
+      "bytes": 6506,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "6a77503de0131188af7dce4cbf2a5f2a19e13dfebaf6649eb32a0be8c0153d10"
+      "sha256": "f722c9afc518b77a40fce655bd78d9f14b3a0764e03222a5f24065e7b210d6fa"
     },
     {
-      "bytes": 3475,
+      "bytes": 3804,
       "mime_type": "application/json",
       "path": "release-allowlist.json",
-      "sha256": "66ed41055b7a765796412c00acad6931fa53946e4d6281d68cc27c6f0d26de2f"
+      "sha256": "486ce143d20a0ef9d859a1a384d665a27c5807b3ccf1787ef72fad595f90d945"
     },
     {
-      "bytes": 3427,
+      "bytes": 3451,
       "mime_type": "text/javascript",
       "path": "road-style.js",
-      "sha256": "9b6ba524a30f3996519738516aaa9238e7cac6987eb7935ca9ae390d03703656"
+      "sha256": "3e48de798c88331891334bacb6efcb06a31c8416b57502429e030c4515fcbe9c"
     },
     {
       "bytes": 4716,
@@ -91,16 +97,16 @@
       "sha256": "9f544f26670c083702e2b3dbfab18af621d78832b52498cf7e0e819df1909604"
     },
     {
-      "bytes": 8788,
+      "bytes": 15292,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "110d36676ee7ecc5f66b3c68d15afcaabb2d7ed94fdc29ea5b45ffafa2a68a84"
+      "sha256": "1b06ae8664507867113d246d8342404311ae7c7b41452bea175d7d204d12665a"
     },
     {
-      "bytes": 1696,
+      "bytes": 1857,
       "mime_type": "text/javascript",
       "path": "tests/page-contract.test.mjs",
-      "sha256": "5c855d851fae73cfc3690638cad0d448ebbe86fe453213352c60eb0cb086b298"
+      "sha256": "96df239f3a78e87298cb619431952e9aba27f2963e309d4b32e01c4a41b7a239"
     },
     {
       "bytes": 2046,
@@ -139,7 +145,7 @@
       "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
     }
   ],
-  "generated_at_utc": "2026-09-22T06:51:13+00:00",
+  "generated_at_utc": "2026-09-22T07:15:45+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

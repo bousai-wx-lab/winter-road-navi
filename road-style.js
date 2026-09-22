@@ -42,7 +42,7 @@ export function createMapStyle() {
       },
     },
     layers: [
-      { id: "background-map", type: "raster", source: "background", minzoom: 4, paint: { "raster-opacity": 0.72, "raster-saturation": -0.35 } },
+      { id: "background-map", type: "raster", source: "background", minzoom: 4, paint: { "raster-opacity": 0.75, "raster-saturation": -0.55, "raster-contrast": 0.05 } },
       {
         id: "general-road-casing",
         type: "line",
@@ -61,7 +61,7 @@ export function createMapStyle() {
         minzoom: 5,
         filter: GENERAL_ROAD_FILTER,
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#386f9e", "line-width": roadWidth(0.8, 4.2), "line-opacity": 0.95 },
+        paint: { "line-color": "#2d6fa8", "line-width": roadWidth(0.8, 4.2), "line-opacity": 0.95 },
       },
       {
         id: "highway-casing",
@@ -81,7 +81,7 @@ export function createMapStyle() {
         minzoom: 5,
         filter: HIGHWAY_FILTER,
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#14815d", "line-width": roadWidth(2.2, 6.3), "line-opacity": 0.98 },
+        paint: { "line-color": "#0a8d92", "line-width": roadWidth(2.2, 6.3), "line-opacity": 0.98 },
       },
     ],
   };
@@ -96,4 +96,3 @@ export function classifyRoad(properties = {}) {
   }
   return "general";
 }
-

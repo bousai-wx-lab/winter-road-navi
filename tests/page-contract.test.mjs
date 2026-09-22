@@ -34,7 +34,9 @@ test("branded winter header and footer link to the blog and X without a usage gu
 });
 
 test("header stays compact and map focus does not add a second full frame", () => {
-  assert.match(styles, /\.topbar\s*\{[^}]*min-height:\s*60px/s);
+  assert.match(styles, /\.topbar\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(styles, /main\s*\{[^}]*padding:\s*0;/s);
+  assert.match(styles, /\.map-shell\s*\{[^}]*border:\s*0;[^}]*border-radius:\s*0;/s);
   assert.match(styles, /\.maplibregl-canvas:focus-visible\s*\{[^}]*outline:\s*none/s);
 });
 

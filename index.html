@@ -6,10 +6,10 @@
     <meta name="referrer" content="no-referrer">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp; connect-src 'self' https://cyberjapandata.gsi.go.jp; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
     <title>冬道そなえナビ | Bousai Wx Lab</title>
-    <meta name="description" content="全国の高速道路と一般道路を地図で確認する、冬道そなえナビの初期公開版です。">
+    <meta name="description" content="一年366日の日最低気温平年値と全国の高速道路・一般道路を重ねて確認できる、冬道そなえナビです。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20260922-4">
+    <link rel="stylesheet" href="./styles.css?v=20260922-5">
     <script type="module" src="./app.js" referrerpolicy="no-referrer"></script>
   </head>
   <body>
@@ -28,7 +28,7 @@
             <div class="tool-title-line">
               <h1>冬道そなえナビ</h1>
             </div>
-            <p class="tool-subtitle">高速道路・一般道路を地図で確認</p>
+            <p class="tool-subtitle">日別の最低気温平年値と道路を地図で確認</p>
           </div>
         </div>
         <nav class="header-actions" aria-label="Bousai Wx Labの関連リンク">
@@ -40,49 +40,97 @@
       </div>
     </header>
 
-    <main>
-      <section class="map-shell" aria-labelledby="map-heading">
-        <h2 id="map-heading" class="visually-hidden">全国の道路地図</h2>
-        <div id="map" role="application" aria-label="全国の高速道路と一般道路を表示する地図"></div>
-
-        <section class="control-panel" aria-label="道路表示の設定">
-          <div class="control-heading">
-            <div>
-              <p class="eyebrow">ROAD LAYERS</p>
-              <h2>道路を表示</h2>
-            </div>
-            <button id="resetView" type="button">全国表示</button>
+    <main class="tool-layout">
+      <aside class="control-panel" aria-label="日付・気温・道路表示の設定">
+        <div class="control-heading">
+          <div>
+            <p class="eyebrow">CLIMATE NORMALS</p>
+            <h2>日別の最低気温</h2>
           </div>
+          <button id="panelToggle" type="button" aria-expanded="true">詳細を閉じる</button>
+        </div>
 
-          <label class="layer-toggle highway-toggle">
-            <input id="highwayToggle" type="checkbox" checked>
-            <span class="legend-line highway-line" aria-hidden="true"></span>
-            <span><strong>高速道路</strong><small>氷色の太い線</small></span>
-          </label>
-          <label class="layer-toggle general-toggle">
-            <input id="generalToggle" type="checkbox" checked>
-            <span class="legend-line general-line" aria-hidden="true"></span>
-            <span><strong>一般道路</strong><small>濃い青の線。拡大すると細い道路も表示</small></span>
-          </label>
-
-          <p id="mapStatus" class="map-status" role="status" aria-live="polite">道路データを読み込んでいます</p>
+        <section class="panel-section date-section" aria-labelledby="date-section-title">
+          <div class="section-title">
+            <span>01</span>
+            <h3 id="date-section-title">平年日を選ぶ</h3>
+          </div>
+          <div class="date-display">
+            <strong id="dateLabel">1月1日</strong>
+            <small>1991〜2020年の平年値</small>
+          </div>
+          <label class="visually-hidden" for="dateSlider">一年の日付</label>
+          <input id="dateSlider" class="date-slider" type="range" min="0" max="365" step="1" value="0" aria-valuetext="1月1日">
+          <div class="month-scale" aria-hidden="true"><span>1月</span><span>4月</span><span>7月</span><span>10月</span><span>12月</span></div>
+          <div class="transport-controls">
+            <button id="previousDay" type="button" aria-label="前の日"><span aria-hidden="true">−1</span><small>前日</small></button>
+            <button id="playButton" class="play-button" type="button" aria-label="一年を自動再生" data-playing="false"><span class="play-icon" aria-hidden="true">▶</span><span class="play-label">再生</span></button>
+            <button id="nextDay" type="button" aria-label="次の日"><span aria-hidden="true">+1</span><small>翌日</small></button>
+          </div>
+          <label class="speed-control" for="speedSelect"><span>1年の再生時間</span><select id="speedSelect"><option value="30">30秒</option><option value="15" selected>15秒</option><option value="8">8秒</option></select></label>
         </section>
 
-        <aside id="roadDetails" class="road-details" hidden aria-live="polite">
-          <button id="closeDetails" type="button" aria-label="道路情報を閉じる">×</button>
-          <p class="eyebrow">SELECTED ROAD</p>
-          <h2 id="roadType">道路</h2>
-          <p id="roadNote">周辺の道路区分を表示しています。</p>
-        </aside>
-      </section>
+        <div class="panel-collapsible">
+          <section class="panel-section temperature-section" aria-labelledby="temperature-section-title">
+            <div class="section-title">
+              <span>02</span>
+              <h3 id="temperature-section-title">平均最低気温</h3>
+            </div>
+            <label class="simple-toggle">
+              <input id="temperatureToggle" type="checkbox" checked>
+              <span><strong>気温分布を表示</strong><small>アメダス180地点をぼかして面状表示</small></span>
+            </label>
+            <label class="opacity-control" for="temperatureOpacity"><span>分布の濃さ <strong id="temperatureOpacityValue">80%</strong></span><input id="temperatureOpacity" type="range" min="20" max="100" step="5" value="80"></label>
+            <div class="temperature-legend" aria-label="平均最低気温の色分け">
+              <div class="temperature-gradient" aria-hidden="true"></div>
+              <div class="temperature-labels"><span>−30℃</span><span>−20</span><span>−10</span><span class="freezing-mark">0℃</span><span>10</span><span>20</span><span>30℃</span></div>
+            </div>
+            <p class="temperature-note">0℃は目安線です。路面温度や凍結を表すものではありません。</p>
+          </section>
 
-      <section class="scope-note" aria-label="この版で確認できること">
-        <span class="scope-icon" aria-hidden="true">i</span>
-        <div>
-          <strong>現在は道路表示までの初期版です。</strong>
-          <span>気温・積雪・凍結・通行規制・経路案内は、まだ表示していません。現在の道路状況や安全を示す地図ではありません。</span>
+          <section class="panel-section road-section" aria-labelledby="road-section-title">
+            <div class="section-title road-title-row">
+              <span>03</span>
+              <h3 id="road-section-title">道路表示</h3>
+              <button id="resetView" type="button">全国表示</button>
+            </div>
+            <label class="layer-toggle highway-toggle">
+              <input id="highwayToggle" type="checkbox" checked>
+              <span class="legend-line highway-line" aria-hidden="true"></span>
+              <span><strong>高速道路</strong><small>氷色の太い線</small></span>
+            </label>
+            <label class="layer-toggle general-toggle">
+              <input id="generalToggle" type="checkbox" checked>
+              <span class="legend-line general-line" aria-hidden="true"></span>
+              <span><strong>一般道路</strong><small>濃い青の線。拡大すると細い道路も表示</small></span>
+            </label>
+          </section>
         </div>
-      </section>
+
+        <p id="mapStatus" class="map-status" role="status" aria-live="polite">気温と道路データを読み込んでいます</p>
+      </aside>
+
+      <div class="map-column">
+        <section class="map-shell" aria-labelledby="map-heading">
+          <h2 id="map-heading" class="visually-hidden">日別平均最低気温と全国の道路地図</h2>
+          <div id="map" role="application" aria-label="日別平均最低気温と全国の高速道路・一般道路を表示する地図"></div>
+
+          <aside id="roadDetails" class="road-details" hidden aria-live="polite">
+            <button id="closeDetails" type="button" aria-label="道路情報を閉じる">×</button>
+            <p class="eyebrow">SELECTED ROAD</p>
+            <h2 id="roadType">道路</h2>
+            <p id="roadNote">周辺の道路区分を表示しています。</p>
+          </aside>
+        </section>
+
+        <section class="scope-note" aria-label="データの意味と注意">
+          <span class="scope-icon" aria-hidden="true">i</span>
+          <div>
+            <strong>気象庁の1991〜2020年の日別平年値を加工しています。</strong>
+            <span>代表180地点をぼかした参考分布で、予報・実況・路面温度・凍結・通行規制・経路案内ではありません。現在の道路状況や安全を示す地図ではありません。</span>
+          </div>
+        </section>
+      </div>
     </main>
 
     <footer class="site-footer">
@@ -101,6 +149,7 @@
           </nav>
         </div>
         <div class="footer-copy">
+          <p>気温：<a href="https://www.data.jma.go.jp/obd/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁「2020年平年値（第5版）アメダス日別平年値」</a>をもとにBousai Wx Labが代表地点を選択・加工して作成。</p>
           <p>道路・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a></p>
           <p>国土地理院のデータをBousai Wx Labが独自に区分・着色して表示しています。データは試験提供で、最新状況と異なる場合があります。</p>
           <p class="privacy-note">このツールは現在地を取得せず、入力欄・Cookie・ブラウザ保存・アクセス解析を使用しません。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。</p>

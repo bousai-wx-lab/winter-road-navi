@@ -6,11 +6,11 @@
     <meta name="referrer" content="no-referrer">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp; connect-src 'self' https://cyberjapandata.gsi.go.jp; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
     <title>冬道そなえナビ | Bousai Wx Lab</title>
-    <meta name="description" content="9月15日から翌6月15日まで、日別最低気温を独自内挿した1kmメッシュと道路を重ねて冬季の寒さの傾向を確認できます。予報や凍結判定ではありません。">
+    <meta name="description" content="9月15日から翌6月15日まで、日別最低気温・日最深積雪の平年推定値と道路を同じ地図で確認できます。予報や路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20260922-roads1">
-    <script type="module" src="./app.js?v=20260923-season1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20260924-snow1">
+    <script type="module" src="./app.js?v=20260924-snow1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -41,11 +41,11 @@
     </header>
 
     <main class="tool-layout">
-      <aside class="control-panel" aria-label="気温と道路表示の設定">
+      <aside class="control-panel" aria-label="気温・積雪・道路表示の設定">
         <div class="control-heading">
           <div>
             <p class="eyebrow">CLIMATE &amp; ROADS</p>
-            <h2>平年の寒さと道路</h2>
+            <h2>平年の寒さ・雪と道路</h2>
           </div>
           <button id="panelToggle" type="button" aria-expanded="true">詳細を閉じる</button>
         </div>
@@ -75,9 +75,34 @@
 
         <div class="panel-collapsible">
           <div class="temperature-options"><label><input id="temperatureToggle" type="checkbox" checked> 気温を重ねる</label><label for="temperatureOpacity">濃さ <output id="opacityValue">65%</output></label><input id="temperatureOpacity" type="range" min="0" max="100" value="65"></div>
+          <section class="panel-section snow-section" aria-labelledby="snow-section-title">
+            <div class="section-title"><span>01</span><h3 id="snow-section-title">日最深積雪の平年値 <small>独自推定</small></h3></div>
+            <p class="snow-intro">選択日の1km格子の雪域を重ねます。道路上の積雪ではありません。</p>
+            <div class="snow-options">
+              <label><input id="snowToggle" type="checkbox" disabled> 積雪を重ねる</label>
+              <label for="snowOpacity">濃さ <output id="snowOpacityValue">55%</output></label>
+              <input id="snowOpacity" type="range" min="0" max="100" value="55">
+            </div>
+            <div class="snow-depth-scale" aria-label="積雪の濃さは1〜4cmから100cm以上までの6階級"></div>
+            <p class="snow-depth-scale-label">1〜4cm <span>100cm以上</span></p>
+            <p class="snow-contour-caption">細い実線：各深さ以上の境界</p>
+            <div class="snow-contour-legend" aria-label="積雪の等値線">
+              <span><i class="snow-line-1" aria-hidden="true"></i>1cm</span>
+              <span><i class="snow-line-5" aria-hidden="true"></i>5cm</span>
+              <span><i class="snow-line-10" aria-hidden="true"></i>10cm</span>
+              <span><i class="snow-line-20" aria-hidden="true"></i>20cm</span>
+              <span><i class="snow-line-50" aria-hidden="true"></i>50cm</span>
+              <span><i class="snow-line-100" aria-hidden="true"></i>100cm</span>
+            </div>
+            <p class="snow-note">線は元の1km格子境界に沿います。欠測と未収録の外側には境界線を引きません。</p>
+            <p id="snowStatus" class="temperature-status" role="status">積雪表示を準備しています</p>
+            <p id="snowPreparationStatus" class="temperature-status" aria-live="polite"></p>
+            <button id="retrySnow" type="button" hidden>積雪データを再読込</button>
+            <p id="snowPoint" class="temperature-point">地図をクリックすると、その格子の積雪階級を確認できます。</p>
+          </section>
           <section class="panel-section road-section" aria-labelledby="road-section-title">
             <div class="section-title road-title-row">
-              <span>01</span>
+              <span>02</span>
               <h3 id="road-section-title">道路表示</h3>
               <button id="resetView" type="button">全国表示</button>
             </div>
@@ -107,8 +132,8 @@
 
       <div class="map-column">
         <section class="map-shell" aria-labelledby="map-heading">
-          <h2 id="map-heading" class="visually-hidden">全国の1km気温メッシュと道路地図</h2>
-          <div id="map" role="application" aria-label="日別の平均最低気温と全国の道路を表示する地図"></div>
+          <h2 id="map-heading" class="visually-hidden">全国の1km気温・積雪平年メッシュと道路地図</h2>
+          <div id="map" role="application" aria-label="日別の平均最低気温、日最深積雪の平年推定値と全国の道路を表示する地図"></div>
           <p id="mapTemperatureLabel" class="map-temperature-label">気温を準備中</p>
 
           <aside id="roadDetails" class="road-details" hidden aria-live="polite">
@@ -122,8 +147,8 @@
         <section class="scope-note" aria-label="データの意味と注意">
           <span class="scope-icon" aria-hidden="true">i</span>
           <div>
-            <strong>平年の気候分布です。予報・実況・路面温度ではありません。</strong>
-            <span>凍結・積雪・通行規制や安全は判定しません。出発前は最新の気象情報と道路管理者の情報を確認してください。</span>
+            <strong>気温・積雪とも平年の推定分布です。予報・実況・路面状態ではありません。</strong>
+            <span>道路上の雪・凍結・通行規制や安全は判定しません。出発前は最新の気象情報と道路管理者の情報を確認してください。</span>
           </div>
         </section>
       </div>
@@ -148,7 +173,8 @@
           <p>道路・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a></p>
           <p>国土地理院のデータをBousai Wx Labが独自に区分・着色して表示しています。データは試験提供で、最新状況と異なる場合があります。</p>
           <p>気温：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年日別平年値</a>・国土数値情報標高データを基に独自算出・独自内挿。公式の日別1kmメッシュではありません。</p>
-          <p>1kmは格子の大きさであり精度の保証ではありません。917観測地点から推定し、383,497格子を着色、4,220格子は欠測。地点を除いて検証した日別RMSEは約0.49〜1.30℃ですが、盆地・沿岸・高標高などでは数℃の誤差が残ります。全陸地の網羅は保証しません。</p>
+          <p>積雪：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年の日最深積雪平年値</a>と月別1km推定値から独自推定。公式の日別1kmメッシュではありません。細い実線は元の格子値が1・5・10・20・50・100cmの各閾値をまたぐ境界です。</p>
+          <p>気温の1km格子は局所的な精度を保証しません。917観測地点から推定し、383,497格子を着色、4,220格子は欠測。地点を除いて検証した日別RMSEは約0.49〜1.30℃ですが、盆地・沿岸・高標高などでは数℃の誤差が残ります。全陸地の網羅は保証しません。</p>
           <p>9月15日から翌6月15日までの275日を、年末年始をまたいで連続表示します。2月29日を含み、気象庁の元の2月29日値は前後日の平均です。一部の観測地点は30年未満の統計を含みます。<a href="https://www.jma.go.jp/bosai/" target="_blank" rel="noopener noreferrer">最新の気象情報（気象庁）</a></p>
           <p class="privacy-note">このツールは現在地を取得せず、住所入力・Cookie・ブラウザ保存・アクセス解析を使用しません。地点選択は画面内だけで処理します。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。</p>
         </div>

@@ -177,7 +177,7 @@ function restoreState(gl, state) {
   gl.blendEquationSeparate(state.equationRGB, state.equationAlpha);
 }
 
-export function createTemperatureLayer(expanded) {
+export function createTemperatureLayer(expanded, options = {}) {
   requireCount(expanded?.count);
   if (!(expanded.rects instanceof Float32Array) || expanded.rects.length !== expanded.count * 4) {
     throw new Error("気温メッシュの描画座標が不正です");
@@ -190,9 +190,11 @@ export function createTemperatureLayer(expanded) {
   let bins = new Uint8Array(expanded.count);
   let opacity = 0.7;
   let visible = true;
+  const layerId = options.id ?? "temperature-mesh";
+  const colorForBin = options.colorForBin ?? paletteColor;
   const palette = new Float32Array(82 * 3);
   for (let bin = 1; bin <= MAX_BIN; bin++) {
-    const hex = paletteColor(bin);
+    const hex = colorForBin(bin);
     palette.set([1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255), bin * 3);
   }
 
@@ -275,7 +277,7 @@ export function createTemperatureLayer(expanded) {
   }
 
   return {
-    id: "temperature-mesh",
+    id: layerId,
     type: "custom",
     renderingMode: "2d",
     setBins(next) {

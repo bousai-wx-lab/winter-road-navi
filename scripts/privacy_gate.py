@@ -17,6 +17,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from verify_temperature_display import validate_temperature_gzip
+from verify_snow_display import validate_snow_gzip
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -232,6 +233,12 @@ def validate_binary_asset(path_label: str, data: bytes, record: dict, *, histori
                 validate_temperature_gzip(path_label, data, record, allow_legacy_mesh_only=historical)
             except (ValueError, TypeError, KeyError, zlib.error):
                 findings.append(f"invalid daily temperature data: {path_label}")
+            return findings
+        if path_label.startswith("data/snow/"):
+            try:
+                validate_snow_gzip(path_label, data, record)
+            except (ValueError, TypeError, KeyError, zlib.error):
+                findings.append(f"invalid daily snow display data: {path_label}")
             return findings
         # Only metadata-free, bounded, numeric terrain summaries are permitted.
         # Arbitrary compressed files, filenames, comments and extra members fail.

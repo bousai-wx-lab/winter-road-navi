@@ -191,7 +191,10 @@ export function initTemperature(map, hooks = {}) {
       let cancelWait;
       const canceled = new Promise((resolve) => { cancelWait = resolve; });
       playbackCancelResolve = cancelWait;
-      const ready = await Promise.race([prepareSeason(), canceled]);
+      const ready = await Promise.race([
+        Promise.all([prepareSeason(), hooks.preparePlayback?.() ?? true]).then((results) => results.every(Boolean)),
+        canceled,
+      ]);
       if (playbackCancelResolve === cancelWait) playbackCancelResolve = null;
       if (!preparing || generation !== playbackGeneration) return;
       if (!ready) { stop(); showStatus("再生に必要な日付を準備できませんでした。再生ボタンで再試行できます", "error"); return; }
@@ -239,6 +242,7 @@ export function initTemperature(map, hooks = {}) {
       layer = createTemperatureLayer(grid);
       map.addLayer(layer, "general-road-casing");
       layer.setOpacity(Number($("temperatureOpacity").value) / 100);
+      hooks.onLayerReady?.(grid, manifest);
       const seasonMonths = [...new Set(manifest.days.map((entry) => Number(entry.slice(0, 2))))];
       month.replaceChildren(...seasonMonths.map((value) => new Option(String(value), String(value))));
       date.max = String(manifest.days.length - 1);

@@ -382,6 +382,28 @@ main {
   border-top-color: #258b82;
 }
 
+.snow-section { border-top-color: #479bc5; }
+.snow-section h3 { margin: 0; font-size: 14px; color: #123b59; }
+.snow-section h3 small { font-size: 10px; color: #426a82; white-space: nowrap; }
+.snow-intro, .snow-note { margin: 5px 0 8px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.snow-options { display: grid; gap: 6px; padding: 4px 0; font-size: 12px; }
+.snow-options input[type="checkbox"] { width: 18px; height: 18px; vertical-align: middle; accent-color: #2578aa; }
+.snow-options input[type="range"] { width: 100%; accent-color: #2578aa; }
+.snow-options output { float: right; }
+.snow-depth-scale { height: 10px; margin-top: 5px; border: 1px solid #91b8c9; background: linear-gradient(90deg, #d7f2f7 0%, #b5e2f1 20%, #88cbe8 40%, #58add9 60%, #327fbf 80%, #1e5595 100%); }
+.snow-depth-scale-label { display: flex; justify-content: space-between; margin: 3px 0 8px; font-size: 10px; color: #456077; }
+.snow-contour-caption { margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #244c69; }
+.snow-contour-legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; font-size: 10px; color: #274b67; }
+.snow-contour-legend span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.snow-contour-legend i { display: inline-block; width: 20px; height: 0; border-top: 1px solid; }
+.snow-line-1 { border-color: #2b819e; }
+.snow-line-5 { border-color: #276f9a; }
+.snow-line-10 { border-color: #235d91; }
+.snow-line-20 { border-color: #204b87; }
+.snow-line-50 { border-color: #1c3978; }
+.snow-line-100 { border-color: #182b68; }
+.snow-section #retrySnow { min-height: 32px; border: 1px solid #8eb6c8; border-radius: 5px; background: #fff; color: #153d58; cursor: pointer; }
+
 .road-temperature-legend {
   display: grid;
   grid-template-columns: 1fr 1fr;

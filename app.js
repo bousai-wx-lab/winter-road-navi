@@ -1,7 +1,8 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js";
-import { initTemperature } from "./temperature-control.js?v=20260923-season1";
+import { initTemperature } from "./temperature-control.js?v=20260924-snow1";
 import { createRoadTemperature } from "./road-temperature.js";
+import { initSnow } from "./snow-control.js";
 
 maplibregl.setWorkerUrl(new URL("./vendor/maplibre-gl-worker.mjs", import.meta.url).href);
 
@@ -12,6 +13,7 @@ const roadType = document.querySelector("#roadType");
 const roadNote = document.querySelector("#roadNote");
 const interactiveLayers = ["highway", "general-road"];
 let roadTemperature = null;
+let snow = null;
 const roadTemperatureStatus = document.querySelector("#roadTemperatureStatus");
 function setRoadTemperatureState(state) {
   roadTemperatureStatus.dataset.state = state;
@@ -103,11 +105,14 @@ map.on("load", () => {
         roadTemperature = null; setRoadTemperatureState("error");
       }
     },
+    onLayerReady(grid, manifest) { snow = initSnow(map, grid, manifest); },
     onDay(classes, day) {
       try { roadTemperature?.setClasses(classes, day); }
       catch { roadTemperature?.clear(); setRoadTemperatureState("error"); }
+      void snow?.setDay(day);
     },
-    onUnavailable(state) { roadTemperature?.clear(); setRoadTemperatureState(state); },
+    onUnavailable(state) { roadTemperature?.clear(); setRoadTemperatureState(state); snow?.clear(); },
+    preparePlayback() { return snow?.preparePlayback() ?? true; },
   });
 });
 

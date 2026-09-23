@@ -3,11 +3,13 @@ import test from "node:test";
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { setImmediate as nextTurn } from "node:timers/promises";
-import { initTemperature } from "../temperature-control.js";
+import { initTemperature, winterSeasonDays } from "../temperature-control.js";
 import { ROAD_CLASSES } from "../temperature-display-data.js";
 
 const CELL_COUNT = 387717;
 const DAYS = Array.from({ length: 366 }, (_, i) => new Date(Date.UTC(2000, 0, i + 1)).toISOString().slice(5, 10));
+const SEASON_DAYS = winterSeasonDays(DAYS);
+const sourceIndex = (seasonIndex) => DAYS.indexOf(SEASON_DAYS[seasonIndex]);
 
 class Element {
   constructor(value = "") {
@@ -46,7 +48,7 @@ function payload(value, url) {
   };
 }
 
-function fixture() {
+function fixture({ automatic = false } = {}) {
   const elements = new Map();
   const get = (id) => {
     if (!elements.has(id)) elements.set(id, new Element());
@@ -85,7 +87,7 @@ function fixture() {
     schema_version: 1, cell_count: CELL_COUNT, bin_min: -40, bin_step: 1, bin_count: 81, missing_bin: 0,
     days: DAYS, grid: grid.record, road_classes: ROAD_CLASSES, files: data.map((entry, i) => ({ day: DAYS[i], ...entry.record })),
   };
-  let manual = false;
+  let manual = !automatic;
   let closed = false;
   let rafId = 0;
   const responses = new Map();
@@ -110,7 +112,7 @@ function fixture() {
       assert.notEqual(index, -1, `unexpected URL ${url}`);
       calls.set(index, (calls.get(index) || 0) + 1);
       if (failures.has(index)) return new Response("unavailable", { status: 503 });
-      if (!manual) return new Response(data[index].bytes);
+      if (!manual || (name === "09-15.json.gz" && calls.get(index) === 1)) return new Response(data[index].bytes);
       return new Promise((resolve, reject) => responses.set(index, { resolve, reject }));
     },
   });
@@ -127,7 +129,7 @@ function fixture() {
         onDay: (classes, day) => roadEvents.push({ state: "day", day, value: classes[0], count: classes.length }),
         onUnavailable: (state) => roadEvents.push({ state }),
       });
-      await waitFor(() => get("map").dataset.temperatureDay === "01-15", "initial day");
+      await waitFor(() => get("map").dataset.temperatureDay === "09-15", "initial day");
     },
     hold() { manual = true; },
     automatic() { manual = false; },
@@ -140,7 +142,7 @@ function fixture() {
       responses.delete(index);
       response.resolve(new Response(data[index].bytes));
     },
-    progress() { return Number(get("temperatureStatus").textContent.match(/再生準備 (\d+)\//)?.[1] || 0); },
+    progress() { return Number(get("seasonPreparationStatus").textContent.match(/(\d+)\/275日/)?.[1] || 0); },
     async close() {
       document.hidden = true;
       document.listeners.get("visibilitychange")?.();
@@ -148,6 +150,7 @@ function fixture() {
       for (const response of responses.values()) response.reject(new Error("Fixture closed"));
       responses.clear();
       await Promise.allSettled(actions);
+      await nextTurn();
       for (const [key, descriptor] of original) {
         if (descriptor) Object.defineProperty(globalThis, key, descriptor);
         else delete globalThis[key];
@@ -155,6 +158,16 @@ function fixture() {
     },
   };
 }
+
+test("the winter timeline is continuous across New Year and ends on June 15", () => {
+  assert.equal(SEASON_DAYS.length, 275);
+  assert.equal(SEASON_DAYS[0], "09-15");
+  assert.equal(SEASON_DAYS.at(-1), "06-15");
+  assert.equal(SEASON_DAYS[SEASON_DAYS.indexOf("12-31") + 1], "01-01");
+  assert.equal(SEASON_DAYS[SEASON_DAYS.indexOf("02-28") + 1], "02-29");
+  assert.equal(SEASON_DAYS.includes("07-01"), false);
+  assert.throws(() => winterSeasonDays(DAYS.slice(1)), /Invalid calendar/);
+});
 
 test("a late earlier-day response cannot replace the newer selection", async () => {
   const f = fixture();
@@ -164,36 +177,35 @@ test("a late earlier-day response cannot replace the newer selection", async () 
     f.hold();
     const earlier = f.select(16);
     const later = f.select(17);
-    f.resolve(17);
+    await waitFor(() => f.responses.has(sourceIndex(17)), "newer selected day");
+    f.resolve(sourceIndex(17));
     await later;
-    f.resolve(16);
+    assert.equal(f.responses.has(sourceIndex(16)), false, "obsolete rapid-slider day was not fetched");
     await earlier;
-    assert.equal(f.get("map").dataset.temperatureDay, DAYS[17]);
-    assert.match(f.get("temperaturePoint").textContent, /01\/18/);
-    assert.match(f.get("temperaturePoint").textContent, /-23℃以上 -22℃未満/);
-    assert.equal(f.roadEvents.at(-1).day, DAYS[17]);
-    assert.equal(f.roadEvents.some((event) => event.day === DAYS[16]), false);
+    assert.equal(f.get("map").dataset.temperatureDay, SEASON_DAYS[17]);
+    assert.match(f.get("temperaturePoint").textContent, /10\/02/);
+    assert.equal(f.roadEvents.at(-1).day, SEASON_DAYS[17]);
+    assert.equal(f.roadEvents.some((event) => event.day === SEASON_DAYS[16]), false);
   } finally { await f.close(); }
 });
 
-test("cancelled preparation cannot resume or start an animation after immediate restart", async () => {
+test("cancelled playback does not cancel background preparation or start a stale animation", async () => {
   const f = fixture();
   try {
     await f.boot();
-    f.hold();
     let oldSettled = false;
     const old = f.play().then(() => { oldSettled = true; });
-    assert.equal(f.responses.size, 6);
+    assert.equal(f.responses.size, 3);
     await f.play(); // Stop the first preparation.
     const restarted = f.play();
-    for (let i = 0; i < 6; i++) f.resolve(i);
     await waitFor(() => oldSettled, "cancelled generation settles without awaiting new requests");
     await old;
-    await waitFor(() => f.responses.size === 6, "new generation progresses");
     assert.equal(f.get("playYear").getAttribute("aria-pressed"), "true");
     assert.equal(f.frames.size, 0);
-    assert.deepEqual([...f.responses.keys()].sort((a, b) => a - b), [6, 7, 8, 9, 10, 11]);
+    assert.deepEqual([...f.responses.keys()].sort((a, b) => a - b), [sourceIndex(1), sourceIndex(2), sourceIndex(3)].sort((a, b) => a - b));
     await f.play();
+    // The background requests remain in flight after the second playback stop.
+    assert.equal(f.responses.size, 3);
     for (const index of [...f.responses.keys()]) f.resolve(index);
     await restarted;
     assert.equal(f.frames.size, 0);
@@ -204,7 +216,7 @@ test("clicking after a failed day load reports failure, and retry restores the s
   const f = fixture();
   try {
     await f.boot();
-    f.failures.add(15);
+    f.failures.add(sourceIndex(15));
     await f.select(15);
     assert.equal(f.get("temperatureStatus").dataset.state, "error");
     assert.equal(f.get("retryTemperature").hidden, false);
@@ -212,12 +224,13 @@ test("clicking after a failed day load reports failure, and retry restores the s
     f.map.click();
     assert.doesNotMatch(f.get("temperaturePoint").textContent, /読み込み中/);
     assert.match(f.get("temperaturePoint").textContent, /失敗|再試行|表示でき/);
-    f.failures.delete(15);
+    f.failures.delete(sourceIndex(15));
+    f.automatic();
     await f.retry();
     assert.equal(f.get("temperatureStatus").dataset.state, "ready");
-    assert.match(f.get("temperaturePoint").textContent, /01\/16/);
+    assert.match(f.get("temperaturePoint").textContent, /09\/30/);
     assert.equal(f.get("retryTemperature").hidden, true);
-    assert.equal(f.roadEvents.at(-1).day, DAYS[15]);
+    assert.equal(f.roadEvents.at(-1).day, SEASON_DAYS[15]);
   } finally { await f.close(); }
 });
 
@@ -233,12 +246,13 @@ test("mesh visibility and opacity leave the selected road classes unchanged", as
     assert.equal(f.roadEvents.length, previousEvents);
     f.map.click();
     assert.match(f.get("temperaturePoint").textContent, /道路着色：0℃以下/);
-    f.hold();
     const pending = f.select(20);
-    assert.equal(f.roadEvents.at(-1).state, "loading");
-    f.resolve(20);
+    assert.equal(f.get("map").dataset.temperatureDay, "09-15");
+    assert.match(f.get("mapTemperatureLabel").textContent, /9月15日を表示中/);
+    await waitFor(() => f.responses.has(sourceIndex(20)), "selected uncached day");
+    f.resolve(sourceIndex(20));
     await pending;
-    assert.equal(f.roadEvents.at(-1).day, DAYS[20]);
+    assert.equal(f.roadEvents.at(-1).day, SEASON_DAYS[20]);
   } finally { await f.close(); }
 });
 
@@ -246,43 +260,50 @@ test("an old preparation failure cannot overwrite a successful manual selection"
   const f = fixture();
   try {
     await f.boot();
-    f.hold();
     const preparation = f.play();
     const selection = f.select(20);
-    f.resolve(20);
+    await waitFor(() => f.responses.has(sourceIndex(20)), "manual selection");
+    f.resolve(sourceIndex(20));
     await selection;
-    const oldRequest = f.responses.get(0);
-    f.responses.delete(0);
+    const oldIndex = sourceIndex(1);
+    const oldRequest = f.responses.get(oldIndex);
+    f.responses.delete(oldIndex);
     oldRequest.reject(new Error("Delayed old request failed"));
     await preparation;
-    assert.equal(f.get("map").dataset.temperatureDay, DAYS[20]);
+    assert.equal(f.get("map").dataset.temperatureDay, SEASON_DAYS[20]);
     assert.equal(f.get("temperatureStatus").dataset.state, "ready");
     assert.equal(f.get("playYear").getAttribute("aria-pressed"), "false");
     assert.equal(f.frames.size, 0);
   } finally { await f.close(); }
 });
 
-test("stopping preparation trims the cache while preserving the selected day", async () => {
-  const f = fixture();
+test("all 275 season days are prepared in the background and kept after playback stops", async () => {
+  const f = fixture({ automatic: true });
   try {
     await f.boot();
-    f.hold();
-    f.play();
-    // Only 45 representative days are decoded; the rest stay unrequested or pending.
-    for (let i = 0; i < 45; i++) {
-      if (i === 14) continue; // Initially displayed and already cached.
-      await waitFor(() => f.responses.has(i), `prefetch ${i}`);
-      f.resolve(i);
-    }
-    await waitFor(() => f.progress() === 45, "45 days cached");
+    await waitFor(() => f.get("seasonPreparationStatus").textContent.includes("275日分の準備完了"), "season prepared");
+    assert.equal(f.get("dateSlider").max, "274");
+    assert.deepEqual(f.get("monthSelect").options.map((option) => Number(option.value)), [9, 10, 11, 12, 1, 2, 3, 4, 5, 6]);
+    assert.equal(f.get("daySelect").options[0].value, "15");
+    assert.equal(f.calls.size, 275, "summer files are never requested");
+    assert.equal(f.calls.has(DAYS.indexOf("07-01")), false);
     await f.play();
-    f.automatic();
-    const selectedCalls = f.calls.get(14);
-    await f.select(14);
-    assert.equal(f.calls.get(14), selectedCalls, "selected day remains cached");
-    const oldCalls = f.calls.get(0);
+    await f.play();
+    const earlierCalls = f.calls.get(sourceIndex(0));
+    const finalCalls = f.calls.get(sourceIndex(274));
+    await f.select(SEASON_DAYS.indexOf("12-31"));
+    await f.select(SEASON_DAYS.indexOf("12-31") + 1);
+    assert.equal(f.get("map").dataset.temperatureDay, "01-01");
+    await f.select(274);
+    assert.equal(f.get("map").dataset.temperatureDay, "06-15");
+    assert.equal(f.get("nextDay").disabled, true);
+    assert.equal(f.get("daySelect").options.at(-1).value, "15");
+    await f.select(275);
+    assert.equal(f.get("map").dataset.temperatureDay, "06-15", "the slider cannot enter summer");
     await f.select(0);
-    assert.equal(f.calls.get(0), oldCalls + 1, "oldest nonselected day is fetched again after eviction");
+    assert.equal(f.get("previousDay").disabled, true);
+    assert.equal(f.calls.get(sourceIndex(0)), earlierCalls);
+    assert.equal(f.calls.get(sourceIndex(274)), finalCalls);
     assert.equal(f.frames.size, 0);
   } finally { await f.close(); }
 });

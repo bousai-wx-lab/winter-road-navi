@@ -53,6 +53,13 @@ test("road controls and mesh calendar exist, old station blur remains absent", (
   }
 });
 
+test("winter calendar and background preparation are visible without exposing summer controls", () => {
+  assert.equal(html.includes('id="dateSlider" type="range" min="0" max="274" value="0"'), true);
+  assert.equal(html.includes('id="seasonPreparationStatus"'), true);
+  assert.equal(html.includes("9月15日から翌6月15日までの275日"), true);
+  assert.equal(html.includes("1年を再生"), false);
+});
+
 test("application does not use location, storage, cookies, or HTML injection", () => {
   for (const token of [
     "geo" + "location",

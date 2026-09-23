@@ -1,6 +1,6 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js";
-import { initTemperature } from "./temperature-control.js?v=20260922-roads1";
+import { initTemperature } from "./temperature-control.js?v=20260923-season1";
 import { createRoadTemperature } from "./road-temperature.js";
 
 maplibregl.setWorkerUrl(new URL("./vendor/maplibre-gl-worker.mjs", import.meta.url).href);

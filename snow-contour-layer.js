@@ -1,4 +1,4 @@
-import { CONTOUR_COLORS, SNOW_THRESHOLDS } from "./snow-display-data.js";
+import { CONTOUR_COLORS, SNOW_THRESHOLDS } from "./snow-display-data.js?v=20260924-snow2";
 
 const VERTEX = `#version 300 es
 precision highp float;
@@ -86,6 +86,7 @@ export function createSnowContourLayer() {
   let resources = null;
   let geometry = { vertices: new Float32Array(0), ranges: SNOW_THRESHOLDS.map(() => [0, 0]) };
   let visible = false;
+  let positiveOnly = false;
   let opacity = 0.55;
   let dirty = true;
   const colors = CONTOUR_COLORS.map((hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255));
@@ -107,6 +108,11 @@ export function createSnowContourLayer() {
     setVisible(value) {
       if (typeof value !== "boolean") throw new Error("積雪等値線の表示状態が不正です");
       visible = value;
+      map?.triggerRepaint();
+    },
+    setPositiveOnly(value) {
+      if (typeof value !== "boolean") throw new Error("積雪の0cm除外設定が不正です");
+      positiveOnly = value;
       map?.triggerRepaint();
     },
     onAdd(nextMap, gl) {
@@ -160,6 +166,7 @@ export function createSnowContourLayer() {
         gl.disable(gl.DEPTH_TEST); gl.depthMask(false); gl.disable(gl.CULL_FACE);
         gl.lineWidth(1);
         for (let i = 0; i < geometry.ranges.length; i++) {
+          if (positiveOnly && i === 0) continue;
           const [first, count] = geometry.ranges[i];
           if (!count) continue;
           gl.uniform4f(resources.color, ...colors[i], Math.sqrt(opacity));

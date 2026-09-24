@@ -19,10 +19,10 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "bytes": 13181,
+      "bytes": 13414,
       "mime_type": "text/markdown",
       "path": "README.md",
-      "sha256": "1c0dded0f6a4ae4ce889e07f0bd00b874cd56afee1d89d6032826d14f718a0ba"
+      "sha256": "15256a5f5fe1d13998725ddff46efe24d30811ef363ac8146e07e1c10263c82b"
     },
     {
       "bytes": 1298,
@@ -31,10 +31,10 @@
       "sha256": "732472f1859e857b5e764b2f8765294cbfedf8cd3adac2f422d3d5436efb61ce"
     },
     {
-      "bytes": 6205,
+      "bytes": 6222,
       "mime_type": "text/javascript",
       "path": "app.js",
-      "sha256": "57fb45865303a59ddb1fa18840bebc1da6adb378b44962f12bb8dea3b8c3fa0a"
+      "sha256": "cf68096b1c7ecdd62e2a12b3018dbdbe3fa6dd0afa5ddb93ad5385dc7f0ed112"
     },
     {
       "bytes": 266670,
@@ -3913,10 +3913,10 @@
       "sha256": "7704fbd5a1bcee94880257656eaf7b3baf0425e82ad785a27ba1fc52b1bf299a"
     },
     {
-      "bytes": 14983,
+      "bytes": 15293,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "1c673ae2f743f9dfd7b2ac7d8d71327b944065435e8dc5964a122703ccad5ba1"
+      "sha256": "dc1d453a8efcc71aadc0c2aa2aa179a6ce0c64559376d07472f93764628e5f93"
     },
     {
       "bytes": 332491,
@@ -3997,28 +3997,28 @@
       "sha256": "3e0abb6a6a24454fd2144d2f94ab156154c3cd915349ff3882541d112c97917e"
     },
     {
-      "bytes": 7648,
+      "bytes": 7933,
       "mime_type": "text/javascript",
       "path": "snow-contour-layer.js",
-      "sha256": "a66ec15c70742c9d8d1af58e7f7150ec87ae206025516365733567a0820aaf78"
+      "sha256": "fd6ed230929021b14a0d1c9e340a3bbb38410b7614a06c7d64f9e10fd27336a8"
     },
     {
-      "bytes": 9550,
+      "bytes": 10757,
       "mime_type": "text/javascript",
       "path": "snow-control.js",
-      "sha256": "5cb9c78b7ba7cec7f7e106dacf8df073424e513b90b9b559731167335427fd28"
+      "sha256": "750a62a1b1405505a552b25fb6d8b373b4470556fb07b0648eb5ef12ea76eac5"
     },
     {
-      "bytes": 5200,
+      "bytes": 5568,
       "mime_type": "text/javascript",
       "path": "snow-display-data.js",
-      "sha256": "811a84f2f0dedbc7f881ea78463b71f64c48bc50fd035de415a1a7495661da62"
+      "sha256": "f91d96afd3b0ec9d69c5aa41ad3fe6414f8abc26b77feacce13b010ca9762929"
     },
     {
-      "bytes": 24096,
+      "bytes": 24554,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "d4932e2cc6a59a194b8694e0f5695719c0e43c57b3351e39ecc49de91594f023"
+      "sha256": "b199c0a0e71084b7055714747a275461314d8488d0d0b0b8ac9a1119a501b796"
     },
     {
       "bytes": 16663,
@@ -4039,10 +4039,10 @@
       "sha256": "882f127c8bd4c31bd32e4a8898a4212b01fd18d179eedc34c4003d366b85fa86"
     },
     {
-      "bytes": 4080,
+      "bytes": 4197,
       "mime_type": "text/javascript",
       "path": "tests/page-contract.test.mjs",
-      "sha256": "0b0d6e20042175f5d4d753d7397cdcc1e45cb8fcb6415d6625f1d7e052967f53"
+      "sha256": "6e4b0ee7879d463242b482be7212b5c00278f75b2297f2df10da5789cdce78e8"
     },
     {
       "bytes": 6090,
@@ -4063,10 +4063,10 @@
       "sha256": "14b4a164290e61648879877137ce1ccb2b716ba1c83d68f04594cf0f9b06f6ac"
     },
     {
-      "bytes": 3890,
+      "bytes": 4330,
       "mime_type": "text/javascript",
       "path": "tests/snow-display.test.mjs",
-      "sha256": "01ac615b85e5681075832beecf40712edffbba89404b00ef157ccff5a23539e9"
+      "sha256": "01e5b0f497d0b6942578b2090f76604cd65ab82f458ea737023e6a711c40b3c9"
     },
     {
       "bytes": 13394,
@@ -4117,7 +4117,7 @@
       "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
     }
   ],
-  "generated_at_utc": "2026-09-24T01:01:37+00:00",
+  "generated_at_utc": "2026-09-24T04:06:38+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

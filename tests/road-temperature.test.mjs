@@ -42,7 +42,7 @@ function fakeGL({ compile = true } = {}) {
   return gl;
 }
 
-function makeMap(gl = fakeGL()) {
+function makeMap(gl = fakeGL(), roadFeatures = features) {
   const layers = new Map(), handlers = new Map();
   const map = {
     gl, layers, orders: [], errors: [], queries: 0, zoom: 10, container: { dataset: {} },
@@ -58,7 +58,7 @@ function makeMap(gl = fakeGL()) {
     getCanvas() { return { width: 800, height: 600, clientWidth: 800, clientHeight: 600 }; },
     getContainer() { return map.container; },
     getBounds() { return { getWest: () => 11175 / 80, getEast: () => 11178 / 80, getSouth: () => 4282 / 120, getNorth: () => 4283 / 120 }; },
-    queryRenderedFeatures(query) { map.queries++; assert.deepEqual(query.layers, ["general-road", "highway"]); return features; },
+    queryRenderedFeatures(query) { map.queries++; assert.deepEqual(query.layers, ["general-road", "highway"]); return roadFeatures; },
     render() { for (const layer of layers.values()) layer.render(gl, options); },
   };
   return map;
@@ -119,6 +119,27 @@ test("zoom uses native pixel widths, invalidates old geometry, and road visibili
     const queries = map.queries;
     map.emit("sourcedata", { sourceId: "background" }); await settle(); assert.equal(map.queries, queries);
   } finally { roads.destroy(); }
+});
+
+test("nationwide zoom draws temperature-colored highways but not general roads", async () => {
+  const highway = [{ ...features[0], properties: { ftCode: 52703 } }];
+  const highwayMap = makeMap(fakeGL(), highway);
+  const highways = createRoadTemperature(highwayMap, grid());
+  try {
+    highwayMap.zoom = 4.7;
+    highways.setClasses(new Uint8Array([1, 2, 3]), "01-22");
+    await settle(); highwayMap.render();
+    assert.ok(highwayMap.gl.draws.length > 0);
+    assert.ok(Number(highwayMap.container.dataset.roadHighwaySegments) > 0);
+  } finally { highways.destroy(); }
+  const generalMap = makeMap();
+  const general = createRoadTemperature(generalMap, grid());
+  try {
+    generalMap.zoom = 4.7;
+    general.setClasses(new Uint8Array([1, 2, 3]), "01-22");
+    await settle(); generalMap.render();
+    assert.equal(generalMap.gl.draws.length, 0);
+  } finally { general.destroy(); }
 });
 
 test("GL context restoration recreates buffers and texture and restores shared GL state", async () => {

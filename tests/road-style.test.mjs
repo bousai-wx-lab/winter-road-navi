@@ -27,6 +27,9 @@ test("highways and general roads are distinct source-layer road groups", () => {
   assert.equal(layers.highway.source, "roads");
   assert.equal(layers["general-road"].source, "roads");
   assert.notEqual(layers.highway.paint["line-color"], layers["general-road"].paint["line-color"]);
+  assert.equal(layers.highway.minzoom, 4);
+  assert.equal(layers["highway-casing"].minzoom, 4);
+  assert.equal(layers["general-road"].minzoom, 5);
 });
 
 test("road classification covers low and high zoom GSI attributes", () => {

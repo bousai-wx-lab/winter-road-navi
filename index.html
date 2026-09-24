@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別最低気温・日最深積雪の平年推定値と道路を同じ地図で確認できます。予報や路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20260924-snow2">
-    <script type="module" src="./app.js?v=20260924-snow2" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20260924-roadhover1">
+    <script type="module" src="./app.js?v=20260924-roadhover1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -71,6 +71,7 @@
           </div>
           <p id="temperaturePoint" class="temperature-point">地図をクリックすると、その格子の気温帯を確認できます。</p>
           <button id="clearTemperaturePoint" type="button" hidden>地点選択を解除</button>
+          <label class="mesh-tooltip-option"><input id="meshTooltipToggle" type="checkbox" checked> マウス位置の気温・積雪を表示</label>
         </section>
 
         <div class="panel-collapsible">
@@ -137,6 +138,12 @@
           <h2 id="map-heading" class="visually-hidden">全国の1km気温・積雪平年メッシュと道路地図</h2>
           <div id="map" role="application" aria-label="日別の平均最低気温、日最深積雪の平年推定値と全国の道路を表示する地図"></div>
           <p id="mapTemperatureLabel" class="map-temperature-label">気温を準備中</p>
+          <div id="meshTooltip" class="mesh-tooltip" role="tooltip" hidden>
+            <strong id="meshTooltipDate"></strong>
+            <span id="meshTooltipTemperature"></span>
+            <span id="meshTooltipSnow"></span>
+            <small>1km格子の独自推定・表示階級</small>
+          </div>
 
           <aside id="roadDetails" class="road-details" hidden aria-live="polite">
             <button id="closeDetails" type="button" aria-label="道路情報を閉じる">×</button>

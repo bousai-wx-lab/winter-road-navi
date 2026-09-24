@@ -103,7 +103,7 @@ export function initTemperature(map, hooks = {}) {
     loadState = "ready";
     bins = data.bins; roadClasses = unpackRoadClasses(data); displayed = index;
     layer.setBins(bins); layer.setVisible($("temperatureToggle").checked);
-    hooks.onDay?.(roadClasses, manifest.days[index]);
+    hooks.onDay?.(roadClasses, manifest.days[index], bins);
     updateMapLabel();
     $("map").dataset.temperatureDay = manifest.days[index];
     $("map").dataset.temperatureCells = String(grid.count);

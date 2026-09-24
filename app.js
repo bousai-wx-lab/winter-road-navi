@@ -1,8 +1,9 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
-import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js";
-import { initTemperature } from "./temperature-control.js?v=20260924-snow1";
-import { createRoadTemperature } from "./road-temperature.js";
-import { initSnow } from "./snow-control.js?v=20260924-snow2";
+import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=20260924-roadhover1";
+import { initTemperature } from "./temperature-control.js?v=20260924-roadhover1";
+import { createRoadTemperature } from "./road-temperature.js?v=20260924-roadhover1";
+import { initSnow } from "./snow-control.js?v=20260924-roadhover1";
+import { lookupCell, binLabel } from "./temperature-layer.js";
 
 maplibregl.setWorkerUrl(new URL("./vendor/maplibre-gl-worker.mjs", import.meta.url).href);
 
@@ -14,6 +15,26 @@ const roadNote = document.querySelector("#roadNote");
 const interactiveLayers = ["highway", "general-road"];
 let roadTemperature = null;
 let snow = null;
+let temperatureGrid = null, temperatureBins = null, tooltipDay = null, hovered = null;
+const tooltip = document.querySelector("#meshTooltip");
+const tooltipToggle = document.querySelector("#meshTooltipToggle");
+function refreshTooltip() {
+  if (!tooltipToggle.checked || !hovered) { tooltip.hidden = true; return; }
+  const index = temperatureGrid ? lookupCell(temperatureGrid, hovered.lng, hovered.lat) : -1;
+  const temperature = !tooltipDay || !temperatureBins ? "気温を準備中"
+    : index < 0 ? "格子未収録" : temperatureBins[index] === 0 ? "欠測" : binLabel(temperatureBins[index]);
+  const snowValue = snow?.tooltipAt(hovered.lng, hovered.lat) ?? { label: "積雪を準備中" };
+  document.querySelector("#meshTooltipDate").textContent = tooltipDay ? `${tooltipDay.replace("-", "月")}日` : "表示日を準備中";
+  document.querySelector("#meshTooltipTemperature").textContent = `平均最低気温：${temperature}`;
+  document.querySelector("#meshTooltipSnow").textContent = `日最深積雪：${snowValue.label}`;
+  tooltip.dataset.day = tooltipDay || "";
+  tooltip.dataset.temperature = temperature;
+  tooltip.dataset.snow = snowValue.label;
+  tooltip.hidden = false;
+  const width = tooltip.offsetWidth, height = tooltip.offsetHeight;
+  tooltip.style.left = `${Math.max(8, Math.min(hovered.x + 14, mapElement.clientWidth - width - 8))}px`;
+  tooltip.style.top = `${Math.max(8, Math.min(hovered.y + 16, mapElement.clientHeight - height - 8))}px`;
+}
 const roadTemperatureStatus = document.querySelector("#roadTemperatureStatus");
 function setRoadTemperatureState(state) {
   roadTemperatureStatus.dataset.state = state;
@@ -84,6 +105,11 @@ document.querySelector("#generalToggle").addEventListener("change", (event) => {
   roadTemperature?.setGeneralVisible(event.currentTarget.checked);
 });
 
+tooltipToggle.addEventListener("change", () => {
+  snow?.setTooltipEnabled(tooltipToggle.checked);
+  refreshTooltip();
+});
+
 document.querySelector("#resetView").addEventListener("click", () => {
   map.easeTo({ center: JAPAN_VIEW.center, zoom: JAPAN_VIEW.zoom, duration: 450 });
 });
@@ -96,6 +122,7 @@ map.on("load", () => {
   setStatus("道路を表示中。細い一般道路は地図を拡大すると現れます", "ready");
   initTemperature(map, {
     onGrid(grid) {
+      temperatureGrid = grid;
       try {
         roadTemperature?.destroy();
         roadTemperature = createRoadTemperature(map, grid, setRoadTemperatureState);
@@ -105,13 +132,21 @@ map.on("load", () => {
         roadTemperature = null; setRoadTemperatureState("error");
       }
     },
-    onLayerReady(grid, manifest) { snow = initSnow(map, grid, manifest); },
-    onDay(classes, day) {
+    onLayerReady(grid, manifest) {
+      snow = initSnow(map, grid, manifest, refreshTooltip);
+      snow.setTooltipEnabled(tooltipToggle.checked);
+    },
+    onDay(classes, day, bins) {
+      temperatureBins = bins; tooltipDay = day;
       try { roadTemperature?.setClasses(classes, day); }
       catch { roadTemperature?.clear(); setRoadTemperatureState("error"); }
       void snow?.setDay(day);
+      refreshTooltip();
     },
-    onUnavailable(state) { roadTemperature?.clear(); setRoadTemperatureState(state); snow?.clear(); },
+    onUnavailable(state) {
+      temperatureBins = null; tooltipDay = null;
+      roadTemperature?.clear(); setRoadTemperatureState(state); snow?.clear(); refreshTooltip();
+    },
     preparePlayback() { return snow?.preparePlayback() ?? true; },
   });
 });
@@ -133,9 +168,17 @@ map.on("error", (event) => {
 map.on("mousemove", (event) => {
   const features = map.queryRenderedFeatures(event.point, { layers: interactiveLayers });
   map.getCanvas().style.cursor = features.length ? "pointer" : "";
+  hovered = { lng: event.lngLat.lng, lat: event.lngLat.lat, x: event.point.x, y: event.point.y };
+  refreshTooltip();
 });
 
+map.on("mouseleave", () => { hovered = null; refreshTooltip(); });
+
 map.on("click", (event) => {
+  if (tooltipToggle.checked) {
+    hovered = { lng: event.lngLat.lng, lat: event.lngLat.lat, x: event.point.x, y: event.point.y };
+    refreshTooltip();
+  }
   const feature = map.queryRenderedFeatures(event.point, { layers: interactiveLayers })[0];
   if (!feature) {
     details.hidden = true;

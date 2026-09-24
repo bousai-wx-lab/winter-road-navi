@@ -175,7 +175,9 @@ function makeLayer(kind, shared) {
       map.on("webglcontextlost", onLost); map.on("webglcontextrestored", onRestored);
     },
     render(gl, options) {
-      if (lost || shared.failed || !shared.active || !shared.geometry || !shared.visible[kind] || shared.map.getZoom() < 5) return;
+      const zoom = shared.map.getZoom();
+      if (lost || shared.failed || !shared.active || !shared.geometry || !shared.visible[kind]
+        || zoom < 4.7 || (kind === "general" && zoom < 5)) return;
       const geometry = shared.geometry[kind];
       if (!geometry.count) return;
       const state = captureGL(gl);

@@ -70,7 +70,17 @@ test("snow shares the same map and calendar with independent visibility, opacity
   assert.equal(html.includes("現象なしは無色"), true);
   assert.equal(html.includes("細い実線"), true);
   assert.equal(html.includes("推定した1km格子境界"), true);
-  assert.equal(app.includes("initSnow(map, grid, manifest)"), true);
+  assert.equal(app.includes("initSnow(map, grid, manifest, refreshTooltip)"), true);
+});
+
+test("map tooltip can be disabled and labels both independent 1km estimates", () => {
+  assert.equal(html.includes('id="meshTooltipToggle" type="checkbox" checked'), true);
+  assert.equal(html.includes('id="meshTooltip" class="mesh-tooltip" role="tooltip" hidden'), true);
+  assert.equal(html.includes("平均最低気温"), true);
+  assert.equal(html.includes("日最深積雪"), true);
+  assert.equal(app.includes("lookupCell(temperatureGrid, hovered.lng, hovered.lat)"), true);
+  assert.equal(app.includes("snow?.tooltipAt(hovered.lng, hovered.lat)"), true);
+  assert.equal(styles.includes(".mesh-tooltip[hidden] { display: none; }"), true);
 });
 
 test("application does not use location, storage, cookies, or HTML injection", () => {

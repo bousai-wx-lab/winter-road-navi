@@ -20,7 +20,7 @@ async function checkedSnowDay(record, count) {
   return decodeSnowDay(JSON.parse(new TextDecoder().decode(decoded)), count, record.day);
 }
 
-export function initSnow(map, grid, temperatureManifest) {
+export function initSnow(map, grid, temperatureManifest, onTooltipChange = () => {}) {
   const toggle = $("snowToggle"), opacity = $("snowOpacity"), opacityValue = $("snowOpacityValue");
   const positiveOnly = $("snowPositiveOnly"), scaleStart = $("snowScaleStart");
   const contourCaption = $("snowContourCaption"), zeroContourLegend = $("snowZeroContourLegend");
@@ -28,7 +28,8 @@ export function initSnow(map, grid, temperatureManifest) {
   const retry = $("retrySnow");
   const cache = new Map(), pending = new Map();
   let manifest = null, layer = null, contours = null, selectedDay = null, displayedDay = null;
-  let bins = null, selectedPoint = null, request = 0, prefetchPromise = null;
+  let bins = null, tooltipBins = null, tooltipDay = null, tooltipEnabled = false, tooltipError = false;
+  let selectedPoint = null, request = 0, prefetchPromise = null;
   let startPromise = null;
 
   function showStatus(message, state = "ready") {
@@ -70,9 +71,12 @@ export function initSnow(map, grid, temperatureManifest) {
     contours.setVisible(toggle.checked);
     bins = decoded;
     displayedDay = day;
+    tooltipBins = decoded;
+    tooltipDay = day;
     $("map").dataset.snowDay = day;
     showStatus(`${day.replace("-", "月")}日の積雪平年値を表示中`);
     refreshPoint();
+    onTooltipChange();
   }
 
   async function loadDay(day) {
@@ -91,22 +95,34 @@ export function initSnow(map, grid, temperatureManifest) {
   async function setDay(day) {
     selectedDay = day;
     const token = ++request;
-    if (!toggle.checked) { hide(); refreshPoint(); return; }
+    tooltipBins = null; tooltipDay = null; tooltipError = false;
+    onTooltipChange();
+    if (!toggle.checked && !tooltipEnabled) { hide(); refreshPoint(); return; }
     if (!manifest) { showStatus("積雪データの一覧を確認中", "loading"); return; }
-    retry.hidden = true;
-    if (!cache.has(day)) {
+    if (toggle.checked) retry.hidden = true;
+    if (toggle.checked && !cache.has(day)) {
       hide(); bins = null; displayedDay = null;
       showStatus(`${day.replace("-", "月")}日の積雪を準備中`, "loading");
       refreshPoint();
     }
     try {
       const compact = await loadDay(day);
-      if (token === request && toggle.checked) display(day, compact);
+      if (token !== request) return;
+      if (toggle.checked) display(day, compact);
+      else {
+        tooltipBins = expandSnowBins(compact, grid.count);
+        tooltipDay = day;
+        onTooltipChange();
+      }
     } catch {
       if (token !== request) return;
-      hide(); bins = null; displayedDay = null;
-      showStatus("積雪を表示できません。気温と道路は引き続き操作できます", "error");
-      retry.hidden = false; refreshPoint();
+      hide(); bins = null; displayedDay = null; tooltipError = true;
+      tooltipBins = null; tooltipDay = null; onTooltipChange();
+      if (toggle.checked) {
+        showStatus("積雪を表示できません。気温と道路は引き続き操作できます", "error");
+        retry.hidden = false;
+      }
+      refreshPoint();
     }
   }
 
@@ -174,7 +190,8 @@ export function initSnow(map, grid, temperatureManifest) {
       layer.setOpacity(value); contours.setOpacity(value);
       toggle.disabled = false;
       showStatus("積雪表示はOFFです。ONにすると選択日の雪域と等値線を表示します");
-      if (toggle.checked && selectedDay) { void setDay(selectedDay); void prepareSeason(); }
+      if (selectedDay && (toggle.checked || tooltipEnabled)) void setDay(selectedDay);
+      if (toggle.checked) void prepareSeason();
     } catch {
       hide();
       if (map.getLayer("snow-contours")) map.removeLayer("snow-contours");
@@ -182,12 +199,15 @@ export function initSnow(map, grid, temperatureManifest) {
       layer = null; contours = null; manifest = null;
       showStatus("積雪表示を準備できません。気温と道路は引き続き操作できます", "error");
       retry.hidden = false;
+      onTooltipChange();
     }
   }
 
   toggle.addEventListener("change", () => {
     if (!toggle.checked) {
-      ++request; hide(); showStatus("積雪表示はOFFです"); refreshPoint(); return;
+      ++request; hide(); showStatus("積雪表示はOFFです"); refreshPoint();
+      if (tooltipEnabled && selectedDay) void setDay(selectedDay);
+      return;
     }
     if (selectedDay) void setDay(selectedDay);
     void prepareSeason();
@@ -218,8 +238,21 @@ export function initSnow(map, grid, temperatureManifest) {
   return {
     setDay,
     preparePlayback: async () => toggle.checked ? prepareSeason() : true,
+    setTooltipEnabled(enabled) {
+      tooltipEnabled = Boolean(enabled);
+      if (!tooltipEnabled) { tooltipBins = null; tooltipDay = null; return; }
+      if (selectedDay) void setDay(selectedDay);
+    },
+    tooltipAt(lng, lat) {
+      if (!manifest) return { state: "unavailable", label: "積雪データなし" };
+      if (tooltipError) return { state: "error", label: "積雪データを確認できません" };
+      if (!selectedDay || tooltipDay !== selectedDay || !tooltipBins) return { state: "loading", label: "積雪を準備中" };
+      const index = lookupCell(grid, lng, lat);
+      return { state: "ready", label: index < 0 ? "格子未収録" : snowBinLabel(tooltipBins[index]) };
+    },
     clear() {
       ++request; hide(); bins = null; displayedDay = null;
+      tooltipBins = null; tooltipDay = null; tooltipError = false; selectedDay = null; onTooltipChange();
       if (toggle.checked) showStatus("気温の日付を確認できないため積雪は非表示です", "error");
       refreshPoint();
     },

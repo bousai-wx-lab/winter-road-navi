@@ -829,6 +829,12 @@ main {
 .temperature-options input[type="range"] { width: 100%; }
 .temperature-options input[type="checkbox"] { width: 18px; height: 18px; vertical-align: middle; accent-color: #146a98; }
 .temperature-options output { float: right; }
+.mesh-tooltip-option { display: flex; align-items: center; gap: 7px; margin: 8px 0 2px; font-size: 12px; font-weight: 700; color: #173b53; cursor: pointer; }
+.mesh-tooltip-option input { width: 18px; height: 18px; margin: 0; accent-color: #146a98; }
+.mesh-tooltip { position: absolute; z-index: 7; display: grid; gap: 3px; width: max-content; max-width: min(250px, calc(100% - 16px)); padding: 9px 11px; border: 1px solid #7396a8; border-radius: 7px; background: rgba(255,255,255,.97); box-shadow: 0 5px 18px rgba(7,45,72,.22); color: #173b53; font-size: 12px; line-height: 1.4; pointer-events: none; }
+.mesh-tooltip[hidden] { display: none; }
+.mesh-tooltip strong { font-size: 13px; }
+.mesh-tooltip small { color: #48677a; font-size: 10px; }
 .map-temperature-label { position: absolute; left: 10px; top: 8px; z-index: 4; margin: 0; padding: 7px 9px; max-width: calc(100% - 66px); background: rgba(255,255,255,.92); color: #173b53; font-size: 12px; font-weight: 700; border: 1px solid #b8ccd7; border-radius: 4px; pointer-events: none; }
 .temperature-controls button:focus-visible, .temperature-controls select:focus-visible, input:focus-visible { outline: 3px solid #087da2; outline-offset: 2px; }
 .temperature-controls button:disabled, .temperature-controls select:disabled { opacity: .5; cursor: wait; }

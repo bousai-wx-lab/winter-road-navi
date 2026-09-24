@@ -80,13 +80,14 @@
             <p class="snow-intro">選択日の1km格子の雪域を重ねます。道路上の積雪ではありません。</p>
             <div class="snow-options">
               <label><input id="snowToggle" type="checkbox" disabled> 積雪を重ねる</label>
-              <label for="snowOpacity">濃さ <output id="snowOpacityValue">55%</output></label>
-              <input id="snowOpacity" type="range" min="0" max="100" value="55">
+              <label for="snowOpacity">濃さ <output id="snowOpacityValue">100%</output></label>
+              <input id="snowOpacity" type="range" min="0" max="100" value="100">
             </div>
-            <div class="snow-depth-scale" aria-label="積雪の濃さは1〜4cmから100cm以上までの6階級"></div>
-            <p class="snow-depth-scale-label">1〜4cm <span>100cm以上</span></p>
-            <p class="snow-contour-caption">細い実線：各深さ以上の境界</p>
+            <div class="snow-depth-scale" aria-label="現象あり0cmは白、約350cm以上は黒の連続的な濃淡"></div>
+            <p class="snow-depth-scale-label">現象あり0cm・白 <span>約350cm以上・黒</span></p>
+            <p class="snow-contour-caption">細い実線：積雪域の境界と各深さ以上の境界</p>
             <div class="snow-contour-legend" aria-label="積雪の等値線">
+              <span><i class="snow-line-0" aria-hidden="true"></i>雪域の境界</span>
               <span><i class="snow-line-1" aria-hidden="true"></i>1cm</span>
               <span><i class="snow-line-5" aria-hidden="true"></i>5cm</span>
               <span><i class="snow-line-10" aria-hidden="true"></i>10cm</span>
@@ -94,7 +95,7 @@
               <span><i class="snow-line-50" aria-hidden="true"></i>50cm</span>
               <span><i class="snow-line-100" aria-hidden="true"></i>100cm</span>
             </div>
-            <p class="snow-note">線は元の1km格子境界に沿います。欠測と未収録の外側には境界線を引きません。</p>
+            <p class="snow-note">現象なしは無色。判定不能・欠測も塗らず、境界線を引きません。線は推定した1km格子境界に沿います。</p>
             <p id="snowStatus" class="temperature-status" role="status">積雪表示を準備しています</p>
             <p id="snowPreparationStatus" class="temperature-status" aria-live="polite"></p>
             <button id="retrySnow" type="button" hidden>積雪データを再読込</button>
@@ -173,7 +174,7 @@
           <p>道路・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a></p>
           <p>国土地理院のデータをBousai Wx Labが独自に区分・着色して表示しています。データは試験提供で、最新状況と異なる場合があります。</p>
           <p>気温：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年日別平年値</a>・国土数値情報標高データを基に独自算出・独自内挿。公式の日別1kmメッシュではありません。</p>
-          <p>積雪：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年の日最深積雪平年値</a>と月別1km推定値から独自推定。公式の日別1kmメッシュではありません。細い実線は元の格子値が1・5・10・20・50・100cmの各閾値をまたぐ境界です。</p>
+          <p>積雪：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年の日最深積雪平年値</a>と月別1km推定値から独自推定。地上観測の「現象なし」と「現象あり0cm」を分け、アメダスの曖昧な0cmは不在の根拠にしていません。全国の雪域境界も独自推定であり、公式の日別1kmメッシュではありません。細い実線は現象の有無、および1・5・10・20・50・100cmの各閾値をまたぐ格子境界です。</p>
           <p>気温の1km格子は局所的な精度を保証しません。917観測地点から推定し、383,497格子を着色、4,220格子は欠測。地点を除いて検証した日別RMSEは約0.49〜1.30℃ですが、盆地・沿岸・高標高などでは数℃の誤差が残ります。全陸地の網羅は保証しません。</p>
           <p>9月15日から翌6月15日までの275日を、年末年始をまたいで連続表示します。2月29日を含み、気象庁の元の2月29日値は前後日の平均です。一部の観測地点は30年未満の統計を含みます。<a href="https://www.jma.go.jp/bosai/" target="_blank" rel="noopener noreferrer">最新の気象情報（気象庁）</a></p>
           <p class="privacy-note">このツールは現在地を取得せず、住所入力・Cookie・ブラウザ保存・アクセス解析を使用しません。地点選択は画面内だけで処理します。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。</p>

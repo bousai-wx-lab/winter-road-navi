@@ -65,8 +65,10 @@ test("snow shares the same map and calendar with independent visibility, opacity
     assert.equal(html.includes(`id="${id}"`), true, id);
   }
   for (const level of [1, 5, 10, 20, 50, 100]) assert.equal(html.includes(`>${level}cm</span>`), true);
+  assert.equal(html.includes("雪域の境界</span>"), true);
+  assert.equal(html.includes("現象なしは無色"), true);
   assert.equal(html.includes("細い実線"), true);
-  assert.equal(html.includes("元の1km格子境界"), true);
+  assert.equal(html.includes("推定した1km格子境界"), true);
   assert.equal(app.includes("initSnow(map, grid, manifest)"), true);
 });
 

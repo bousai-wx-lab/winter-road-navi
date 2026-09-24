@@ -14,7 +14,10 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "data/snow/manifest.json"
 DAYS = [(date(2000, 1, 1) + timedelta(days=i)).strftime("%m-%d") for i in range(366)]
 SEASON = DAYS[DAYS.index("09-15"):] + DAYS[:DAYS.index("06-15") + 1]
-THRESHOLDS = (1, 5, 10, 20, 50, 100)
+THRESHOLDS = (0, 1, 5, 10, 20, 50, 100)
+BIN_STARTS = tuple(range(1, 5)) + tuple(range(5, 10)) + tuple(range(10, 20)) \
+    + tuple(range(20, 50, 2)) + tuple(range(50, 100, 5)) \
+    + tuple(100 + i * 250 // 20 for i in range(20))
 MAX_DAILY = 4_000_000
 
 
@@ -46,7 +49,7 @@ def decode_snow_gzip(data: bytes, expected_raw_bytes: int):
     return result
 
 
-def validate_snow_gzip(path_label: str, data: bytes, record: dict):
+def validate_snow_gzip(path_label: str, data: bytes, record: dict, *, allow_legacy: bool = False):
     match = re.fullmatch(r"data/snow/(\d{2}-\d{2})\.json\.gz", path_label)
     require(match is not None and match[1] in SEASON, "invalid snow file path")
     value = decode_snow_gzip(data, record.get("uncompressed_bytes"))
@@ -54,19 +57,22 @@ def validate_snow_gzip(path_label: str, data: bytes, record: dict):
             and value["day"] == match[1] and type(value["cell_count"]) is int
             and value["cell_count"] == 387717, "invalid snow day identity")
     runs = value["runs"]
+    legacy = allow_legacy and set(value["contours"]) == {"1", "5", "10", "20", "50", "100"}
+    max_bin = 7 if legacy else 66
+    levels = THRESHOLDS[1:] if legacy else THRESHOLDS
     require(type(runs) is list and bool(runs) and len(runs) % 2 == 0, "invalid snow runs")
     count = 0
     for index in range(0, len(runs), 2):
         bin_value, length = runs[index:index + 2]
-        require(type(bin_value) is int and 0 <= bin_value <= 7
+        require(type(bin_value) is int and 0 <= bin_value <= max_bin
                 and type(length) is int and length > 0, "invalid snow class or run length")
         count += length
         require(count <= 387717, "snow runs overflow grid")
     require(count == 387717, "snow runs do not cover grid")
     contours = value["contours"]
-    require(type(contours) is dict and set(contours) == {str(level) for level in THRESHOLDS},
+    require(type(contours) is dict and set(contours) == {str(level) for level in levels},
             "invalid snow contour levels")
-    for level in THRESHOLDS:
+    for level in levels:
         segments = contours[str(level)]
         require(type(segments) is list and len(segments) % 3 == 0 and len(segments) <= 300_000,
                 "invalid snow contour count")
@@ -108,8 +114,13 @@ def verify_contours(value, cells, indices):
         for neighbor, axis in ((indices.get((row, col + 1)), 0), (indices.get((row + 1, col)), 1)):
             if neighbor is None or bins[index] == 0 or bins[neighbor] == 0:
                 continue
-            for level_index, level in enumerate(THRESHOLDS, 2):
-                if (bins[index] >= level_index) != (bins[neighbor] >= level_index):
+            if (bins[index] == 1) != (bins[neighbor] == 1):
+                expected[0].append((row, col, axis))
+            if bins[index] < 2 or bins[neighbor] < 2:
+                continue
+            for level in THRESHOLDS[1:]:
+                cutoff = BIN_STARTS.index(level) + 3
+                if (bins[index] >= cutoff) != (bins[neighbor] >= cutoff):
                     expected[level].append((row, col, axis))
     for level in THRESHOLDS:
         saved = value["contours"][str(level)]
@@ -123,6 +134,8 @@ def verify():
     require(manifest["schema_version"] == 1 and manifest["source_id"] == "daily-snow-depth-normals-1km"
             and manifest["baseline"] == "1991-2020" and manifest["days"] == SEASON
             and manifest["cell_count"] == 387717 and manifest["missing_bin"] == 0
+            and manifest["absent_bin"] == 1 and manifest["present_zero_bin"] == 2
+            and manifest["positive_bin_starts_cm"] == list(BIN_STARTS)
             and manifest["thresholds_cm"] == list(THRESHOLDS), "invalid snow display manifest")
     grid_bytes = (ROOT / "data/temperature/grid.json").read_bytes()
     require(hashlib.sha256(grid_bytes).hexdigest() == manifest["grid_sha256"],

@@ -236,7 +236,7 @@ def validate_binary_asset(path_label: str, data: bytes, record: dict, *, histori
             return findings
         if path_label.startswith("data/snow/"):
             try:
-                validate_snow_gzip(path_label, data, record)
+                validate_snow_gzip(path_label, data, record, allow_legacy=historical)
             except (ValueError, TypeError, KeyError, zlib.error):
                 findings.append(f"invalid daily snow display data: {path_label}")
             return findings

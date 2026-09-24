@@ -1,23 +1,45 @@
-export const SNOW_THRESHOLDS = Object.freeze([1, 5, 10, 20, 50, 100]);
-
-export const SNOW_COLORS = Object.freeze([
-  "#000000", "#000000", "#d7f2f7", "#b5e2f1", "#88cbe8", "#58add9", "#327fbf", "#1e5595",
+export const SNOW_THRESHOLDS = Object.freeze([0, 1, 5, 10, 20, 50, 100]);
+export const SNOW_BIN_STARTS = Object.freeze([
+  ...Array.from({ length: 4 }, (_, i) => 1 + i),
+  ...Array.from({ length: 5 }, (_, i) => 5 + i),
+  ...Array.from({ length: 10 }, (_, i) => 10 + i),
+  ...Array.from({ length: 15 }, (_, i) => 20 + i * 2),
+  ...Array.from({ length: 10 }, (_, i) => 50 + i * 5),
+  ...Array.from({ length: 20 }, (_, i) => 100 + Math.floor(i * 250 / 20)),
 ]);
+export const SNOW_MAX_BIN = SNOW_BIN_STARTS.length + 2;
+
+export const SNOW_COLORS = Object.freeze(Array.from({ length: 82 }, (_, bin) => {
+  if (bin < 2) return "#000000"; // Fully transparent in the mesh renderer.
+  const depth = bin === 2 ? 0 : SNOW_BIN_STARTS[Math.min(bin - 3, SNOW_BIN_STARTS.length - 1)];
+  const shade = Math.max(0, Math.round(255 * (1 - depth / 337)));
+  const hex = shade.toString(16).padStart(2, "0");
+  return `#${hex}${hex}${hex}`;
+}));
 
 export const CONTOUR_COLORS = Object.freeze([
-  "#2b819e", "#276f9a", "#235d91", "#204b87", "#1c3978", "#182b68",
+  "#202020", "#353535", "#353535", "#353535", "#353535", "#353535", "#ffffff",
 ]);
 
 export function snowBinLabel(bin) {
-  const labels = ["欠測（推定できません）", "0cm", "1〜4cm", "5〜9cm", "10〜19cm", "20〜49cm", "50〜99cm", "100cm以上"];
-  if (!Number.isInteger(bin) || bin < 0 || bin >= labels.length) throw new Error("積雪階級が不正です");
-  return labels[bin];
+  if (!Number.isInteger(bin) || bin < 0 || bin > SNOW_MAX_BIN) throw new Error("積雪階級が不正です");
+  if (bin === 0) return "判定不能・欠測";
+  if (bin === 1) return "現象なし";
+  if (bin === 2) return "現象あり・0cm";
+  const index = bin - 3;
+  const lower = SNOW_BIN_STARTS[index];
+  const upper = SNOW_BIN_STARTS[index + 1];
+  return upper === undefined ? `${lower}cm以上` : lower === upper - 1 ? `${lower}cm` : `${lower}〜${upper - 1}cm`;
 }
 
 export function checkedSnowManifest(manifest, count, temperatureGridSha, seasonDays) {
   if (manifest?.schema_version !== 1 || manifest.source_id !== "daily-snow-depth-normals-1km"
     || manifest.cell_count !== count || manifest.grid_sha256 !== temperatureGridSha
-    || manifest.missing_bin !== 0 || !Array.isArray(manifest.days)
+    || manifest.missing_bin !== 0 || manifest.absent_bin !== 1 || manifest.present_zero_bin !== 2
+    || !Array.isArray(manifest.positive_bin_starts_cm)
+    || manifest.positive_bin_starts_cm.length !== SNOW_BIN_STARTS.length
+    || manifest.positive_bin_starts_cm.some((value, i) => value !== SNOW_BIN_STARTS[i])
+    || !Array.isArray(manifest.days)
     || manifest.days.length !== seasonDays.length || manifest.days.some((day, i) => day !== seasonDays[i])
     || !Array.isArray(manifest.thresholds_cm) || manifest.thresholds_cm.some((value, i) => value !== SNOW_THRESHOLDS[i])
     || manifest.thresholds_cm.length !== SNOW_THRESHOLDS.length
@@ -38,7 +60,7 @@ export function decodeSnowDay(data, count, expectedDay) {
   let position = 0;
   for (let i = 0; i < data.runs.length; i += 2) {
     const bin = data.runs[i], length = data.runs[i + 1];
-    if (!Number.isInteger(bin) || bin < 0 || bin > 7 || !Number.isSafeInteger(length)
+    if (!Number.isInteger(bin) || bin < 0 || bin > SNOW_MAX_BIN || !Number.isSafeInteger(length)
       || length < 1 || position + length > count) throw new Error("積雪階級の並びが不正です");
     runs[i] = bin; runs[i + 1] = length; position += length;
   }

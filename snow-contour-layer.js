@@ -162,7 +162,7 @@ export function createSnowContourLayer() {
         for (let i = 0; i < geometry.ranges.length; i++) {
           const [first, count] = geometry.ranges[i];
           if (!count) continue;
-          gl.uniform4f(resources.color, ...colors[i], opacity);
+          gl.uniform4f(resources.color, ...colors[i], Math.sqrt(opacity));
           gl.drawArrays(gl.LINES, first, count);
         }
       } finally {

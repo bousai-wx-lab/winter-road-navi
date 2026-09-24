@@ -390,11 +390,15 @@ main {
 .snow-options input[type="checkbox"] { width: 18px; height: 18px; vertical-align: middle; accent-color: #2578aa; }
 .snow-options input[type="range"] { width: 100%; accent-color: #2578aa; }
 .snow-options output { float: right; }
+.snow-options button { justify-self: start; min-height: 34px; padding: 5px 10px; border: 1px solid #7d9daf; border-radius: 5px; background: #fff; color: #153d58; font: inherit; font-weight: 700; cursor: pointer; }
+.snow-options button[aria-pressed="true"] { border-color: #1b5d80; background: #1b5d80; color: #fff; }
+.snow-options button:focus-visible { outline: 3px solid #ffbd42; outline-offset: 2px; }
 .snow-depth-scale { height: 10px; margin-top: 5px; border: 1px solid #6d8291; background: linear-gradient(90deg, #fff 0%, #000 100%); }
 .snow-depth-scale-label { display: flex; justify-content: space-between; margin: 3px 0 8px; font-size: 10px; color: #456077; }
 .snow-contour-caption { margin: 0 0 4px; font-size: 11px; font-weight: 700; color: #244c69; }
 .snow-contour-legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; font-size: 10px; color: #274b67; }
 .snow-contour-legend span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.snow-contour-legend span[hidden] { display: none; }
 .snow-contour-legend i { display: inline-block; width: 20px; height: 0; border-top: 1px solid; }
 .snow-line-0 { border-color: #202020; }
 .snow-line-1, .snow-line-5, .snow-line-10, .snow-line-20, .snow-line-50 { border-color: #353535; }

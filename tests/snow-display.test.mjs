@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { checkedSnowManifest, decodeSnowDay, expandSnowBins, snowBinLabel, SNOW_THRESHOLDS, SNOW_BIN_STARTS, SNOW_COLORS } from "../snow-display-data.js";
+import { checkedSnowManifest, decodeSnowDay, expandSnowBins, snowFillBins, snowBinLabel, SNOW_THRESHOLDS, SNOW_BIN_STARTS, SNOW_COLORS } from "../snow-display-data.js";
 import { contourVertices, createSnowContourLayer } from "../snow-contour-layer.js";
 
 test("snow classes keep absent, present-zero, unknown and grayscale separate", () => {
@@ -14,7 +14,13 @@ test("snow classes keep absent, present-zero, unknown and grayscale separate", (
   assert.equal(snowBinLabel(3), "1cm");
   assert.equal(snowBinLabel(66), "337cm以上");
   assert.equal(SNOW_COLORS[2], "#ffffff");
+  assert.equal(SNOW_COLORS[3], "#ffffff");
   assert.equal(SNOW_COLORS[66], "#000000");
+  const bins = expandSnowBins(compact, 7);
+  assert.deepEqual([...snowFillBins(bins)], [0, 0, 2, 3, 7, 47, 66]);
+  assert.deepEqual([...snowFillBins(bins, true)], [0, 0, 0, 3, 7, 47, 66]);
+  assert.equal(bins[2], 2);
+  assert.throws(() => snowFillBins(bins, "yes"));
   assert.throws(() => snowBinLabel(67));
 });
 
@@ -59,6 +65,9 @@ test("contour segments use exact original 1 km edges in Mercator", () => {
   layer.setContours(groups);
   layer.setVisible(true);
   layer.setOpacity(0.55);
+  layer.setPositiveOnly(true);
+  layer.setPositiveOnly(false);
   assert.throws(() => layer.setOpacity(2));
   assert.throws(() => layer.setVisible("yes"));
+  assert.throws(() => layer.setPositiveOnly("yes"));
 });

@@ -12,10 +12,19 @@ export const SNOW_MAX_BIN = SNOW_BIN_STARTS.length + 2;
 export const SNOW_COLORS = Object.freeze(Array.from({ length: 82 }, (_, bin) => {
   if (bin < 2) return "#000000"; // Fully transparent in the mesh renderer.
   const depth = bin === 2 ? 0 : SNOW_BIN_STARTS[Math.min(bin - 3, SNOW_BIN_STARTS.length - 1)];
-  const shade = Math.max(0, Math.round(255 * (1 - depth / 337)));
+  const shade = Math.max(0, Math.round(255 * (1 - Math.max(0, depth - 1) / 336)));
   const hex = shade.toString(16).padStart(2, "0");
   return `#${hex}${hex}${hex}`;
 }));
+
+export function snowFillBins(bins, positiveOnly = false) {
+  if (!(bins instanceof Uint8Array) || typeof positiveOnly !== "boolean") throw new Error("積雪表示階級が不正です");
+  const fill = bins.slice();
+  for (let i = 0; i < fill.length; i++) {
+    if (fill[i] === 1 || (positiveOnly && fill[i] === 2)) fill[i] = 0;
+  }
+  return fill;
+}
 
 export const CONTOUR_COLORS = Object.freeze([
   "#202020", "#353535", "#353535", "#353535", "#353535", "#353535", "#ffffff",

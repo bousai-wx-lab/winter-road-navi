@@ -1,6 +1,6 @@
 import { createTemperatureLayer, lookupCell } from "./temperature-layer.js";
-import { checkedSnowManifest, decodeSnowDay, expandSnowBins, SNOW_COLORS, snowBinLabel } from "./snow-display-data.js";
-import { createSnowContourLayer } from "./snow-contour-layer.js";
+import { checkedSnowManifest, decodeSnowDay, expandSnowBins, snowFillBins, SNOW_COLORS, snowBinLabel } from "./snow-display-data.js?v=20260924-snow2";
+import { createSnowContourLayer } from "./snow-contour-layer.js?v=20260924-snow2";
 
 const ROOT = "./data/snow/";
 const $ = (id) => document.getElementById(id);
@@ -22,6 +22,8 @@ async function checkedSnowDay(record, count) {
 
 export function initSnow(map, grid, temperatureManifest) {
   const toggle = $("snowToggle"), opacity = $("snowOpacity"), opacityValue = $("snowOpacityValue");
+  const positiveOnly = $("snowPositiveOnly"), scaleStart = $("snowScaleStart");
+  const contourCaption = $("snowContourCaption"), zeroContourLegend = $("snowZeroContourLegend");
   const status = $("snowStatus"), preparation = $("snowPreparationStatus"), point = $("snowPoint");
   const retry = $("retrySnow");
   const cache = new Map(), pending = new Map();
@@ -45,14 +47,24 @@ export function initSnow(map, grid, temperatureManifest) {
     if (!toggle.checked) { point.textContent = "選択地点：積雪表示はOFFです"; return; }
     if (displayedDay !== selectedDay || !bins) { point.textContent = "選択地点：積雪を準備中です"; return; }
     const index = lookupCell(grid, selectedPoint.lng, selectedPoint.lat);
-    point.textContent = `選択地点（${displayedDay.replace("-", "/")}）：${index < 0 ? "格子未収録" : snowBinLabel(bins[index])}。日最深積雪の平年推定値で、現在の道路上の雪ではありません。`;
+    const label = index < 0 ? "格子未収録" : snowBinLabel(bins[index]);
+    const excluded = index >= 0 && positiveOnly.getAttribute("aria-pressed") === "true" && bins[index] === 2;
+    point.textContent = `選択地点（${displayedDay.replace("-", "/")}）：${label}${excluded ? "（0cm除外中のため無色）" : ""}。日最深積雪の平年推定値で、現在の道路上の雪ではありません。`;
+  }
+
+  function updateMode() {
+    const active = positiveOnly.getAttribute("aria-pressed") === "true";
+    scaleStart.textContent = active ? "1cm・白" : "現象あり0cm・白";
+    contourCaption.textContent = active ? "細い実線：現象あり格子間の1・5・10・20・50・100cm境界" : "細い実線：積雪域の境界と各深さ以上の境界";
+    zeroContourLegend.hidden = active;
+    contours?.setPositiveOnly(active);
+    if (bins && displayedDay === selectedDay && layer) layer.setBins(snowFillBins(bins, active));
+    refreshPoint();
   }
 
   function display(day, compact) {
     const decoded = expandSnowBins(compact, grid.count);
-    const fill = decoded.slice();
-    for (let i = 0; i < fill.length; i++) if (fill[i] === 1) fill[i] = 0;
-    layer.setBins(fill);
+    layer.setBins(snowFillBins(decoded, positiveOnly.getAttribute("aria-pressed") === "true"));
     contours.setContours(compact.contours);
     layer.setVisible(toggle.checked);
     contours.setVisible(toggle.checked);
@@ -155,6 +167,7 @@ export function initSnow(map, grid, temperatureManifest) {
         colorForBin: (bin) => SNOW_COLORS[Math.min(bin, SNOW_COLORS.length - 1)],
       });
       contours = createSnowContourLayer();
+      contours.setPositiveOnly(positiveOnly.getAttribute("aria-pressed") === "true");
       map.addLayer(layer, "general-road-casing");
       map.addLayer(contours, "general-road-casing");
       const value = Number(opacity.value) / 100;
@@ -178,6 +191,10 @@ export function initSnow(map, grid, temperatureManifest) {
     }
     if (selectedDay) void setDay(selectedDay);
     void prepareSeason();
+  });
+  positiveOnly.addEventListener("click", () => {
+    positiveOnly.setAttribute("aria-pressed", String(positiveOnly.getAttribute("aria-pressed") !== "true"));
+    updateMode();
   });
   opacity.addEventListener("input", () => {
     opacityValue.textContent = `${opacity.value}%`;

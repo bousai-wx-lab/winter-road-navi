@@ -1122,7 +1122,8 @@ main {
 /* Parallel climate and live-data controls. */
 [hidden] { display: none !important; }
 .display-mode-buttons, .live-time-buttons { display: flex; gap: 8px; margin: 10px 0; }
-.display-mode-buttons button { flex: 1; min-height: 44px; }
+.display-mode-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.display-mode-buttons button { min-width: 0; min-height: 44px; padding: 8px 4px; font-size: 12px; }
 .display-mode-buttons button[aria-pressed="true"] { background: #155c72; color: white; border-color: #155c72; }
 #liveControls > label { display: block; font-weight: 700; margin: 10px 0 5px; }
 #liveControls > select { width: 100%; max-width: 100%; min-height: 44px; }

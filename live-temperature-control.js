@@ -4,11 +4,29 @@ import {LIVE_ROOT,LIVE_KINDS,LIVE_POLL_MS,liveSlots,liveFile,liveSlotKey,chooseL
 
 const $=id=>document.getElementById(id);
 const FACE_COLORS=["#00000000","#b8dfd0","#e8bd20","#f08020","#da3434"];
+const MODE_KINDS={observed:["current","observed"],forecast:["temp3h","daily"]};
 export function initLiveTemperature(map,hooks={}) {
   let active=false,request=0,abort=null,timer=null,loading=false;
   let manifest=null,slots=[],selectedId=null,selectedTarget=null,followingLatest=true,shown=null,layer=null,grid=null,pinned=null;
   const select=$("liveSlot"),kindSelect=$("liveKind"),status=$("liveStatus"),point=$("livePoint");
-  let kind=kindSelect.value;
+  let mode="observed",kind=kindSelect.value;
+  const selections={observed:null,forecast:{kind:"temp3h",selectedId:null,selectedTarget:null,followingLatest:false}};
+  function setMode(next) {
+    if(!Object.hasOwn(MODE_KINDS,next)) throw new Error("気温モードが不正です");
+    if(next!==mode) {
+      selections[mode]={kind,selectedId,selectedTarget,followingLatest};
+      ({kind,selectedId,selectedTarget,followingLatest}=selections[next]);
+      mode=next;slots=[];
+    }
+    kindSelect.replaceChildren(...MODE_KINDS[mode].map(key=>new Option(LIVE_KINDS[key].label,key)));
+    kindSelect.value=kind;
+    const label=mode==="observed"?"実況":"予測";
+    $("liveControls").setAttribute("aria-label",`${label}気温の設定`);
+    $("liveKindLabel").textContent=`表示する${label}気温`;
+    $("liveLegend").setAttribute("aria-label",`${label}気温面の色分け`);
+    $("liveUpdateNote").textContent="天気分布予報プラスと同じ数値を使用。10分ごと・タブ復帰時に更新を確認します。"+(mode==="observed"?"実況の最新枠を選択中は最新時刻へ進み、過去の対象を選んだ場合はその対象を保ちます。":"選択した予想の対象日時を保ちます。実況値は実況値モードで確認できます。");
+    controls();
+  }
   function setStatus(text,state) {status.textContent=text;status.dataset.state=state;}
   function controls() {
     const index=slots.findIndex(s=>s.id===selectedId);
@@ -51,7 +69,7 @@ export function initLiveTemperature(map,hooks={}) {
     const token=++request; abort?.abort();abort=new AbortController();const signal=abort.signal;
     loading=true;shown=null;layer?.setVisible(false);hooks.onUnavailable?.("loading");
     delete $("map").dataset.liveTarget;delete $("map").dataset.liveUpdated;delete $("map").dataset.liveCells;
-    $("mapTemperatureLabel").textContent="実況・予想気温を準備中";
+    $("mapTemperatureLabel").textContent=`${mode==="observed"?"実況":"予測"}気温を準備中`;
     setStatus("対象時刻と気温を読み込んでいます","loading");refreshPoint();
     try {
       // A manifest and selected CSV are accepted together. Re-check generation
@@ -102,11 +120,11 @@ export function initLiveTemperature(map,hooks={}) {
       if(!active || token!==request || error.name==="AbortError") return;
       loading=false;layer?.setVisible(false);hooks.onUnavailable?.("error");
       setStatus("気温を取得・確認できません。再読込できます。","error");
-      $("mapTemperatureLabel").textContent="実況・予想気温を表示できません";refreshPoint();
+      $("mapTemperatureLabel").textContent=`${mode==="observed"?"実況":"予測"}気温を表示できません`;refreshPoint();
     }
   }
   function choose(id) {selectedId=id;const slot=slots.find(s=>s.id===id);selectedTarget=slot?liveSlotKey(slot,kind):null;followingLatest=(kind==="current" || kind==="observed") && id===slots.at(-1)?.id;void load();}
-  kindSelect.addEventListener("change",()=>{kind=kindSelect.value;selectedId=null;selectedTarget=null;slots=[];followingLatest=true;controls();void load();});
+  kindSelect.addEventListener("change",()=>{if(!MODE_KINDS[mode].includes(kindSelect.value))return;kind=kindSelect.value;selectedId=null;selectedTarget=null;slots=[];followingLatest=true;controls();void load();});
   select.addEventListener("change",()=>choose(select.value));
   $("livePrevious").addEventListener("click",()=>choose(slots[Math.max(0,slots.findIndex(s=>s.id===selectedId)-1)]?.id));
   $("liveNext").addEventListener("click",()=>choose(slots[Math.min(slots.length-1,slots.findIndex(s=>s.id===selectedId)+1)]?.id));
@@ -115,7 +133,9 @@ export function initLiveTemperature(map,hooks={}) {
   $("clearLivePoint").addEventListener("click",()=>{pinned=null;point.textContent="地図をクリックすると、その格子の気温と道路の色区分を確認できます。";$("clearLivePoint").hidden=true;});
   map.on("click",event=>{if(!active)return;pinned=event.lngLat;$("clearLivePoint").hidden=false;refreshPoint();});
   document.addEventListener("visibilitychange",()=>{if(active && !document.hidden && !loading) void load(true);});
+  setMode(mode);
   return {
+    setMode,
     setActive(value) {
       active=value;++request;abort?.abort();clearInterval(timer);loading=false;shown=null;
       layer?.setVisible(false);controls();

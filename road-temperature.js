@@ -276,7 +276,7 @@ export function createRoadTemperature(map, grid, onState = () => {}) {
   if (typeof Worker !== "undefined") {
     try {
       worker = new Worker(new URL("./road-geometry-worker.js", import.meta.url), { type: "module" });
-      worker.postMessage({ type: "init", grid: { rows: grid.rows, cols: grid.cols, count: grid.count } });
+      worker.postMessage({ type: "init", grid: { rows: grid.rows, cols: grid.cols, count: grid.count, rowScale: grid.rowScale, colScale: grid.colScale } });
       worker.onmessage = ({ data }) => finish(data);
       worker.onerror = () => { busy = false; queued = false; shared.fail(new Error("道路着色の分割処理を実行できません")); };
     } catch (error) { worker?.terminate(); worker = null; shared.fail(error); }

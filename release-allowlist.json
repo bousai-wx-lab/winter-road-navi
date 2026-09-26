@@ -1056,7 +1056,11 @@
     "data/temperature-max/12-30.json.gz",
     "data/temperature-max/12-31.json.gz",
     "data/temperature-max/grid.json",
-    "data/temperature-max/manifest.json"
+    "data/temperature-max/manifest.json",
+    "live-temperature-data.js",
+    "live-temperature-control.js",
+    "tests/live-temperature.test.mjs",
+    "tests/live-control.test.mjs"
   ],
   "allowed_external_hosts": [
     "127.0.0.1",
@@ -1067,6 +1071,7 @@
     "github.com",
     "localhost",
     "maps.gsi.go.jp",
+    "nature-wx-lab.github.io",
     "nlftp.mlit.go.jp",
     "registry.npmjs.org",
     "www.data.jma.go.jp",

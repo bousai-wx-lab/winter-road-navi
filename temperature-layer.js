@@ -99,8 +99,8 @@ export function lookupCell(expanded, lng, lat) {
   if (!Number.isFinite(lng) || !Number.isFinite(lat) || lng < 0 || lng >= 180 || lat < 0 || lat >= MAX_LATITUDE) return -1;
   // A boundary belongs to its northern/eastern cell; the tolerance only removes
   // floating-point noise from converting an exact mesh edge back to degrees.
-  const row = Math.floor(lat * 120 + 1e-9);
-  const col = Math.floor(lng * 80 + 1e-9);
+  const row = Math.floor(lat * (expanded.rowScale ?? 120) + 1e-9);
+  const col = Math.floor(lng * (expanded.colScale ?? 80) + 1e-9);
   let low = 0;
   let high = expanded.count;
   while (low < high) {

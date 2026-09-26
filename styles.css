@@ -1118,3 +1118,22 @@ main {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Parallel climate and live-data controls. */
+[hidden] { display: none !important; }
+.display-mode-buttons, .live-time-buttons { display: flex; gap: 8px; margin: 10px 0; }
+.display-mode-buttons button { flex: 1; min-height: 44px; }
+.display-mode-buttons button[aria-pressed="true"] { background: #155c72; color: white; border-color: #155c72; }
+#liveControls > label { display: block; font-weight: 700; margin: 10px 0 5px; }
+#liveControls > select { width: 100%; max-width: 100%; min-height: 44px; }
+.live-time-buttons button { flex: 1; min-height: 44px; }
+.live-meta { font-size: 12px; line-height: 1.6; margin: 7px 0; color: #526673; }
+.live-notice { font-size: 13px; line-height: 1.6; padding: 8px; background: #fff1cc; color: #694500; border-radius: 6px; }
+.live-warm { background: #b8dfd0; }
+
+.live-data-details summary { min-height: 40px; padding: 10px 0; font-size: 12px; cursor: pointer; }
+@media (max-width: 760px) {
+  #liveControls { display: block; max-height: 260px; overflow-y: auto; overscroll-behavior: contain; }
+  #liveControls > label { margin: 4px 0; font-size: 12px; }
+  .display-mode-buttons { margin: 6px 0; }
+}

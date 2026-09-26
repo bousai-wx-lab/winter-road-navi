@@ -1,12 +1,12 @@
 import {createTemperatureLayer, lookupCell} from "./temperature-layer.js";
 import {roadClassLabel} from "./temperature-display-data.js";
-import {LIVE_ROOT,LIVE_KINDS,LIVE_POLL_MS,liveSlots,liveFile,decodeLiveCSV,timeLabel,utcTime,liveFreshness} from "./live-temperature-data.js";
+import {LIVE_ROOT,LIVE_KINDS,LIVE_POLL_MS,liveSlots,liveFile,liveSlotKey,chooseLiveSlot,decodeLiveCSV,timeLabel,utcTime,liveFreshness} from "./live-temperature-data.js";
 
 const $=id=>document.getElementById(id);
 const FACE_COLORS=["#00000000","#b8dfd0","#e8bd20","#f08020","#da3434"];
 export function initLiveTemperature(map,hooks={}) {
   let active=false,request=0,abort=null,timer=null,loading=false;
-  let manifest=null,slots=[],selectedId=null,followingLatest=true,shown=null,layer=null,grid=null,pinned=null;
+  let manifest=null,slots=[],selectedId=null,selectedTarget=null,followingLatest=true,shown=null,layer=null,grid=null,pinned=null;
   const select=$("liveSlot"),kindSelect=$("liveKind"),status=$("liveStatus"),point=$("livePoint");
   let kind=kindSelect.value;
   function setStatus(text,state) {status.textContent=text;status.dataset.state=state;}
@@ -60,7 +60,7 @@ export function initLiveTemperature(map,hooks={}) {
       for(let attempt=0;attempt<3;attempt++) {
         nextManifest=await get(LIVE_KINDS[kind].manifest,true,signal);
         nextSlots=liveSlots(nextManifest,kind);
-        slot=(refresh && followingLatest?nextSlots.at(-1):nextSlots.find(s=>s.id===selectedId)) || (kind==="daily"?nextSlots.find(s=>s.status==="available"):null) || (kind==="temp3h"?nextSlots.find(s=>Date.parse(utcTime(s.validtime))>=Date.now()):null) || nextSlots.at(-1);
+        slot=chooseLiveSlot(nextSlots,{kind,id:selectedId,target:selectedTarget,followLatest:refresh && followingLatest && selectedTarget!==null});
         if(slot.status==="unavailable") break;
         try {data=decodeLiveCSV(await get(liveFile(kind,slot),false,signal),kind,slot);}
         catch(error) {if(attempt===2) throw error;continue;}
@@ -69,7 +69,7 @@ export function initLiveTemperature(map,hooks={}) {
         data=null;
       }
       if(!active || token!==request) return;
-      manifest=nextManifest;slots=nextSlots;selectedId=slot.id;followingLatest=slot.id===slots.at(-1).id;
+      manifest=nextManifest;slots=nextSlots;selectedId=slot.id;selectedTarget=liveSlotKey(slot,kind);followingLatest=(kind==="current" || kind==="observed") && slot.id===slots.at(-1).id;
       select.replaceChildren(...slots.map(s=>new Option(`${s.target_date} · ${s.label}${s.status==="unavailable"?"（データなし）":""}`,s.id)));
       select.value=slot.id;controls();
       const observed=kind==="current" || kind==="observed";
@@ -105,8 +105,8 @@ export function initLiveTemperature(map,hooks={}) {
       $("mapTemperatureLabel").textContent="実況・予想気温を表示できません";refreshPoint();
     }
   }
-  function choose(id) {selectedId=id;followingLatest=id===slots.at(-1)?.id;void load();}
-  kindSelect.addEventListener("change",()=>{kind=kindSelect.value;selectedId=null;slots=[];followingLatest=true;controls();void load();});
+  function choose(id) {selectedId=id;const slot=slots.find(s=>s.id===id);selectedTarget=slot?liveSlotKey(slot,kind):null;followingLatest=(kind==="current" || kind==="observed") && id===slots.at(-1)?.id;void load();}
+  kindSelect.addEventListener("change",()=>{kind=kindSelect.value;selectedId=null;selectedTarget=null;slots=[];followingLatest=true;controls();void load();});
   select.addEventListener("change",()=>choose(select.value));
   $("livePrevious").addEventListener("click",()=>choose(slots[Math.max(0,slots.findIndex(s=>s.id===selectedId)-1)]?.id));
   $("liveNext").addEventListener("click",()=>choose(slots[Math.min(slots.length-1,slots.findIndex(s=>s.id===selectedId)+1)]?.id));

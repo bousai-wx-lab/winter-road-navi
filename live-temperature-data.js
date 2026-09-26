@@ -56,6 +56,17 @@ export function liveFile(kind, slot) {
   throw new Error("データ参照が不正です");
 }
 
+export function liveSlotKey(slot,kind) {
+  return kind === "temp3h" ? slot.validtime : kind === "current" ? "current" : `${slot.target_date}:${slot.element}`;
+}
+
+export function chooseLiveSlot(slots,{kind,id,target,followLatest=false,now=Date.now()}) {
+  if(followLatest) return slots.at(-1);
+  const kept=target ? slots.find(s=>liveSlotKey(s,kind)===target) : slots.find(s=>s.id===id);
+  return kept || (kind==="daily"?slots.find(s=>s.status==="available"):null)
+    || (kind==="temp3h"?slots.find(s=>s.status!=="unavailable" && Date.parse(utcTime(s.validtime))>=now):null) || slots.at(-1);
+}
+
 export function classForTemperature(value) {
   return !Number.isFinite(value) ? 0 : value <= 0 ? 4 : value <= 2 ? 3 : value <= 5 ? 2 : 1;
 }

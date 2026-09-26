@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {classForTemperature,decodeLiveCSV,liveSlots,liveFile,liveFreshness,utcTime} from "../live-temperature-data.js";
+import {classForTemperature,decodeLiveCSV,liveSlots,liveFile,liveFreshness,utcTime,liveSlotKey,chooseLiveSlot} from "../live-temperature-data.js";
 import {lookupCell} from "../temperature-layer.js";
 import {mercatorPoint,splitSegment} from "../road-geometry.js";
 
@@ -53,4 +53,12 @@ test("freshness, elapsed forecast and provisional observations are explicit",()=
   assert.match(liveFreshness(manifest,"current",{},now+3600000),/更新が遅れ/);
   assert.match(liveFreshness(manifest,"observed",{source:"realtime"},now),/暫定/);
   assert.match(liveFreshness(manifest,"temp3h",slot,now+4*3600000),/対象時刻を過ぎ/);
+});
+
+test("daily forecasts keep their date across the morning today/tomorrow rollover",()=>{
+  const old={id:"tomorrow_min",target_date:"2026-09-27",element:"min",status:"available"};
+  const rolled=[{...old,id:"today_min"},{...old,id:"tomorrow_min",target_date:"2026-09-28"}];
+  assert.equal(chooseLiveSlot(rolled,{kind:"daily",id:old.id,target:liveSlotKey(old,"daily")}),rolled[0]);
+  assert.equal(chooseLiveSlot(rolled,{kind:"daily",id:old.id,target:liveSlotKey(old,"daily"),followLatest:true}),rolled[1]);
+  assert.equal(liveSlotKey({...old,target_time:"2026-09-27T09:00:00+09:00"},"observed"),liveSlotKey({...old,target_time:"2026-09-27T09:10:00+09:00"},"observed"));
 });

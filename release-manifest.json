@@ -19,10 +19,10 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "bytes": 22223,
+      "bytes": 22426,
       "mime_type": "text/markdown",
       "path": "README.md",
-      "sha256": "b68bb45e1d1f1abdf2fdf0c046d845433bed8b984b83173fe5754977894e3eed"
+      "sha256": "68747d0e9b3ffc04c397d77432cdf39d443aa285fccbd491683512aad250a773"
     },
     {
       "bytes": 1298,
@@ -6121,22 +6121,22 @@
       "sha256": "7704fbd5a1bcee94880257656eaf7b3baf0425e82ad785a27ba1fc52b1bf299a"
     },
     {
-      "bytes": 19952,
+      "bytes": 19961,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "903530a54774e1c092a353c74092a5d793018f2e073d3fe4561434a814dbdd4e"
+      "sha256": "f9cd824efb35686fd78dd1eb732024ff2a1a5c5a9f91ba82e9f256b063c3b03d"
     },
     {
-      "bytes": 9029,
+      "bytes": 9178,
       "mime_type": "text/javascript",
       "path": "live-temperature-control.js",
-      "sha256": "b642dce93079e4c1adaa12edf5c76f5899e4f64bd71fade8dcc13ff11ddbf0bd"
+      "sha256": "642484626bba6a7fe0845623c2612b121ee568161f36f6f58be6b8f1d535d18b"
     },
     {
-      "bytes": 7637,
+      "bytes": 8232,
       "mime_type": "text/javascript",
       "path": "live-temperature-data.js",
-      "sha256": "41a51667a7408543ce1543b5e4ffd2d9735cff746216c4dde7c96d15ed2db652"
+      "sha256": "a70fdd016daf374477ac9e66beafe81111001e378d3d803bba54a8e68778015a"
     },
     {
       "bytes": 438018,
@@ -6265,10 +6265,10 @@
       "sha256": "dac71dce38430f548905a5741e3f0062ee8ed70cc55aedbe4a7b01c32692da08"
     },
     {
-      "bytes": 4032,
+      "bytes": 4732,
       "mime_type": "text/javascript",
       "path": "tests/live-temperature.test.mjs",
-      "sha256": "b6feb5c9e2b7d5da0cd73e6689335e98b71f787bb6af09ee3eec68bf7d97c4e6"
+      "sha256": "a2e15a78877ad058a9fac684cd8915ef4e07b1057eea7224b54ef20164f70cae"
     },
     {
       "bytes": 4863,
@@ -6349,7 +6349,7 @@
       "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
     }
   ],
-  "generated_at_utc": "2026-09-26T08:59:41+00:00",
+  "generated_at_utc": "2026-09-26T09:08:55+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

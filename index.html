@@ -6,11 +6,11 @@
     <meta name="referrer" content="no-referrer">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp; connect-src 'self' https://cyberjapandata.gsi.go.jp; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
     <title>冬道そなえナビ | Bousai Wx Lab</title>
-    <meta name="description" content="9月15日から翌6月15日まで、日別最低気温・日最深積雪の平年推定値と道路を同じ地図で確認できます。予報や路面の安全判定ではありません。">
+    <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。予報や路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20260924-roadhover1">
-    <script type="module" src="./app.js?v=20260924-roadhover1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20260926-tmax1">
+    <script type="module" src="./app.js?v=20260926-tmax1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -51,7 +51,8 @@
         </div>
 
         <section class="temperature-controls" aria-labelledby="temperature-title">
-          <h3 id="temperature-title">日別の平均最低気温 <span>独自算出</span></h3>
+          <h3 id="temperature-title"><b id="temperatureTitleText">日別の平均最低気温</b> <span>独自算出</span></h3>
+          <label class="temperature-mode-row" for="temperatureMode"><span>表示する気温</span><select id="temperatureMode" disabled><option value="tmin" selected>最低気温モード</option><option value="tmax">最高気温モード</option></select></label>
           <p class="baseline-label">1991〜2020年の日別平年値を基に内挿 · 9/15〜翌6/15</p>
           <div class="date-row">
             <button id="previousDay" type="button" aria-label="前の日" disabled>‹</button>
@@ -181,9 +182,9 @@
         <div class="footer-copy">
           <p>道路・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a></p>
           <p>国土地理院のデータをBousai Wx Labが独自に区分・着色して表示しています。データは試験提供で、最新状況と異なる場合があります。</p>
-          <p>気温：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年日別平年値</a>・国土数値情報標高データを基に独自算出・独自内挿。公式の日別1kmメッシュではありません。</p>
+          <p>気温：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年日別平年値</a>・国土数値情報標高データを基に独自算出・独自内挿。最高気温は地点の日別変化と月別1km推定値を組み合わせています。公式の日別1kmメッシュではありません。</p>
           <p>積雪：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年の日最深積雪平年値</a>と月別1km推定値から独自推定。地上観測の「現象なし」と「現象あり0cm」を分け、アメダスの曖昧な0cmは不在の根拠にしていません。全国の雪域境界も独自推定であり、公式の日別1kmメッシュではありません。細い実線は現象の有無、および1・5・10・20・50・100cmの各閾値をまたぐ格子境界です。</p>
-          <p>気温の1km格子は局所的な精度を保証しません。917観測地点から推定し、383,497格子を着色、4,220格子は欠測。地点を除いて検証した日別RMSEは約0.49〜1.30℃ですが、盆地・沿岸・高標高などでは数℃の誤差が残ります。全陸地の網羅は保証しません。</p>
+          <p>気温の1km格子は局所的な精度を保証しません。最低気温は917地点、最高気温は916地点から推定し、各383,497格子を着色、4,220格子は欠測。最低気温の地点除外検証の日別RMSEは約0.49〜1.30℃。最高気温の日別変化の検証は気温全体の独立した精度保証ではありません。盆地・沿岸・高標高などでは数℃の誤差が残り、全陸地の網羅は保証しません。</p>
           <p>9月15日から翌6月15日までの275日を、年末年始をまたいで連続表示します。2月29日を含み、気象庁の元の2月29日値は前後日の平均です。一部の観測地点は30年未満の統計を含みます。<a href="https://www.jma.go.jp/bosai/" target="_blank" rel="noopener noreferrer">最新の気象情報（気象庁）</a></p>
           <p class="privacy-note">このツールは現在地を取得せず、住所入力・Cookie・ブラウザ保存・アクセス解析を使用しません。地点選択は画面内だけで処理します。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。</p>
         </div>

@@ -77,7 +77,7 @@ def decode_temperature_gzip(data, expected_raw_bytes):
 
 
 def validate_temperature_gzip(path_label, data, record, *, allow_legacy_mesh_only=False):
-    match = re.fullmatch(r"data/temperature/(\d{2}-\d{2})\.json\.gz", path_label)
+    match = re.fullmatch(r"data/temperature(?:-max)?/(\d{2}-\d{2})\.json\.gz", path_label)
     require(match is not None and match[1] in DAYS, "invalid daily gzip path")
     value = decode_temperature_gzip(data, record.get("uncompressed_bytes"))
     validate_day(value, match[1], CELL_COUNT, MISSING_COUNT, require_road=not allow_legacy_mesh_only)

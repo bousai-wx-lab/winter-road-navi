@@ -48,6 +48,7 @@ jobs:
       - name: Verify all daily display values and rejection tests
         run: |
           python3 scripts/verify_temperature_display.py
+          python3 scripts/verify_temperature_display.py --manifest data/temperature-max/manifest.json
           python3 scripts/test_temperature_display.py
           python3 scripts/verify_snow_display.py
 

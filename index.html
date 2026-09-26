@@ -4,13 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp; connect-src 'self' https://cyberjapandata.gsi.go.jp; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp; connect-src 'self' https://cyberjapandata.gsi.go.jp https://nature-wx-lab.github.io; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
     <title>冬道そなえナビ | Bousai Wx Lab</title>
-    <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。予報や路面の安全判定ではありません。">
+    <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20260926-tmax1">
-    <script type="module" src="./app.js?v=20260926-tmax1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20260926-live1">
+    <script type="module" src="./app.js?v=20260926-live1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -45,12 +45,31 @@
         <div class="control-heading">
           <div>
             <p class="eyebrow">CLIMATE &amp; ROADS</p>
-            <h2>平年の寒さ・雪と道路</h2>
+            <h2 id="panelHeading">平年の寒さ・雪と道路</h2>
           </div>
           <button id="panelToggle" type="button" aria-expanded="true">詳細を閉じる</button>
         </div>
 
-        <section class="temperature-controls" aria-labelledby="temperature-title">
+        <div class="display-mode-buttons" role="group" aria-label="表示モード">
+          <button id="normalMode" type="button" aria-pressed="true" disabled>平年値モード</button>
+          <button id="liveMode" type="button" aria-pressed="false" disabled>実況モード</button>
+        </div>
+        <section id="liveControls" class="temperature-controls" aria-label="実況・予想気温の設定" hidden>
+          <label for="liveKind">表示する気温</label>
+          <select id="liveKind"><option value="current">実況気温（アメダス10分値）</option><option value="observed">実況の日最低・日最高</option><option value="temp3h">予想気温（3時間ごと）</option><option value="daily">予想の日最低・日最高</option></select>
+          <label for="liveSlot">対象時刻・日付</label>
+          <select id="liveSlot" disabled></select>
+          <div class="live-time-buttons"><button id="livePrevious" type="button" disabled>‹ 前へ</button><button id="liveNext" type="button" disabled>次へ ›</button><button id="liveRefresh" type="button">再読込</button></div>
+          <p id="liveStatus" class="temperature-status" role="status">実況モードを選ぶと読み込みます</p>
+          <p id="liveNotice" class="live-notice" role="status" hidden></p>
+          <p id="liveUpdated" class="live-meta"></p>
+          <details class="live-data-details"><summary>データ・更新について</summary><p id="liveSource" class="live-meta"></p>
+          <p class="live-meta">天気分布予報プラスと同じ数値を使用。10分ごと・タブ復帰時に更新を確認します。実況の最新枠を選択中は最新時刻へ進み、過去の対象を選んだ場合はその対象を保ちます。</p></details>
+          <div class="road-temperature-legend" aria-label="実況・予想気温面の色分け"><span><i class="road-red" aria-hidden="true"></i>0℃以下</span><span><i class="road-orange" aria-hidden="true"></i>0℃超〜2℃</span><span><i class="road-yellow" aria-hidden="true"></i>2℃超〜5℃</span><span><i class="live-warm" aria-hidden="true"></i>5℃超</span></div>
+          <p class="live-meta">気温面と道路を同じ閾値で着色。欠測の面は無色・道路は灰色です。平年の積雪はこのモードでは表示しません。</p>
+          <p id="livePoint" class="temperature-point">地図をクリックすると、その格子の気温と道路の色区分を確認できます。</p><button id="clearLivePoint" type="button" hidden>地点選択を解除</button>
+        </section>
+        <section id="normalControls" class="temperature-controls" aria-labelledby="temperature-title">
           <h3 id="temperature-title"><b id="temperatureTitleText">日別の平均最低気温</b> <span>独自算出</span></h3>
           <label class="temperature-mode-row" for="temperatureMode"><span>表示する気温</span><select id="temperatureMode" disabled><option value="tmin" selected>最低気温モード</option><option value="tmax">最高気温モード</option></select></label>
           <p class="baseline-label">1991〜2020年の日別平年値を基に内挿 · 9/15〜翌6/15</p>
@@ -72,9 +91,9 @@
           </div>
           <p id="temperaturePoint" class="temperature-point">地図をクリックすると、その格子の気温帯を確認できます。</p>
           <button id="clearTemperaturePoint" type="button" hidden>地点選択を解除</button>
-          <label class="mesh-tooltip-option"><input id="meshTooltipToggle" type="checkbox" checked> マウス位置の気温・積雪を表示</label>
         </section>
 
+        <label class="mesh-tooltip-option"><input id="meshTooltipToggle" type="checkbox" checked> マウス・タップ位置の気温を表示</label>
         <div class="panel-collapsible">
           <div class="temperature-options"><label><input id="temperatureToggle" type="checkbox" checked> 気温を重ねる</label><label for="temperatureOpacity">濃さ <output id="opacityValue">65%</output></label><input id="temperatureOpacity" type="range" min="0" max="100" value="65"></div>
           <section class="panel-section snow-section" aria-labelledby="snow-section-title">
@@ -143,7 +162,7 @@
             <strong id="meshTooltipDate"></strong>
             <span id="meshTooltipTemperature"></span>
             <span id="meshTooltipSnow"></span>
-            <small>1km格子の独自推定・表示階級</small>
+            <small id="meshTooltipNote">1km格子の独自推定・表示階級</small>
           </div>
 
           <aside id="roadDetails" class="road-details" hidden aria-live="polite">
@@ -157,7 +176,7 @@
         <section class="scope-note" aria-label="データの意味と注意">
           <span class="scope-icon" aria-hidden="true">i</span>
           <div>
-            <strong>気温・積雪とも平年の推定分布です。予報・実況・路面状態ではありません。</strong>
+            <strong id="dataMeaning">気温・積雪とも平年の推定分布です。予報・実況・路面状態ではありません。</strong>
             <span>道路上の雪・凍結・通行規制や安全は判定しません。出発前は最新の気象情報と道路管理者の情報を確認してください。</span>
           </div>
         </section>
@@ -182,11 +201,12 @@
         <div class="footer-copy">
           <p>道路・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a></p>
           <p>国土地理院のデータをBousai Wx Labが独自に区分・着色して表示しています。データは試験提供で、最新状況と異なる場合があります。</p>
-          <p>気温：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年日別平年値</a>・国土数値情報標高データを基に独自算出・独自内挿。最高気温は地点の日別変化と月別1km推定値を組み合わせています。公式の日別1kmメッシュではありません。</p>
+          <p>平年の気温：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年日別平年値</a>・国土数値情報標高データを基に独自算出・独自内挿。最高気温は地点の日別変化と月別1km推定値を組み合わせています。公式の日別1kmメッシュではありません。</p>
           <p>積雪：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年の日最深積雪平年値</a>と月別1km推定値から独自推定。地上観測の「現象なし」と「現象あり0cm」を分け、アメダスの曖昧な0cmは不在の根拠にしていません。全国の雪域境界も独自推定であり、公式の日別1kmメッシュではありません。細い実線は現象の有無、および1・5・10・20・50・100cmの各閾値をまたぐ格子境界です。</p>
           <p>気温の1km格子は局所的な精度を保証しません。最低気温は917地点、最高気温は916地点から推定し、各383,497格子を着色、4,220格子は欠測。最低気温の地点除外検証の日別RMSEは約0.49〜1.30℃。最高気温の日別変化の検証は気温全体の独立した精度保証ではありません。盆地・沿岸・高標高などでは数℃の誤差が残り、全陸地の網羅は保証しません。</p>
           <p>9月15日から翌6月15日までの275日を、年末年始をまたいで連続表示します。2月29日を含み、気象庁の元の2月29日値は前後日の平均です。一部の観測地点は30年未満の統計を含みます。<a href="https://www.jma.go.jp/bosai/" target="_blank" rel="noopener noreferrer">最新の気象情報（気象庁）</a></p>
-          <p class="privacy-note">このツールは現在地を取得せず、住所入力・Cookie・ブラウザ保存・アクセス解析を使用しません。地点選択は画面内だけで処理します。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。</p>
+          <p>実況・予想気温：<a href="https://nature-wx-lab.github.io/weather-distribution-plus/" target="_blank" rel="noopener noreferrer">Nature Wx Lab「天気分布予報プラス」</a>の数値配信を使用。予想は気象庁の約5km天気分布予報、実況は気象庁のアメダス10分値・日別値から内挿した約5kmメッシュです。元ツールの実況気温の約1km色タイルとは異なり、2℃境界を数値で判定します。実況は地点の実測値そのものではなく、更新・配信の遅れがあり得ます。予想は日最低・日最高と3時間気温、実況の日別値は過去7日を含みます。いずれも路面温度・凍結・通行可否を示しません。</p>
+          <p class="privacy-note">このツールは現在地を取得せず、住所入力・Cookie・ブラウザ保存・アクセス解析を使用しません。地点選択は画面内だけで処理します。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。実況モードでは気温データを天気分布予報プラスの配信元（GitHub Pages）へ要求します。</p>
         </div>
         <p class="footer-copyright">© 2026 Bousai Wx Lab.</p>
       </div>

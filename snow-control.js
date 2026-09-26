@@ -30,7 +30,7 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
   let manifest = null, layer = null, contours = null, selectedDay = null, displayedDay = null;
   let bins = null, tooltipBins = null, tooltipDay = null, tooltipEnabled = false, tooltipError = false;
   let selectedPoint = null, request = 0, prefetchPromise = null;
-  let startPromise = null;
+  let startPromise = null, modeActive = true;
 
   function showStatus(message, state = "ready") {
     status.textContent = message;
@@ -67,8 +67,8 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
     const decoded = expandSnowBins(compact, grid.count);
     layer.setBins(snowFillBins(decoded, positiveOnly.getAttribute("aria-pressed") === "true"));
     contours.setContours(compact.contours);
-    layer.setVisible(toggle.checked);
-    contours.setVisible(toggle.checked);
+    layer.setVisible(modeActive && toggle.checked);
+    contours.setVisible(modeActive && toggle.checked);
     bins = decoded;
     displayedDay = day;
     tooltipBins = decoded;
@@ -97,7 +97,7 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
     const token = ++request;
     tooltipBins = null; tooltipDay = null; tooltipError = false;
     onTooltipChange();
-    if (!toggle.checked && !tooltipEnabled) { hide(); refreshPoint(); return; }
+    if (!modeActive || (!toggle.checked && !tooltipEnabled)) { hide(); refreshPoint(); return; }
     if (!manifest) { showStatus("積雪データの一覧を確認中", "loading"); return; }
     if (toggle.checked) retry.hidden = true;
     if (toggle.checked && !cache.has(day)) {
@@ -154,7 +154,7 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
     }
     progress();
     prefetchPromise = Promise.all(Array.from({ length: 3 }, async () => {
-      while (toggle.checked && !document.hidden) {
+      while (modeActive && toggle.checked && !document.hidden) {
         const day = nextDay();
         if (!day) return;
         try { await loadDay(day); } catch { /* A selected day can retry independently. */ }
@@ -236,6 +236,11 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
   });
   startPromise = start();
   return {
+    setActive(value) {
+      modeActive = value;
+      if (!value) { ++request; hide(); }
+      else if (selectedDay) void setDay(selectedDay);
+    },
     setDay,
     preparePlayback: async () => toggle.checked ? prepareSeason() : true,
     setTooltipEnabled(enabled) {

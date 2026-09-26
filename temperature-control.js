@@ -53,7 +53,7 @@ export function initTemperature(map, hooks = {}) {
   let manifest, grid, layer, bins, roadClasses, selected = 0, displayed = -1, request = 0;
   let playing = false, preparing = false, animation = 0, selectedPoint = null, playbackGeneration = 0;
   let playbackCancelResolve = null;
-  let loadState = "loading";
+  let loadState = "loading", active = true;
   const showStatus = (text, state = "ready") => { status.textContent = text; status.dataset.state = state; };
   const stop = () => {
     playbackGeneration++;
@@ -68,7 +68,7 @@ export function initTemperature(map, hooks = {}) {
   function syncModeLabels() {
     $("temperatureTitleText").textContent = `日別の${modeText(selectedMode)}`;
     document.querySelector(".temperature-legend").setAttribute("aria-label", `${modeText(displayedMode)}の色の凡例`);
-    document.querySelector(".road-temperature-legend").setAttribute("aria-label", `道路の${modeText(displayedMode)}の色分け`);
+    document.querySelector(".road-section .road-temperature-legend").setAttribute("aria-label", `道路の${modeText(displayedMode)}の色分け`);
     $("map").setAttribute("aria-label", `日別の${modeText(displayedMode)}、日最深積雪の平年推定値と全国の道路を表示する地図`);
   }
   async function loadManifest(context) {
@@ -93,6 +93,7 @@ export function initTemperature(map, hooks = {}) {
     return context.manifest;
   }
   function updateMapLabel() {
+    if (!active) return;
     if (displayed < 0) { label.textContent = `${dayText(selected)} · ${modeText(selectedMode)}を読み込み中`; return; }
     const shown = `${dayText(displayed)} · ${modeText(displayedMode)}（独自算出）`;
     label.textContent = displayed === selected && displayedMode === selectedMode ? shown
@@ -142,12 +143,12 @@ export function initTemperature(map, hooks = {}) {
     loadState = "ready";
     bins = data.bins; roadClasses = unpackRoadClasses(data); displayed = index;
     displayedMode = selectedMode;
-    layer.setBins(bins); layer.setVisible($("temperatureToggle").checked);
-    syncModeLabels();
+    layer.setBins(bins); layer.setVisible(active && $("temperatureToggle").checked);
+    if (active) syncModeLabels();
     hooks.onDay?.(roadClasses, manifest.days[index], bins, displayedMode);
     updateMapLabel();
-    $("map").dataset.temperatureDay = manifest.days[index];
-    $("map").dataset.temperatureMode = displayedMode;
+    if (active) $("map").dataset.temperatureDay = manifest.days[index];
+    if (active) $("map").dataset.temperatureMode = displayedMode;
     $("map").dataset.temperatureCells = String(grid.count);
     refreshPoint();
   }
@@ -209,7 +210,7 @@ export function initTemperature(map, hooks = {}) {
     };
     updateProgress();
     context.prefetchPromise = Promise.all(Array.from({ length: 3 }, async () => {
-      while (!document.hidden && context === source) {
+      while (active && !document.hidden && context === source) {
         const index = nextIndex();
         if (index < 0) return;
         try { await loadDay(index, context); } catch { /* Keep other dates usable; a later selection can retry. */ }
@@ -359,7 +360,7 @@ export function initTemperature(map, hooks = {}) {
   $("retryTemperature").addEventListener("click", () => layer ? source.manifest ? retrySelection() : changeMode(selectedMode) : start());
   $("temperatureToggle").addEventListener("change", () => {
     if (layer && bins) {
-      layer.setVisible($("temperatureToggle").checked);
+      layer.setVisible(active && $("temperatureToggle").checked);
       updateMapLabel();
     }
   });
@@ -386,4 +387,17 @@ export function initTemperature(map, hooks = {}) {
     }
   });
   start();
+  return {
+    setActive(value) {
+      active = value; stop(); layer?.setVisible(value && Boolean(bins) && $("temperatureToggle").checked);
+      if (!value) return;
+      if (grid) hooks.onGrid?.(grid);
+      if (manifest && layer) {
+        syncModeLabels();
+        if (displayed === selected && displayedMode === selectedMode && cache.has(selected)) show(selected, cache.get(selected));
+        else void select(selected, false);
+        if (!source.prefetchPromise) void prepareSeason();
+      }
+    },
+  };
 }

@@ -24,8 +24,8 @@ export function latitudeAt(y) {
 }
 
 export function gridIndex(grid, x, y) {
-  const row = Math.floor(latitudeAt(y) * 120 + 1e-8);
-  const col = Math.floor((x * 360 - 180) * 80 + 1e-8);
+  const row = Math.floor(latitudeAt(y) * (grid.rowScale ?? 120) + 1e-8);
+  const col = Math.floor((x * 360 - 180) * (grid.colScale ?? 80) + 1e-8);
   let lo = 0, hi = grid.count;
   while (lo < hi) {
     const mid = (lo + hi) >>> 1;
@@ -41,19 +41,20 @@ export function splitSegment(a, b, grid) {
   const dx = b[0] - a[0], dy = b[1] - a[1];
   if (Math.hypot(dx, dy) < EPSILON) return [];
   const cuts = [0, 1];
+  const rowScale = grid.rowScale ?? 120, colScale = grid.colScale ?? 80;
   if (Math.abs(dx) > EPSILON) {
-    const lo = Math.min(a[0], b[0]) * 28800 - 14400;
-    const hi = Math.max(a[0], b[0]) * 28800 - 14400;
+    const lo = (Math.min(a[0], b[0]) * 360 - 180) * colScale;
+    const hi = (Math.max(a[0], b[0]) * 360 - 180) * colScale;
     for (let col = Math.floor(lo) + 1; col < hi; col++) {
-      const t = ((col + 14400) / 28800 - a[0]) / dx;
+      const t = (((col / colScale + 180) / 360) - a[0]) / dx;
       if (t > EPSILON && t < 1 - EPSILON) cuts.push(t);
     }
   }
   if (Math.abs(dy) > EPSILON) {
-    const lo = Math.min(latitudeAt(a[1]), latitudeAt(b[1])) * 120;
-    const hi = Math.max(latitudeAt(a[1]), latitudeAt(b[1])) * 120;
+    const lo = Math.min(latitudeAt(a[1]), latitudeAt(b[1])) * rowScale;
+    const hi = Math.max(latitudeAt(a[1]), latitudeAt(b[1])) * rowScale;
     for (let row = Math.floor(lo) + 1; row < hi; row++) {
-      const edge = mercatorPoint(0, row / 120)[1];
+      const edge = mercatorPoint(0, row / rowScale)[1];
       const t = (edge - a[1]) / dy;
       if (t > EPSILON && t < 1 - EPSILON) cuts.push(t);
     }
@@ -155,7 +156,7 @@ export function buildRoadGeometry(features, grid, geographicBounds) {
         if (p[0] < bounds[0] || p[0] > bounds[2] || p[1] < bounds[1] || p[1] > bounds[3]) continue;
         // Original vertices retain a round join. Newly inserted grid crossings
         // have no disc, so those colour transitions remain butt-ended.
-        const col = (p[0] * 360 - 180) * 80, row = latitudeAt(p[1]) * 120;
+        const col = (p[0] * 360 - 180) * (grid.colScale ?? 80), row = latitudeAt(p[1]) * (grid.rowScale ?? 120);
         const onColumn = Math.abs(col - Math.round(col)) < 1e-7;
         const onRow = Math.abs(row - Math.round(row)) < 1e-7;
         // A source vertex can itself coincide with a mesh edge. Partition its

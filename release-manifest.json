@@ -19,10 +19,10 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "bytes": 22636,
+      "bytes": 27661,
       "mime_type": "text/markdown",
       "path": "README.md",
-      "sha256": "73068a63a338bd989c034db0c04f3aaf7a97aef359f15db2bb0a582ef8e84e0e"
+      "sha256": "68bd30a5820bc3247dcf1edb1f26a975d64d639a3915b4d1786b4da5c9067f62"
     },
     {
       "bytes": 1298,
@@ -31,10 +31,10 @@
       "sha256": "732472f1859e857b5e764b2f8765294cbfedf8cd3adac2f422d3d5436efb61ce"
     },
     {
-      "bytes": 13111,
+      "bytes": 16895,
       "mime_type": "text/javascript",
       "path": "app.js",
-      "sha256": "ff4b1f4a6f167f25c78f4876434f4c082e6ac2b5f499c618f255b513dc223b7f"
+      "sha256": "bf3718c12f9cc918ccb871eeb6527fa4601d1ef968393c25610151d046a6e31b"
     },
     {
       "bytes": 266670,
@@ -6121,10 +6121,22 @@
       "sha256": "7704fbd5a1bcee94880257656eaf7b3baf0425e82ad785a27ba1fc52b1bf299a"
     },
     {
-      "bytes": 20023,
+      "bytes": 25891,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "e8a20a96fd2d5cd0dc7226364a8a18fc6c4d5fd04d87b40ca090d3328fa311a7"
+      "sha256": "575414ff7e70bbe09d415b4233d32a08a8d73ba60f844b1e200ea1907a4632b5"
+    },
+    {
+      "bytes": 9145,
+      "mime_type": "text/javascript",
+      "path": "live-snow-control.js",
+      "sha256": "f83dfc2c53387e75173e1aa375cc1b07ff1c65e7b5ed5d2ceb880c954ea05f87"
+    },
+    {
+      "bytes": 7878,
+      "mime_type": "text/javascript",
+      "path": "live-snow-data.js",
+      "sha256": "9f4a9cab62e4ec435e80be9f2e84091262160af9ba6dc3cfcae4324deee9b2f0"
     },
     {
       "bytes": 10673,
@@ -6139,10 +6151,10 @@
       "sha256": "a70fdd016daf374477ac9e66beafe81111001e378d3d803bba54a8e68778015a"
     },
     {
-      "bytes": 438018,
+      "bytes": 438182,
       "mime_type": "application/json",
       "path": "release-allowlist.json",
-      "sha256": "df6862523dc015c005ef2d9a8fb3c3ea19d63b277f96c8e63b59b70c7c10a51c"
+      "sha256": "ffc7103d16c5b148bed14b7f5f497805303de8b72eae22fada45b8a838297130"
     },
     {
       "bytes": 642,
@@ -6235,10 +6247,10 @@
       "sha256": "f91d96afd3b0ec9d69c5aa41ad3fe6414f8abc26b77feacce13b010ca9762929"
     },
     {
-      "bytes": 26846,
+      "bytes": 28497,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "a8566ad9829ecd618d1e885c607062d1f076f2a6804179ed57fe155e9cffabcf"
+      "sha256": "9f238755f0dc062e735e5b9a20d0fa47e408cf2d234f88bc68219cb76a97be78"
     },
     {
       "bytes": 22774,
@@ -6263,6 +6275,12 @@
       "mime_type": "text/javascript",
       "path": "tests/live-control.test.mjs",
       "sha256": "948645fc2852ed115e6511481996b943b6ed824c5b553e7e2cf1a9bf4f441506"
+    },
+    {
+      "bytes": 4406,
+      "mime_type": "text/javascript",
+      "path": "tests/live-snow.test.mjs",
+      "sha256": "f3da678c85aa8fae1090c987e08410d860d7dbbf8694fae85e2c533c50170539"
     },
     {
       "bytes": 4732,
@@ -6319,6 +6337,12 @@
       "sha256": "a3e5234583745f49e110e83cf197c09aa932c89e6ff6848b046d48a45d86b439"
     },
     {
+      "bytes": 2127,
+      "mime_type": "text/javascript",
+      "path": "tests/weather.test.mjs",
+      "sha256": "33032d376859feb79803095a1cde7d7a22bef26879eb66493468aee452129f9c"
+    },
+    {
       "bytes": 5984,
       "mime_type": "text/plain",
       "path": "vendor/maplibre-gl-LICENSE.txt",
@@ -6347,9 +6371,21 @@
       "mime_type": "text/javascript",
       "path": "vendor/maplibre-gl.mjs",
       "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
+    },
+    {
+      "bytes": 5622,
+      "mime_type": "text/javascript",
+      "path": "weather-control.js",
+      "sha256": "8887820c1cf12af8f7f3233ed9e1a8bbb82e1b87daefaf49d1b9fda20b4a0252"
+    },
+    {
+      "bytes": 2799,
+      "mime_type": "text/javascript",
+      "path": "weather-data.js",
+      "sha256": "d942f5d207380f3753f1c63d3444f6a9f3f87299e97880fd396e7f06a2f88d97"
     }
   ],
-  "generated_at_utc": "2026-09-26T10:26:58+00:00",
+  "generated_at_utc": "2026-09-26T12:19:09+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

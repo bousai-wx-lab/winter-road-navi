@@ -1133,8 +1133,26 @@ main {
 .live-warm { background: #b8dfd0; }
 
 .live-data-details summary { min-height: 40px; padding: 10px 0; font-size: 12px; cursor: pointer; }
+.live-view-controls { display:flex; align-items:center; gap:8px; margin:8px 0; font-size:12px; font-weight:700; }
+.live-view-controls select { flex:1; min-width:0; min-height:44px; border:1px solid #88abbf; border-radius:5px; background:white; color:#153d58; padding:6px; }
+.dynamic-controls { display:block; }
+.dynamic-controls > label { display:block; font-size:12px; font-weight:700; margin:7px 0 4px; }
+.dynamic-controls > select, .dynamic-controls > input[type="range"] { width:100%; min-width:0; }
+.dynamic-controls > select { font-size:12px; min-height:44px; }
+.dynamic-controls > input[type="range"] { margin-left:0; margin-right:0; }
+.dynamic-controls > button { min-height:44px; }
+.weather-legend, .live-snow-legend { display:flex; flex-wrap:wrap; gap:7px 10px; font-size:11px; margin:10px 0; }
+.weather-legend span { display:flex; align-items:center; gap:3px; }
+.weather-legend i { width:15px; height:15px; border:1px solid #59717c; }
+.weather-sun { background:#ffaa00; } .weather-cloud { background:#aaaaaa; } .weather-rain { background:#0041ff; } .weather-mix { background:#a0d2ff; } .weather-snow { background:#f2f2ff; }
+.live-snow-toggles { display:flex; flex-wrap:wrap; gap:10px; margin:8px 0; font-size:12px; }
+.live-snow-toggles label { display:flex; align-items:center; gap:4px; min-height:44px; }
+.live-snow-scale { height:15px; background:linear-gradient(to right,#fafbff,#a3acc5,#182a52); border:1px solid #67839b; }
+.maplibregl-popup-content { color:#153d58; font-size:12px; line-height:1.6; }
+.maplibregl-popup-content p { margin:5px 0; }
 @media (max-width: 760px) {
   #liveControls { display: block; max-height: 260px; overflow-y: auto; overscroll-behavior: contain; }
+  .dynamic-controls { max-height:260px; overflow-y:auto; overscroll-behavior:contain; }
   #liveControls > label { margin: 4px 0; font-size: 12px; }
   .display-mode-buttons { margin: 6px 0; }
 }

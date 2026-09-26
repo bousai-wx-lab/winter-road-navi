@@ -226,7 +226,7 @@ def validate_binary_asset(path_label: str, data: bytes, record: dict, *, histori
     if digest_bytes(data) != record.get("sha256"):
         findings.append(f"binary asset hash mismatch: {path_label}")
     if record.get("mime_type") == "application/gzip":
-        if path_label.startswith("data/temperature/"):
+        if path_label.startswith(("data/temperature/", "data/temperature-max/")):
             try:
                 # Mesh-only payloads are permitted solely for an explicitly
                 # hash-allowlisted historical Git blob, never the worktree.

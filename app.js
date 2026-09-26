@@ -1,6 +1,6 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=20260924-roadhover1";
-import { initTemperature } from "./temperature-control.js?v=20260924-roadhover1";
+import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20260926-tmax1";
 import { createRoadTemperature } from "./road-temperature.js?v=20260924-roadhover1";
 import { initSnow } from "./snow-control.js?v=20260924-roadhover1";
 import { lookupCell, binLabel } from "./temperature-layer.js";
@@ -16,19 +16,23 @@ const interactiveLayers = ["highway", "general-road"];
 let roadTemperature = null;
 let snow = null;
 let temperatureGrid = null, temperatureBins = null, tooltipDay = null, hovered = null;
+let tooltipMode = "tmin";
+let tooltipTemperatureState = "loading";
 const tooltip = document.querySelector("#meshTooltip");
 const tooltipToggle = document.querySelector("#meshTooltipToggle");
 function refreshTooltip() {
   if (!tooltipToggle.checked || !hovered) { tooltip.hidden = true; return; }
   const index = temperatureGrid ? lookupCell(temperatureGrid, hovered.lng, hovered.lat) : -1;
-  const temperature = !tooltipDay || !temperatureBins ? "気温を準備中"
+  const temperature = tooltipTemperatureState === "error" ? "気温を表示できません"
+    : !tooltipDay || !temperatureBins ? "気温を準備中"
     : index < 0 ? "格子未収録" : temperatureBins[index] === 0 ? "欠測" : binLabel(temperatureBins[index]);
   const snowValue = snow?.tooltipAt(hovered.lng, hovered.lat) ?? { label: "積雪を準備中" };
   document.querySelector("#meshTooltipDate").textContent = tooltipDay ? `${tooltipDay.replace("-", "月")}日` : "表示日を準備中";
-  document.querySelector("#meshTooltipTemperature").textContent = `平均最低気温：${temperature}`;
+  document.querySelector("#meshTooltipTemperature").textContent = `${TEMPERATURE_MODES[tooltipMode].label}：${temperature}`;
   document.querySelector("#meshTooltipSnow").textContent = `日最深積雪：${snowValue.label}`;
   tooltip.dataset.day = tooltipDay || "";
   tooltip.dataset.temperature = temperature;
+  tooltip.dataset.temperatureMode = tooltipMode;
   tooltip.dataset.snow = snowValue.label;
   tooltip.hidden = false;
   const width = tooltip.offsetWidth, height = tooltip.offsetHeight;
@@ -136,14 +140,16 @@ map.on("load", () => {
       snow = initSnow(map, grid, manifest, refreshTooltip);
       snow.setTooltipEnabled(tooltipToggle.checked);
     },
-    onDay(classes, day, bins) {
-      temperatureBins = bins; tooltipDay = day;
+    onDay(classes, day, bins, mode) {
+      temperatureBins = bins; tooltipDay = day; tooltipMode = mode;
+      tooltipTemperatureState = "ready";
       try { roadTemperature?.setClasses(classes, day); }
       catch { roadTemperature?.clear(); setRoadTemperatureState("error"); }
       void snow?.setDay(day);
       refreshTooltip();
     },
-    onUnavailable(state) {
+    onUnavailable(state, mode) {
+      tooltipMode = mode; tooltipTemperatureState = state;
       temperatureBins = null; tooltipDay = null;
       roadTemperature?.clear(); setRoadTemperatureState(state); snow?.clear(); refreshTooltip();
     },

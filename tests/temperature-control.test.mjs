@@ -84,13 +84,19 @@ function fixture({ automatic = false } = {}) {
     return payload({ day, cell_count: CELL_COUNT, runs: [bin, CELL_COUNT], road_runs: [roadClass, CELL_COUNT] }, `${day}.json.gz`);
   });
   const manifest = {
+    source_id: "daily-tmin-normals-1km", baseline: "1991-2020", unit: "degC",
     schema_version: 1, cell_count: CELL_COUNT, bin_min: -40, bin_step: 1, bin_count: 81, missing_bin: 0,
     days: DAYS, grid: grid.record, road_classes: ROAD_CLASSES, files: data.map((entry, i) => ({ day: DAYS[i], ...entry.record })),
   };
+  const maximumData = DAYS.map((day) => payload({ day, cell_count: CELL_COUNT, runs: [55, CELL_COUNT], road_runs: [1, CELL_COUNT] }, `${day}.json.gz`));
+  const maximumManifest = { ...manifest, source_id: "daily-climate-normals-1km", element: "tmax",
+    files: maximumData.map((entry, i) => ({ day: DAYS[i], ...entry.record })) };
   let manual = !automatic;
   let closed = false;
   let rafId = 0;
   const responses = new Map();
+  const maxResponses = new Map(), maxCalls = new Map(), maxFailures = new Set();
+  const manifestFailures = new Set();
   const calls = new Map();
   const failures = new Set();
   const frames = new Map();
@@ -106,14 +112,17 @@ function fixture({ automatic = false } = {}) {
     fetch: async (url) => {
       if (closed) throw new Error("Fixture closed");
       const name = String(url).split("/").at(-1);
-      if (name === "manifest.json") return Response.json(manifest);
+      const maximum = String(url).includes("temperature-max/");
+      const mode = maximum ? "tmax" : "tmin";
+      if (name === "manifest.json") return manifestFailures.has(mode) ? new Response("unavailable", { status: 503 }) : Response.json(maximum ? maximumManifest : manifest);
       if (name === "grid.json") return new Response(grid.bytes);
       const index = DAYS.indexOf(name.replace(".json.gz", ""));
       assert.notEqual(index, -1, `unexpected URL ${url}`);
-      calls.set(index, (calls.get(index) || 0) + 1);
-      if (failures.has(index)) return new Response("unavailable", { status: 503 });
-      if (!manual || (name === "09-15.json.gz" && calls.get(index) === 1)) return new Response(data[index].bytes);
-      return new Promise((resolve, reject) => responses.set(index, { resolve, reject }));
+      const modeCalls = maximum ? maxCalls : calls;
+      modeCalls.set(index, (modeCalls.get(index) || 0) + 1);
+      if ((maximum ? maxFailures : failures).has(index)) return new Response("unavailable", { status: 503 });
+      if (!manual || (!maximum && name === "09-15.json.gz" && calls.get(index) === 1)) return new Response((maximum ? maximumData : data)[index].bytes);
+      return new Promise((resolve, reject) => (maximum ? maxResponses : responses).set(index, { resolve, reject }));
     },
   });
   const invoke = (id, event) => {
@@ -123,11 +132,12 @@ function fixture({ automatic = false } = {}) {
   };
   return {
     get, map, frames, responses, calls, failures, roadEvents,
+    maxResponses, maxCalls, maxFailures, maximumManifest, manifestFailures,
     async boot() {
       initTemperature(map, {
         onGrid: (grid) => roadEvents.push({ state: "grid", count: grid.count }),
-        onDay: (classes, day) => roadEvents.push({ state: "day", day, value: classes[0], count: classes.length }),
-        onUnavailable: (state) => roadEvents.push({ state }),
+        onDay: (classes, day, bins, mode) => roadEvents.push({ state: "day", day, mode, bin: bins[0], value: classes[0], count: classes.length }),
+        onUnavailable: (state, mode) => roadEvents.push({ state, mode }),
       });
       await waitFor(() => get("map").dataset.temperatureDay === "09-15", "initial day");
     },
@@ -136,6 +146,13 @@ function fixture({ automatic = false } = {}) {
     play: () => invoke("playYear", "click"),
     retry: () => invoke("retryTemperature", "click"),
     select(index) { get("dateSlider").value = String(index); return invoke("dateSlider", "input"); },
+    mode(mode) { get("temperatureMode").value = mode; return invoke("temperatureMode", "change"); },
+    resolveMax(index) {
+      const response = maxResponses.get(index);
+      assert.ok(response, `maximum day ${index} is pending`);
+      maxResponses.delete(index);
+      response.resolve(new Response(maximumData[index].bytes));
+    },
     resolve(index) {
       const response = responses.get(index);
       assert.ok(response, `day ${index} is pending`);
@@ -148,7 +165,9 @@ function fixture({ automatic = false } = {}) {
       document.listeners.get("visibilitychange")?.();
       closed = true;
       for (const response of responses.values()) response.reject(new Error("Fixture closed"));
+      for (const response of maxResponses.values()) response.reject(new Error("Fixture closed"));
       responses.clear();
+      maxResponses.clear();
       await Promise.allSettled(actions);
       await nextTurn();
       for (const [key, descriptor] of original) {
@@ -248,11 +267,114 @@ test("mesh visibility and opacity leave the selected road classes unchanged", as
     assert.match(f.get("temperaturePoint").textContent, /道路着色：0℃以下/);
     const pending = f.select(20);
     assert.equal(f.get("map").dataset.temperatureDay, "09-15");
-    assert.match(f.get("mapTemperatureLabel").textContent, /9月15日を表示中/);
+    assert.match(f.get("mapTemperatureLabel").textContent, /9月15日の平均最低気温を表示中/);
     await waitFor(() => f.responses.has(sourceIndex(20)), "selected uncached day");
     f.resolve(sourceIndex(20));
     await pending;
     assert.equal(f.roadEvents.at(-1).day, SEASON_DAYS[20]);
+  } finally { await f.close(); }
+});
+
+test("switching modes retains the date, point, opacity and mesh visibility while changing bands and road classes together", async () => {
+  const f = fixture({ automatic: true });
+  try {
+    await f.boot();
+    await f.select(SEASON_DAYS.indexOf("01-22"));
+    f.map.click();
+    const day = f.get("map").dataset.temperatureDay;
+    f.get("temperatureToggle").checked = false;
+    f.get("temperatureToggle").emit("change");
+    f.get("temperatureOpacity").value = "23";
+    f.get("temperatureOpacity").emit("input");
+    await f.mode("tmax");
+    assert.equal(f.get("map").dataset.temperatureDay, day);
+    assert.equal(f.get("map").dataset.temperatureMode, "tmax");
+    assert.equal(f.roadEvents.at(-1).mode, "tmax");
+    assert.equal(f.roadEvents.at(-1).bin, 55);
+    assert.equal(f.roadEvents.at(-1).value, 1);
+    assert.match(f.get("temperaturePoint").textContent, /01\/22・平均最高気温/);
+    assert.match(f.get("mapTemperatureLabel").textContent, /平均最高気温.*気温面は非表示/);
+    assert.equal(f.get("temperatureOpacity").value, "23");
+    await f.mode("tmin");
+    assert.equal(f.get("map").dataset.temperatureDay, day);
+    assert.equal(f.roadEvents.at(-1).mode, "tmin");
+  } finally { await f.close(); }
+});
+
+test("a late maximum-mode response cannot replace a newer minimum-mode selection", async () => {
+  const f = fixture();
+  try {
+    await f.boot();
+    const maximum = f.mode("tmax");
+    await waitFor(() => f.maxResponses.has(sourceIndex(0)), "maximum-mode day");
+    assert.equal(f.get("map").dataset.temperatureMode, "tmin");
+    assert.match(f.get("mapTemperatureLabel").textContent, /平均最低気温を表示中.*平均最高気温を準備中/);
+    f.automatic();
+    const minimum = f.mode("tmin");
+    for (const index of [...f.responses.keys()]) f.resolve(index);
+    await minimum;
+    f.resolveMax(sourceIndex(0));
+    await maximum;
+    assert.equal(f.get("map").dataset.temperatureMode, "tmin");
+    assert.equal(f.roadEvents.some((event) => event.state === "day" && event.mode === "tmax"), false);
+    assert.match(f.get("temperatureTitleText").textContent, /平均最低気温/);
+  } finally { await f.close(); }
+});
+
+test("maximum-mode manifest failure and mismatched grid fail closed, and minimum mode recovers", async () => {
+  const f = fixture({ automatic: true });
+  try {
+    await f.boot();
+    f.manifestFailures.add("tmax");
+    await f.mode("tmax");
+    assert.equal(f.get("temperatureStatus").dataset.state, "error");
+    assert.equal(f.get("retryTemperature").hidden, false);
+    assert.equal(f.roadEvents.at(-1).state, "error");
+    f.manifestFailures.clear();
+    f.maximumManifest.grid = { ...f.maximumManifest.grid, sha256: "0".repeat(64) };
+    await f.retry();
+    assert.equal(f.maxCalls.size, 0, "mismatched geometry cannot load daily values");
+    assert.equal(f.get("temperatureStatus").dataset.state, "error");
+    await f.mode("tmin");
+    assert.equal(f.get("temperatureStatus").dataset.state, "ready");
+    assert.equal(f.roadEvents.at(-1).mode, "tmin");
+  } finally { await f.close(); }
+});
+
+test("switching during playback cancels its animation and maximum-mode cache never borrows minimum values", async () => {
+  const f = fixture({ automatic: true });
+  try {
+    await f.boot();
+    await f.play();
+    assert.equal(f.frames.size, 1);
+    await f.mode("tmax");
+    assert.equal(f.frames.size, 0);
+    assert.equal(f.get("playYear").getAttribute("aria-pressed"), "false");
+    await f.select(SEASON_DAYS.indexOf("02-29"));
+    assert.equal(f.roadEvents.at(-1).day, "02-29");
+    assert.equal(f.roadEvents.at(-1).mode, "tmax");
+    assert.equal(f.roadEvents.at(-1).bin, 55);
+    assert.equal(f.maxCalls.has(DAYS.indexOf("07-01")), false);
+    await f.select(274);
+    assert.equal(f.roadEvents.at(-1).day, "06-15");
+  } finally { await f.close(); }
+});
+
+test("an unavailable maximum-temperature day is never replaced with minimum-temperature values and can be retried", async () => {
+  const f = fixture({ automatic: true });
+  try {
+    await f.boot();
+    f.maxFailures.add(sourceIndex(0));
+    await f.mode("tmax");
+    assert.equal(f.get("temperatureStatus").dataset.state, "error");
+    assert.equal(f.get("retryTemperature").hidden, false);
+    assert.equal(f.roadEvents.some((event) => event.state === "day" && event.mode === "tmax"), false);
+    assert.equal(f.roadEvents.at(-1).mode, "tmax", "failure is labeled with the requested metric");
+    f.maxFailures.clear();
+    await f.retry();
+    assert.equal(f.get("map").dataset.temperatureMode, "tmax");
+    assert.equal(f.roadEvents.at(-1).bin, 55);
+    assert.equal(f.get("temperatureStatus").dataset.state, "ready");
   } finally { await f.close(); }
 });
 

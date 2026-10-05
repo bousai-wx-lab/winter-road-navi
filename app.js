@@ -3,9 +3,10 @@ import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=2026
 import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20260926-weather-snow1";
 import { createRoadTemperature } from "./road-temperature.js?v=20260926-weather-snow1";
 import { initSnow } from "./snow-control.js?v=20260926-weather-snow1";
-import { initLiveTemperature } from "./live-temperature-control.js?v=20260926-weather-snow1";
-import { initWeather } from "./weather-control.js?v=20260926-weather-snow1";
+import { initLiveTemperature } from "./live-temperature-control.js?v=20261005-timeline1";
+import { initWeather } from "./weather-control.js?v=20261005-timeline1";
 import { initLiveSnow } from "./live-snow-control.js?v=20260926-weather-snow1";
+import { initForecastTimeline } from "./forecast-timeline.js?v=20261005-timeline1";
 import { lookupCell, binLabel } from "./temperature-layer.js";
 
 maplibregl.setWorkerUrl(new URL("./vendor/maplibre-gl-worker.mjs", import.meta.url).href);
@@ -19,6 +20,7 @@ const interactiveLayers = ["highway", "general-road"];
 let roadTemperature = null;
 let normalTemperature = null, liveTemperature = null, displayMode = "normal";
 let weather = null, liveSnow = null, displayView = "temperature";
+let forecastTimeline = null;
 const selectedViews = {observed:"temperature",forecast:"temperature"};
 let snow = null;
 let temperatureGrid = null, temperatureBins = null, tooltipDay = null, hovered = null;
@@ -181,6 +183,7 @@ function applyDisplay() {
   normalTemperature.setActive(mode === "normal");
   if (live) document.querySelector("#map").setAttribute("aria-label", `${label}${viewName}と道路を表示する地図`);
   if(!temperature)setRoadTemperatureState("off");
+  forecastTimeline?.setVisible(mode === "forecast");
   refreshTooltip();
 }
 function switchDisplayMode(mode) {
@@ -204,9 +207,11 @@ document.querySelector("#liveMode").addEventListener("click", () => switchDispla
 document.querySelector("#forecastMode").addEventListener("click", () => switchDisplayMode("forecast"));
 map.on("load", () => {
   setStatus("道路を表示中。細い一般道路は地図を拡大すると現れます", "ready");
-  weather = initWeather(map,{onChange:refreshTooltip});
+  forecastTimeline = initForecastTimeline(map,()=>displayMode === "forecast" ? displayView === "weather" ? weather : liveTemperature : null);
+  weather = initWeather(map,{onChange(){refreshTooltip();forecastTimeline.render();}});
   liveSnow = initLiveSnow(map,{onChange:refreshTooltip});
   liveTemperature = initLiveTemperature(map, {
+    onChange(){forecastTimeline.render();},
     onData(shown) {
       if (displayMode === "normal" || displayView !== "temperature") return;
       useGrid(shown.data.grid); tooltipDay = shown.day; tooltipTemperatureState = "ready";

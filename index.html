@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、実況積雪深の観測点と独自推定面にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20260926-weather-snow1">
-    <script type="module" src="./app.js?v=20260926-weather-snow1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261005-timeline1">
+    <script type="module" src="./app.js?v=20261005-timeline1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -182,6 +182,17 @@
       </aside>
 
       <div class="map-column">
+        <section id="forecastTimeline" class="forecast-timeline" aria-label="予測の対象時刻" hidden>
+          <div class="forecast-time-heading"><strong>予測の対象</strong><output id="forecastTimeLabel" for="forecastTimeRange">予測の対象時刻を準備中</output></div>
+          <div class="forecast-time-row">
+            <button id="forecastTimePrevious" type="button" aria-label="予測の前の対象へ" disabled>◀</button>
+            <div class="forecast-time-track">
+              <input id="forecastTimeRange" type="range" min="0" max="0" step="1" value="0" aria-label="予測の対象時刻" aria-describedby="forecastTimeLabel" disabled>
+              <div id="forecastTimeTicks" class="forecast-time-ticks"></div>
+            </div>
+            <button id="forecastTimeNext" type="button" aria-label="予測の次の対象へ" disabled>▶</button>
+          </div>
+        </section>
         <section class="map-shell" aria-labelledby="map-heading">
           <h2 id="map-heading" class="visually-hidden">全国の1km気温・積雪平年メッシュと道路地図</h2>
           <div id="map" role="application" aria-label="日別の平均最低気温、日最深積雪の平年推定値と全国の道路を表示する地図"></div>

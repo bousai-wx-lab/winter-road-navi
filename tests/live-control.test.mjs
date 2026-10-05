@@ -43,10 +43,14 @@ test("live controller separates observations and forecasts, preserves selections
     control.setMode("forecast");control.setActive(true);await until(()=>shown.length===3);
     assert.deepEqual(get("liveKind").options.map(x=>x.value),["temp3h","daily"]);
     assert.equal(shown.at(-1).data.values[0],-1.2);assert.equal(get("map").dataset.liveKind,"temp3h");
+    assert.equal(control.timeline().slots[0].shortLabel,"1日12時");
+    assert.equal(control.timeline().selected,"temp3h_20990101030000");
     get("liveKind").value="daily";get("liveKind").emit("change");await until(()=>shown.length===4);
-    get("liveSlot").value="tomorrow_max";get("liveSlot").emit("change");await until(()=>shown.length===5);
+    control.choose("tomorrow_max");assert.equal(get("liveSlot").value,"tomorrow_max");await until(()=>shown.length===5);
+    assert.equal(control.timeline().selected,"tomorrow_max");assert.equal(control.timeline().slots[1].shortLabel,"1日最高");
     control.setMode("observed");control.setActive(true);await until(()=>shown.length===6);
     assert.equal(get("liveKind").value,"current");assert.equal(shown.at(-1).data.values[0],2.01);
+    assert.deepEqual(control.timeline().slots,[]);
     control.setMode("forecast");control.setActive(true);await until(()=>shown.length===7);
     assert.equal(get("liveKind").value,"daily");assert.equal(get("liveSlot").value,"tomorrow_max");
     assert.equal(shown.at(-1).slot.element,"max");assert.equal(shown.at(-1).data.values[0],-1.2);

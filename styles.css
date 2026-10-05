@@ -263,7 +263,39 @@ main {
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.map-column > .map-shell { grid-row: 2; }
+.map-column > .scope-note { grid-row: 3; }
+.forecast-timeline { grid-row: 1; min-width: 0; padding: 8px 12px 5px; background: #f7fbfd; border-bottom: 1px solid #abcbd8; color: #173b53; }
+.forecast-timeline[hidden] { display: none; }
+.forecast-time-heading { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; line-height: 1.4; }
+.forecast-time-heading strong { color: #176b83; }
+.forecast-time-heading output { font-weight: 700; }
+.forecast-time-row { display: flex; align-items: flex-start; gap: 12px; }
+.forecast-time-row > button { flex: 0 0 44px; min-height: 44px; margin-top: 0; border: 1px solid #9bbccf; border-radius: 5px; background: white; color: #176b83; font-size: 17px; cursor: pointer; }
+.forecast-time-row > button:disabled { opacity: .4; cursor: default; }
+.forecast-time-track { flex: 1; min-width: 0; }
+#forecastTimeRange { display: block; width: 100%; height: 44px; margin: 0; accent-color: #176b83; cursor: pointer; }
+#forecastTimeRange:disabled { cursor: default; }
+.forecast-time-ticks { position: relative; height: 30px; margin: 0 9px; }
+.forecast-time-tick { position: absolute; top: -7px; transform: translateX(-50%); width: 56px; padding: 8px 0 2px; border: 0; border-radius: 3px; background: transparent; color: #48677a; font: inherit; font-size: 11px; line-height: 19px; cursor: pointer; }
+.forecast-time-tick::before { content: ""; position: absolute; width: 1px; height: 6px; top: 0; left: 50%; background: #789aaa; }
+.forecast-time-tick[aria-current="true"] span { padding: 2px 3px; border-radius: 3px; background: #176b83; color: white; font-weight: 700; }
+.forecast-time-row button:focus-visible { outline: 3px solid #087da2; outline-offset: 2px; }
+@media (min-width: 761px) and (max-width: 1100px) {
+  .forecast-timeline[data-dense="true"] .forecast-time-tick[data-major="false"][data-edge="false"] span { visibility: hidden; }
+  .forecast-timeline[data-dense="true"] .forecast-time-tick { width: 28px; }
+}
+@media (max-width: 760px) {
+  .forecast-timeline { padding: 6px 8px 3px; }
+  .forecast-time-heading { font-size: 10px; gap: 2px 7px; }
+  .forecast-time-row { gap: 8px; }
+  .forecast-time-tick { font-size: 10px; }
+  .forecast-timeline[data-dense="true"] .forecast-time-tick { width: 20px; }
+  .forecast-timeline[data-dense="true"] .forecast-time-tick[data-edge="false"] span { visibility: hidden; }
+  .forecast-time-tick span { white-space: nowrap; }
 }
 
 .map-shell {
@@ -910,7 +942,7 @@ main {
 
   .map-column {
     height: 100%;
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
   }
 
   .map-shell {

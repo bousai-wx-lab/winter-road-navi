@@ -1,5 +1,6 @@
 import {WEATHER_ROOT,WEATHER_PRODUCTS,weatherSlots,weatherTile,weatherNotice} from "./weather-data.js";
 import {timeLabel} from "./live-temperature-data.js";
+import {forecastTickLabel} from "./forecast-timeline.js";
 
 const $=id=>document.getElementById(id);
 export function initWeather(map,hooks={}) {
@@ -14,6 +15,7 @@ export function initWeather(map,hooks={}) {
   function controls() {
     const index=slots.findIndex(s=>s.id===selected);
     $("weatherPrevious").disabled=index<=0;$("weatherNext").disabled=index<0 || index>=slots.length-1;$("weatherSlot").disabled=!slots.length;
+    hooks.onChange?.();
   }
   function paint() {
     for(const id of layers) if(map.getLayer(id))map.setPaintProperty(id,"raster-opacity",Number($("weatherOpacity").value)/100);
@@ -55,7 +57,7 @@ export function initWeather(map,hooks={}) {
       clear();status("天気を取得・確認できません。再読込できます。","error");$("mapTemperatureLabel").textContent="天気を表示できません";
     }
   }
-  function choose(id) {selected=id;saved[mode]=id;void load();}
+  function choose(id) {if(!active || !slots.some(s=>s.id===id))return;selected=id;saved[mode]=id;$("weatherSlot").value=id;controls();void load();}
   $("weatherSlot").addEventListener("change",()=>choose($("weatherSlot").value));
   $("weatherPrevious").addEventListener("click",()=>choose(slots[Math.max(0,slots.findIndex(s=>s.id===selected)-1)]?.id));
   $("weatherNext").addEventListener("click",()=>choose(slots[Math.min(slots.length-1,slots.findIndex(s=>s.id===selected)+1)]?.id));
@@ -67,5 +69,6 @@ export function initWeather(map,hooks={}) {
     saved[mode]=selected;active=value;++token;abort?.abort();clearInterval(timer);clear();
     if(nextMode!==mode){mode=nextMode;selected=saved[mode];slots=[];}
     if(value){void load(true);timer=setInterval(()=>{if(!document.hidden)void load(true);},600000);}
-  },label:()=>current?.label || "天気を準備中"};
+    controls();
+  },choose,timeline:()=>({selected,slots:mode==="forecast"?slots.map(s=>({id:s.id,label:s.label,shortLabel:forecastTickLabel(s.end)})):[]}),label:()=>current?.label || "天気を準備中"};
 }

@@ -2,12 +2,18 @@ import {utcTime,timeLabel} from "./live-temperature-data.js";
 
 export const WEATHER_ROOT="https://www.jma.go.jp/bosai/jmatile/data/";
 export const WEATHER_PRODUCTS=Object.freeze({
-  observed:{family:"suikeikishou",element:"wthr",label:"推計気象分布（天気）",resolution:"約1km",tileSize:512},
-  forecast:{family:"wdist",element:"wm",label:"天気分布予報（天気）",resolution:"約5km",tileSize:256},
+  observed:{family:"suikeikishou",element:"wthr",name:"天気",label:"推計気象分布（天気）",resolution:"約1km",tileSize:512},
+  forecast:{family:"wdist",element:"wm",name:"天気",label:"天気分布予報（天気）",resolution:"約5km",tileSize:256},
+  precipitation:{family:"wdist",element:"r3",name:"3時間降水量",label:"天気分布予報（3時間降水量）",resolution:"約5km",tileSize:256,unit:"mm/3h"},
+  snowfall:{family:"wdist",element:"s3",name:"3時間降雪量",label:"天気分布予報（3時間降雪量）",resolution:"約5km",tileSize:256,unit:"cm/3h"},
 });
 export const WEATHER_COLORS=["#ffaa00","#aaaaaa","#0041ff","#a0d2ff","#f2f2ff"];
-export function weatherSlots(records,mode) {
-  const product=WEATHER_PRODUCTS[mode];
+export function weatherProduct(mode,view="weather") {
+  if(!["observed","forecast"].includes(mode) || !["weather","precipitation","snowfall"].includes(view) || mode==="observed" && view!=="weather") throw new Error("気象分布の種類が不正です");
+  return WEATHER_PRODUCTS[view==="weather"?mode:view];
+}
+export function weatherSlots(records,mode,view="weather") {
+  const product=weatherProduct(mode,view);
   if(!product || !Array.isArray(records) || !records.length || records.length>96) throw new Error("天気の時刻情報が不正です");
   const slots=records.filter(row=>Array.isArray(row.elements) && row.elements.includes(product.element)).map(row=>{
     const base=utcTime(row.basetime),end=utcTime(row.validtime);
@@ -20,8 +26,8 @@ export function weatherSlots(records,mode) {
   if(!slots.length || new Set(slots.map(s=>s.id)).size!==slots.length) throw new Error("天気の対象が重複・欠落しています");
   return slots;
 }
-export function weatherTile(mode,slot,jmaZoom) {
-  const product=WEATHER_PRODUCTS[mode];
+export function weatherTile(mode,slot,jmaZoom,view="weather") {
+  const product=weatherProduct(mode,view);
   if(!product || ![4,6,8,10].includes(jmaZoom)) throw new Error("天気画像の指定が不正です");
   utcTime(slot.basetime);utcTime(slot.validtime);
   // JMA's 512-pixel observed tiles use half as many x/y tiles as its

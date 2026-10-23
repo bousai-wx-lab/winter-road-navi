@@ -45,7 +45,8 @@ void main() {
   }
 }`;
 
-const FRAGMENT = `#version 300 es
+const TEMPERATURE_COLORS=["#75838c","#000000","#e8bd20","#f08020","#da3434"];
+const fragmentFor = colors => `#version 300 es
 precision highp float;
 precision highp int;
 precision highp usampler2D;
@@ -63,9 +64,8 @@ void main() {
     || ((v_clip & 4u) != 0u && v_gridSide.y <= 0.) || ((v_clip & 8u) != 0u && v_gridSide.y > 0.)) discard;
   uint category = texelFetch(u_classes,ivec2(int(v_cell)%u_textureWidth,int(v_cell)/u_textureWidth),0).r;
   if (category == 1u) discard;
-  vec3 rgb = category == 4u ? vec3(218.,52.,52.)/255.
-    : category == 3u ? vec3(240.,128.,32.)/255.
-    : category == 2u ? vec3(232.,189.,32.)/255. : vec3(117.,131.,140.)/255.;
+  const vec3 palette[${colors.length}] = vec3[${colors.length}](${colors.map(hex=>`vec3(${[1,3,5].map(i=>`${parseInt(hex.slice(i,i+2),16)}.`).join(",")})/255.`).join(",")});
+  vec3 rgb = palette[min(int(category),${colors.length-1})];
   float distance = v_round > .5 ? length(v_offset) : abs(v_offset.y);
   float alpha = 1.-smoothstep(max(0.,u_halfWidth-.5),u_halfWidth+.5,distance);
   if (alpha <= 0.) discard;
@@ -128,7 +128,7 @@ function makeLayer(kind, shared) {
     let vertex, fragment;
     const result = {};
     try {
-      vertex = shader(gl, gl.VERTEX_SHADER, VERTEX); fragment = shader(gl, gl.FRAGMENT_SHADER, FRAGMENT);
+      vertex = shader(gl, gl.VERTEX_SHADER, VERTEX); fragment = shader(gl, gl.FRAGMENT_SHADER, fragmentFor(shared.colors));
       result.program = gl.createProgram();
       if (!result.program) throw new Error("道路着色GPUプログラムを作成できません");
       gl.attachShader(result.program, vertex); gl.attachShader(result.program, fragment); gl.linkProgram(result.program);
@@ -223,14 +223,15 @@ function makeLayer(kind, shared) {
   };
 }
 
-export function createRoadTemperature(map, grid, onState = () => {}) {
+export function createRoadTemperature(map, grid, onState = () => {}, {colors=TEMPERATURE_COLORS} = {}) {
   if (!grid || !(grid.rows instanceof Uint16Array) || !(grid.cols instanceof Uint16Array)
     || !Number.isSafeInteger(grid.count) || grid.count < 1 || grid.rows.length !== grid.count || grid.cols.length !== grid.count) {
     throw new Error("道路着色の格子定義が不正です");
   }
+  if(!Array.isArray(colors) || colors.length<5 || colors.length>16 || colors.some(c=>!/^#[a-f0-9]{6}$/i.test(c)))throw new Error("道路の配色が不正です");
   let destroyed = false, timer = null, worker = null, busy = false, queued = false, zooming = false, generation = 0, state;
   const shared = {
-    map, count: grid.count, active: false, failed: false, classes: null, day: null, classVersion: 0,
+    map, colors, count: grid.count, active: false, failed: false, classes: null, day: null, classVersion: 0,
     geometry: null, geometryVersion: 0, visible: { general: true, highway: true }, gpu: { general: false, highway: false },
     notify(next) { if (!destroyed && next !== state) { state = next; onState(next); } },
     observe() {
@@ -319,7 +320,7 @@ export function createRoadTemperature(map, grid, onState = () => {}) {
   return {
     setClasses(classes, day) {
       if (destroyed) throw new Error("道路着色は終了しています");
-      if (!(classes instanceof Uint8Array) || classes.length !== grid.count || classes.some((value) => value > 4)
+      if (!(classes instanceof Uint8Array) || classes.length !== grid.count || classes.some((value) => value >= colors.length)
         || typeof day !== "string" || !/^\d{2}-\d{2}$/.test(day)) throw new Error("道路着色の日付・区分が不正です");
       shared.classes = classes; shared.day = day; shared.classVersion++; shared.active = true; shared.report(); map.triggerRepaint();
     },

@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、実況積雪深の観測点と独自推定面にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261010-amounts1">
-    <script type="module" src="./app.js?v=20261010-amounts1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261023-risk1">
+    <script type="module" src="./app.js?v=20261023-risk1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -58,6 +58,20 @@
         <div id="liveViewControls" class="live-view-controls" hidden>
           <label for="liveView">表示する情報</label><select id="liveView"><option value="temperature">気温</option><option value="weather">天気</option><option value="snow">積雪深</option></select>
         </div>
+        <div id="forecastCompositeControls">
+        <section id="riskControls" class="temperature-controls dynamic-controls" aria-label="道路リスクの設定と凡例" hidden>
+          <h3>道路のリスク色 <span>独自区分</span></h3>
+          <div id="riskLegend" class="risk-legend" aria-label="道路だけに適用する6色の凡例"></div>
+          <div id="riskWeatherLegend" aria-label="地図の面：予測天気の凡例"></div>
+          <p class="risk-snow-caption">細い青線：最新の実況積雪深（独自推定）<br>等値線 1・5・10・20・50・100cm</p>
+          <p id="riskSnowUpdated" class="live-meta"></p><p id="riskSnowNotice" class="live-notice" role="status" hidden></p>
+          <p id="riskStatus" class="temperature-status" role="status">予測の天気に合わせて道路条件を計算します</p>
+          <p id="riskUpdated" class="live-meta"></p>
+          <button id="riskRefresh" type="button">道路リスクを再読込</button>
+          <p id="riskSnowStatus" class="live-meta" role="status"></p>
+          <p class="risk-note">雪は紫→ピンク→赤→薄赤を優先。降水後の低温はオレンジ→黄。灰色は資料不足、該当なしは道路区分色です。</p>
+          <details class="live-data-details"><summary>道路色・積雪線の見方</summary><p class="live-meta">降水ありは3時間降水量1mm以上、または天気が雨・雨または雪・雪の予報。対象期間の終わりと、その3・6・9・12時間先の予想気温で低温を判定します。12時間先までそろわない場合、降雪の色や0℃以下を確認できる場合を除き、低温条件は判定資料不足です。</p><p class="live-meta">降雪1cm・3cm・6cmは、それぞれ赤・ピンク・紫。雪の予報で有効な降雪量が1cm未満なら薄赤です。雪の量が資料なしの場合を1cm未満として扱いません。</p><p class="live-meta">背景の色は予測天気です。積雪深の線は最新の実況観測から補間した参考値で、選択した未来の積雪深ではありません。観測範囲外や資料不足では線を描きません。道路の積雪、凍結、通行可否は判定しません。</p></details>
+        </section>
         <section id="weatherControls" class="temperature-controls dynamic-controls" aria-label="天気の設定" hidden>
           <h3 id="weatherTitle">推計気象分布（天気）</h3>
           <label id="weatherSlotLabel" for="weatherSlot">天気の対象時刻・期間</label><select id="weatherSlot" disabled></select>
@@ -70,6 +84,7 @@
           <label for="weatherOpacity"><span id="weatherOpacityLabelText">天気の濃さ </span><output id="weatherOpacityValue">75%</output></label><input id="weatherOpacity" type="range" min="0" max="100" value="75">
           <p id="weatherDescription" class="live-meta">気象庁の天気画像をそのまま表示。無色は海域・資料なしです。10分ごと・タブ復帰時に更新を確認します。</p>
         </section>
+        </div>
         <section id="liveSnowControls" class="temperature-controls dynamic-controls" aria-label="実況積雪深の設定" hidden>
           <h3>実況積雪深 <span>点：観測／面：独自推定</span></h3>
           <label for="liveSnowSlot">積雪の観測時刻（正時）</label><select id="liveSnowSlot"></select>

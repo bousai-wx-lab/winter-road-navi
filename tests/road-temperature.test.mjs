@@ -137,7 +137,7 @@ test("nationwide zoom draws temperature-colored highways but not general roads",
   const highwayMap = makeMap(fakeGL(), highway);
   const highways = createRoadTemperature(highwayMap, grid());
   try {
-    highwayMap.zoom = 4.7;
+    highwayMap.zoom = 4;
     highways.setClasses(new Uint8Array([1, 2, 3]), "01-22");
     await settle(); highwayMap.render();
     assert.ok(highwayMap.gl.draws.length > 0);
@@ -151,6 +151,29 @@ test("nationwide zoom draws temperature-colored highways but not general roads",
     await settle(); generalMap.render();
     assert.equal(generalMap.gl.draws.length, 0);
   } finally { general.destroy(); }
+});
+
+test("settled tiles replace transitional road geometry once, preserving missing and valid classes", async () => {
+  const map = makeMap(), roads = createRoadTemperature(map, grid());
+  try {
+    roads.setClasses(new Uint8Array([0, 1, 4]), "10-23");
+    await settle(); map.render();
+    assert.equal(map.container.dataset.roadGeneralSegments, "3");
+    map.emit("zoomstart"); map.emit("zoomend"); map.emit("moveend");
+    await settle();
+    // At zoomend MapLibre can still render parent tiles. Final child geometry
+    // becomes queryable on idle, after the last sourcedata notification.
+    map.queryRenderedFeatures = () => [{ ...features[0], geometry: { type: "LineString", coordinates: [[11177.2 / 80, 4282.5 / 120], [11177.8 / 80, 4282.5 / 120]] } }];
+    map.emit("idle"); await settle(); map.render();
+    assert.equal(map.container.dataset.roadGeneralSegments, "1");
+    assert.deepEqual(map.gl.textures.at(-1), [0, 0, 1, 4]);
+    const version = map.container.dataset.roadGeometryVersion, queries = map.queries;
+    map.emit("idle"); await settle();
+    assert.equal(map.container.dataset.roadGeometryVersion, version, "repaint must not cause an idle/rebuild loop");
+    assert.equal(map.queries, queries);
+    roads.destroy(); map.emit("idle"); await settle();
+    assert.equal(map.layers.size, 0);
+  } finally { roads.destroy(); }
 });
 
 test("GL context restoration recreates buffers and texture and restores shared GL state", async () => {

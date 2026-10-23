@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   BASE_TILE_URL,
+  JAPAN_VIEW,
   GENERAL_ROAD_FILTER,
   HIGHWAY_FILTER,
   ROAD_TILE_URL,
@@ -15,6 +16,16 @@ test("the style uses only the approved GSI tile host", () => {
     assert.equal(new URL(url.replace("{z}", "5").replace("{x}", "28").replace("{y}", "12")).hostname, "cyberjapandata.gsi.go.jp");
     assert.equal(url.startsWith("https://"), true);
   }
+});
+
+test("the default extent contains Hokkaido and Kyushu, with a basemap available on wider zooms", () => {
+  const [[west, south], [east, north]] = JAPAN_VIEW.bounds;
+  for (const [lng, lat] of [[141.65, 45.5], [145.82, 43.38], [130.67, 30.99], [129.48, 31.62]]) {
+    assert.ok(lng > west && lng < east && lat > south && lat < north);
+  }
+  const style = createMapStyle();
+  assert.ok(style.sources.background.minzoom <= 2.5);
+  assert.ok(style.layers.find(l => l.id === "background-map").minzoom <= 2.5);
 });
 
 test("highways and general roads are distinct source-layer road groups", () => {

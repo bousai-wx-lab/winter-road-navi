@@ -285,7 +285,7 @@ export function createRoadTemperature(map, grid, onState = () => {}, {colors=TEM
   }
 
   function rebuild() {
-    if (destroyed || zooming) return;
+    if (destroyed) return;
     timer = null;
     if (busy) { queued = true; return; }
     try {
@@ -308,13 +308,21 @@ export function createRoadTemperature(map, grid, onState = () => {}, {colors=TEM
     if (event) needsSettledGeometry = true;
     generation++;
     if (timer !== null) clearTimeout(timer);
-    if (zooming) { timer = null; return; }
     timer = setTimeout(rebuild, 70);
   }
   function onZoomStart() {
     zooming = true; generation++; queued = false; needsSettledGeometry = true;
     if (timer !== null) clearTimeout(timer);
-    timer = null; shared.geometry = null; shared.report(); map.triggerRepaint();
+    // The prepared geometry is geographic, so the current projection matrix
+    // also draws it correctly while zooming. Keep its classes visible until
+    // replacement tiles are ready, instead of exposing the green base roads.
+    timer = null; shared.report(); map.triggerRepaint();
+  }
+  function onZoom() {
+    if (destroyed || timer !== null) return;
+    // Throttle camera updates while retaining the last prepared geometry.
+    // Tile changes still invalidate jobs through schedule(sourcedata).
+    timer = setTimeout(rebuild, 70);
   }
   function onZoomEnd() { zooming = false; schedule(); }
   function onIdle() {
@@ -325,7 +333,7 @@ export function createRoadTemperature(map, grid, onState = () => {}, {colors=TEM
     needsSettledGeometry = false;
     schedule();
   }
-  map.on("moveend", schedule); map.on("zoomend", onZoomEnd); map.on("sourcedata", schedule); map.on("zoomstart", onZoomStart); map.on("idle", onIdle);
+  map.on("moveend", schedule); map.on("zoomend", onZoomEnd); map.on("sourcedata", schedule); map.on("zoomstart", onZoomStart); map.on("zoom", onZoom); map.on("idle", onIdle);
   schedule();
   return {
     setClasses(classes, day) {
@@ -351,7 +359,7 @@ export function createRoadTemperature(map, grid, onState = () => {}, {colors=TEM
       destroyed = true; generation++;
       if (timer !== null) clearTimeout(timer);
       worker?.terminate();
-      map.off("moveend", schedule); map.off("zoomend", onZoomEnd); map.off("sourcedata", schedule); map.off("zoomstart", onZoomStart); map.off("idle", onIdle);
+      map.off("moveend", schedule); map.off("zoomend", onZoomEnd); map.off("sourcedata", schedule); map.off("zoomstart", onZoomStart); map.off("zoom", onZoom); map.off("idle", onIdle);
       for (const layer of layers) if (map.getLayer(layer.id)) map.removeLayer(layer.id);
       shared.geometry = null; shared.classes = null; shared.active = false; shared.observe();
     },

@@ -113,7 +113,7 @@ test("insertion order, original-road fallback, class texture and date-only GPU u
   assert.equal(map.layers.size, 0);
 });
 
-test("zoom uses native pixel widths, invalidates old geometry, and road visibility is independent", async () => {
+test("zoom keeps classified roads visible, refreshes tiles during motion, and preserves independent visibility", async () => {
   const map = makeMap(), states = [];
   const roads = createRoadTemperature(map, grid(), (state) => states.push(state));
   try {
@@ -123,8 +123,15 @@ test("zoom uses native pixel widths, invalidates old geometry, and road visibili
     roads.setGeneralVisible(false); map.render(); assert.equal(map.gl.draws.length, count);
     roads.setGeneralVisible(true);
     map.emit("zoomstart"); map.zoom = 15; map.render();
-    assert.equal(map.gl.draws.length, count); assert.equal(states.at(-1), "loading");
-    map.emit("sourcedata", { sourceId: "roads" }); await settle(); assert.equal(map.gl.draws.length, count);
+    assert.equal(map.gl.draws.length, count + 1); assert.equal(states.at(-1), "ready");
+    assert.equal(map.container.dataset.roadTemperatureReady, "true");
+    const queriesDuringZoom = map.queries;
+    map.emit("zoom"); map.emit("zoom"); map.emit("zoom"); await settle();
+    assert.equal(map.queries, queriesDuringZoom + 1, "camera frames must share one pending refresh");
+    const versionDuringZoom = map.container.dataset.roadGeometryVersion;
+    map.emit("sourcedata", { sourceId: "roads" }); await settle();
+    assert.ok(Number(map.container.dataset.roadGeometryVersion) > Number(versionDuringZoom));
+    map.render(); assert.ok(map.gl.draws.length > count + 1);
     map.emit("zoomend"); await settle(); map.render();
     assert.equal(map.gl.widths.at(-1), 2.1); assert.equal(states.at(-1), "ready");
     const queries = map.queries;
@@ -233,4 +240,32 @@ test("old Worker replies cannot restore pre-zoom geometry or replace the latest 
     assert.equal(states.at(-1), "ready");
   } finally { roads.destroy(); globalThis.Worker = originalWorker; }
   assert.equal(workers[0].terminated, true);
+});
+
+test("a delayed zoom rebuild never removes gray/red/purple risk colours or revives a cleared overlay", async () => {
+  const originalWorker = globalThis.Worker, workers = [];
+  globalThis.Worker = class {
+    constructor() { this.jobs = []; workers.push(this); }
+    postMessage(message) { this.jobs.push(message); }
+    terminate() {}
+    finish(job) { this.onmessage({ data: { generation: job.generation, geometry: buildRoadGeometry(job.features, grid(), job.bounds) } }); }
+  };
+  const map = makeMap(), roads = createRoadTemperature(map, grid(), () => {}, { colors: RISK_RULES.map(r => r.color) });
+  try {
+    roads.setClasses(new Uint8Array([0, 5, 7]), "10-24"); await settle();
+    const worker = workers[0]; worker.finish(worker.jobs.at(-1)); map.render();
+    const draws = map.gl.draws.length, textureUploads = map.gl.textures.length;
+    map.emit("zoomstart"); map.zoom = 11; map.emit("zoom"); await settle();
+    const pending = worker.jobs.at(-1);
+    map.render();
+    assert.equal(map.gl.draws.length, draws + 1, "the classified overlay must cover the green base road during the worker delay");
+    assert.deepEqual(map.gl.textures.at(-1), [0, 0, 5, 7]);
+    assert.equal(map.gl.textures.length, textureUploads, "zoom must not replace or clear the weather classes");
+    assert.equal(map.container.dataset.roadTemperatureReady, "true");
+    map.emit("zoomend"); await settle(); worker.finish(pending);
+    map.render(); assert.equal(map.gl.draws.length, draws + 2, "a rejected old reply must keep the last valid geometry visible");
+    roads.clear(); worker.finish(worker.jobs.at(-1)); map.render();
+    assert.equal(map.gl.draws.length, draws + 2, "a later worker result must not revive cleared weather colours");
+    assert.equal(map.container.dataset.roadTemperatureReady, "false");
+  } finally { roads.destroy(); globalThis.Worker = originalWorker; }
 });

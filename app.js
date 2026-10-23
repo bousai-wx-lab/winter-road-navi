@@ -1,7 +1,7 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=20261023-layout1";
 import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20260926-weather-snow1";
-import { createRoadTemperature } from "./road-temperature.js?v=20261023-layout1";
+import { createRoadTemperature } from "./road-temperature.js?v=20261023-zoomcolor1";
 import { initSnow } from "./snow-control.js?v=20260926-weather-snow1";
 import { initLiveTemperature } from "./live-temperature-control.js?v=20261005-timeline1";
 import { initWeather } from "./weather-control.js?v=20261023-risk1";

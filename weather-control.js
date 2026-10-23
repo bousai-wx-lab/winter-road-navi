@@ -83,5 +83,5 @@ export function initWeather(map,hooks={}) {
     if(value)metadata();
     if(value){void load(true);timer=setInterval(()=>{if(!document.hidden)void load(true);},600000);}
     controls();
-  },choose,title:()=>product().name,timeline:()=>({selected,slots:mode==="forecast"?slots.map(s=>({id:s.id,label:s.label,shortLabel:forecastTickLabel(s.end)})):[]}),label:()=>current?.label || `${product().name}を準備中`};
+  },choose,current:()=>current,title:()=>product().name,timeline:()=>({selected,slots:mode==="forecast"?slots.map(s=>({id:s.id,label:s.label,shortLabel:forecastTickLabel(s.end)})):[]}),label:()=>current?.label || `${product().name}を準備中`};
 }

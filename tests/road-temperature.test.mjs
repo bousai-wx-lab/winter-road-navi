@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createRoadTemperature } from "../road-temperature.js";
 import { expandGrid } from "../temperature-layer.js";
 import { buildRoadGeometry } from "../road-geometry.js";
+import { RISK_RULES } from "../forecast-risk-data.js";
 
 const grid = () => expandGrid({ cell_count: 3, runs: [4282, 11175, 3] });
 const features = [{ type: "Feature", properties: { ftCode: 2701 }, geometry: { type: "LineString", coordinates: [[11175.2 / 80, 4282.5 / 120], [11177.8 / 80, 4282.5 / 120]] } }];
@@ -64,6 +65,16 @@ function makeMap(gl = fakeGL(), roadFeatures = features) {
   return map;
 }
 const settle = () => new Promise((resolve) => setTimeout(resolve, 90));
+
+test("risk palette supports all six road colours without changing the default temperature limits",async()=>{
+  const map=makeMap(),roads=createRoadTemperature(map,grid(),()=>{},{colors:RISK_RULES.map(r=>r.color)});
+  try {
+    roads.setClasses(new Uint8Array([5,6,7]),"10-23");await settle();map.render();
+    assert.deepEqual(map.gl.textures.at(-1),[0,5,6,7]);
+    assert.throws(()=>roads.setClasses(new Uint8Array([8,0,1]),"10-23"));
+    assert.ok(map.gl.draws.length>0);
+  }finally{roads.destroy();}
+});
 
 test("insertion order, original-road fallback, class texture and date-only GPU updates", async () => {
   const map = makeMap(), initial = map.gl.snapshot(), states = [];

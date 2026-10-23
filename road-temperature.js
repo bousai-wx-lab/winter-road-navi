@@ -177,7 +177,7 @@ function makeLayer(kind, shared) {
     render(gl, options) {
       const zoom = shared.map.getZoom();
       if (lost || shared.failed || !shared.active || !shared.geometry || !shared.visible[kind]
-        || zoom < 4.7 || (kind === "general" && zoom < 5)) return;
+        || zoom < 4 || (kind === "general" && zoom < 5)) return;
       const geometry = shared.geometry[kind];
       if (!geometry.count) return;
       const state = captureGL(gl);
@@ -230,6 +230,7 @@ export function createRoadTemperature(map, grid, onState = () => {}, {colors=TEM
   }
   if(!Array.isArray(colors) || colors.length<5 || colors.length>16 || colors.some(c=>!/^#[a-f0-9]{6}$/i.test(c)))throw new Error("道路の配色が不正です");
   let destroyed = false, timer = null, worker = null, busy = false, queued = false, zooming = false, generation = 0, state;
+  let needsSettledGeometry = true;
   const shared = {
     map, colors, count: grid.count, active: false, failed: false, classes: null, day: null, classVersion: 0,
     geometry: null, geometryVersion: 0, visible: { general: true, highway: true }, gpu: { general: false, highway: false },
@@ -304,18 +305,27 @@ export function createRoadTemperature(map, grid, onState = () => {}, {colors=TEM
   }
   function schedule(event) {
     if (destroyed || (event?.type === "sourcedata" && event.sourceId !== "roads")) return;
+    if (event) needsSettledGeometry = true;
     generation++;
     if (timer !== null) clearTimeout(timer);
     if (zooming) { timer = null; return; }
     timer = setTimeout(rebuild, 70);
   }
   function onZoomStart() {
-    zooming = true; generation++; queued = false;
+    zooming = true; generation++; queued = false; needsSettledGeometry = true;
     if (timer !== null) clearTimeout(timer);
     timer = null; shared.geometry = null; shared.report(); map.triggerRepaint();
   }
   function onZoomEnd() { zooming = false; schedule(); }
-  map.on("moveend", schedule); map.on("zoomend", onZoomEnd); map.on("sourcedata", schedule); map.on("zoomstart", onZoomStart);
+  function onIdle() {
+    if (!needsSettledGeometry || zooming || destroyed) return;
+    // Tile loading and parent/child transitions may finish after zoomend and
+    // sourcedata. Re-query the final rendered roads once, without changing
+    // weather classes or starting an idle/repaint loop.
+    needsSettledGeometry = false;
+    schedule();
+  }
+  map.on("moveend", schedule); map.on("zoomend", onZoomEnd); map.on("sourcedata", schedule); map.on("zoomstart", onZoomStart); map.on("idle", onIdle);
   schedule();
   return {
     setClasses(classes, day) {
@@ -341,7 +351,7 @@ export function createRoadTemperature(map, grid, onState = () => {}, {colors=TEM
       destroyed = true; generation++;
       if (timer !== null) clearTimeout(timer);
       worker?.terminate();
-      map.off("moveend", schedule); map.off("zoomend", onZoomEnd); map.off("sourcedata", schedule); map.off("zoomstart", onZoomStart);
+      map.off("moveend", schedule); map.off("zoomend", onZoomEnd); map.off("sourcedata", schedule); map.off("zoomstart", onZoomStart); map.off("idle", onIdle);
       for (const layer of layers) if (map.getLayer(layer.id)) map.removeLayer(layer.id);
       shared.geometry = null; shared.classes = null; shared.active = false; shared.observe();
     },

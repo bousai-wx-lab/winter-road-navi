@@ -1,6 +1,6 @@
 export const ROAD_TILE_URL = "https://cyberjapandata.gsi.go.jp/xyz/experimental_bvmap/{z}/{x}/{y}.pbf";
 export const BASE_TILE_URL = "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png";
-export const JAPAN_VIEW = Object.freeze({ center: [137.2, 37.0], zoom: 5 });
+export const JAPAN_VIEW = Object.freeze({ bounds: [[128, 30], [146, 46]], padding: 18 });
 
 const numeric = (property, fallback = -1) => ["to-number", ["get", property], fallback];
 
@@ -28,7 +28,7 @@ export function createMapStyle() {
         type: "raster",
         tiles: [BASE_TILE_URL],
         tileSize: 256,
-        minzoom: 5,
+        minzoom: 2,
         maxzoom: 18,
         attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">地理院タイル</a>',
       },
@@ -42,7 +42,7 @@ export function createMapStyle() {
       },
     },
     layers: [
-      { id: "background-map", type: "raster", source: "background", minzoom: 4, paint: { "raster-opacity": 0.75, "raster-saturation": -0.55, "raster-contrast": 0.05 } },
+      { id: "background-map", type: "raster", source: "background", minzoom: 2, paint: { "raster-opacity": 0.75, "raster-saturation": -0.55, "raster-contrast": 0.05 } },
       {
         id: "general-road-casing",
         type: "line",

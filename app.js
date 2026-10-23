@@ -1,7 +1,7 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
-import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=20260926-weather-snow1";
+import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=20261023-layout1";
 import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20260926-weather-snow1";
-import { createRoadTemperature } from "./road-temperature.js?v=20261023-risk1";
+import { createRoadTemperature } from "./road-temperature.js?v=20261023-layout1";
 import { initSnow } from "./snow-control.js?v=20260926-weather-snow1";
 import { initLiveTemperature } from "./live-temperature-control.js?v=20261005-timeline1";
 import { initWeather } from "./weather-control.js?v=20261023-risk1";
@@ -83,17 +83,26 @@ if (window.matchMedia("(max-width: 760px)").matches) {
 const map = new maplibregl.Map({
   container: "map",
   style: createMapStyle(),
-  center: JAPAN_VIEW.center,
-  zoom: JAPAN_VIEW.zoom,
-  minZoom: 4.7,
+  bounds: JAPAN_VIEW.bounds,
+  fitBoundsOptions: { padding: JAPAN_VIEW.padding },
+  minZoom: 2.5,
   maxZoom: 17.5,
-  maxBounds: [[120, 18], [156, 49]],
+  renderWorldCopies: false,
   attributionControl: true,
   cooperativeGestures: false,
   antialias: false,
   refreshExpiredTiles: false,
   validateStyle: true,
 });
+
+// Fit the default extent to the available map area, including after the
+// forecast bar opens. A user's pan/zoom keeps their chosen view on resize.
+let usingDefaultView = true;
+map.on("movestart", event => { if (event.originalEvent) usingDefaultView = false; });
+function showJapan(duration = 0) {
+  map.fitBounds(JAPAN_VIEW.bounds, { padding: JAPAN_VIEW.padding, duration });
+}
+map.on("resize", () => { if (usingDefaultView) showJapan(); });
 
 map.addControl(new maplibregl.NavigationControl({ showCompass: false, visualizePitch: false }), "top-right");
 map.addControl(new maplibregl.ScaleControl({ maxWidth: 110, unit: "metric" }), "bottom-right");
@@ -140,7 +149,8 @@ tooltipToggle.addEventListener("change", () => {
 });
 
 document.querySelector("#resetView").addEventListener("click", () => {
-  map.easeTo({ center: JAPAN_VIEW.center, zoom: JAPAN_VIEW.zoom, duration: 450 });
+  usingDefaultView = true;
+  showJapan(450);
 });
 
 document.querySelector("#closeDetails").addEventListener("click", () => {

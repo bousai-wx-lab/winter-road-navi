@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、実況積雪深の観測点と独自推定面にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261023-layout1">
-    <script type="module" src="./app.js?v=20261023-zoomcolor1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261024-recovery1">
+    <script type="module" src="./app.js?v=20261024-recovery-risk1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -70,7 +70,7 @@
           <button id="riskRefresh" type="button">道路リスクを再読込</button>
           <p id="riskSnowStatus" class="live-meta" role="status"></p>
           <p class="risk-note">雪は紫→ピンク→赤→薄赤を優先。降水後の低温はオレンジ→黄。灰色は資料不足、該当なしは道路区分色です。</p>
-          <details class="live-data-details"><summary>道路色・積雪線の見方</summary><p class="live-meta">降水ありは3時間降水量1mm以上、または天気が雨・雨または雪・雪の予報。対象期間の終わりと、その3・6・9・12時間先の予想気温で低温を判定します。12時間先までそろわない場合、降雪の色や0℃以下を確認できる場合を除き、低温条件は判定資料不足です。</p><p class="live-meta">降雪1cm・3cm・6cmは、それぞれ赤・ピンク・紫。雪の予報で有効な降雪量が1cm未満なら薄赤です。雪の量が資料なしの場合を1cm未満として扱いません。</p><p class="live-meta">背景の色は予測天気です。積雪深の線は最新の実況観測から補間した参考値で、選択した未来の積雪深ではありません。観測範囲外や資料不足では線を描きません。道路の積雪、凍結、通行可否は判定しません。</p></details>
+          <details class="live-data-details"><summary>道路色・積雪線の見方</summary><p class="live-meta">降水ありは3時間降水量1mm以上、または天気が雨・雨または雪・雪の予報。対象期間の終わりの気温が2℃以下のとき、その時刻までの前12時間に降水があったかを見ます。対象コマを含む3時間分の4コマが対象です。0℃以下はオレンジ、0℃超〜2℃以下は黄色。降水を1コマでも確認すれば着色し、前12時間に欠けた資料があって降水を確認できない場合は灰色です。2℃超なら降水履歴を理由に灰色にしません。</p><p class="live-meta">降雪1cm・3cm・6cmは、それぞれ赤・ピンク・紫。雪の予報で有効な降雪量が1cm未満なら薄赤です。雪の量が資料なしの場合を1cm未満として扱いません。</p><p class="live-meta">背景の色は予測天気です。積雪深の線は最新の実況観測から補間した参考値で、選択した未来の積雪深ではありません。観測範囲外や資料不足では線を描きません。道路の積雪、凍結、通行可否は判定しません。</p></details>
         </section>
         <section id="weatherControls" class="temperature-controls dynamic-controls" aria-label="天気の設定" hidden>
           <h3 id="weatherTitle">推計気象分布（天気）</h3>
@@ -214,6 +214,10 @@
           <h2 id="map-heading" class="visually-hidden">全国の1km気温・積雪平年メッシュと道路地図</h2>
           <div id="map" role="application" aria-label="日別の平均最低気温、日最深積雪の平年推定値と全国の道路を表示する地図"></div>
           <p id="mapTemperatureLabel" class="map-temperature-label">気温を準備中</p>
+          <div id="mapRecovery" class="map-recovery" role="status" aria-live="polite" hidden>
+            <p id="mapRecoveryMessage"></p>
+            <button id="mapRetry" type="button" hidden>地図を再試行</button>
+          </div>
           <div id="meshTooltip" class="mesh-tooltip" role="tooltip" hidden>
             <strong id="meshTooltipDate"></strong>
             <span id="meshTooltipTemperature"></span>

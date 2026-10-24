@@ -19,10 +19,10 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "bytes": 34434,
+      "bytes": 37722,
       "mime_type": "text/markdown",
       "path": "README.md",
-      "sha256": "94d2e25b75c7ee1b8b8dfe49f21a00034d4cdaa4d99f2e3e272223fe28890ca3"
+      "sha256": "106475374bb098f19d534c5155399d6ac1c7a86eec8a0aaaa3eb93d338ca135b"
     },
     {
       "bytes": 1298,
@@ -31,10 +31,10 @@
       "sha256": "732472f1859e857b5e764b2f8765294cbfedf8cd3adac2f422d3d5436efb61ce"
     },
     {
-      "bytes": 21612,
+      "bytes": 22262,
       "mime_type": "text/javascript",
       "path": "app.js",
-      "sha256": "0effc2ebd734d5e5dc1355e89b6749f8f4c72cb2342b3c6de311b5e50ce86179"
+      "sha256": "95de495b1d9f254ac0d3949134080cfa8d8d6e096388d127bd67d4a2f3f9b953"
     },
     {
       "bytes": 266670,
@@ -6121,16 +6121,16 @@
       "sha256": "7704fbd5a1bcee94880257656eaf7b3baf0425e82ad785a27ba1fc52b1bf299a"
     },
     {
-      "bytes": 6174,
+      "bytes": 6584,
       "mime_type": "text/javascript",
       "path": "forecast-risk-control.js",
-      "sha256": "144d60b546aaac8aed4e1144bdc6ac45ca02be8d8d6e9876ba1bc33258f613ee"
+      "sha256": "090edcabccf9fb3f59ae84188bb02132acbb61e31fec7af786053f079b985974"
     },
     {
-      "bytes": 7615,
+      "bytes": 8430,
       "mime_type": "text/javascript",
       "path": "forecast-risk-data.js",
-      "sha256": "8548ce4d04a5bb4eff32c58439bb7efc92de25a5fe3a6160feadc8a66c766fa3"
+      "sha256": "cd2f2bb627b3c6a3f681f1528e639c2f1b1e0e4d306dae8e24044a3f6a942586"
     },
     {
       "bytes": 3113,
@@ -6139,10 +6139,10 @@
       "sha256": "2d391e0a3a79b72c578970efc8d862dddd809bd3de2c88ccfe7bbde34f0789bf"
     },
     {
-      "bytes": 30312,
+      "bytes": 30758,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "5b407aa0e0d780405f96aa93c35d2947347701b8b5260415012ef7d5a737e3bd"
+      "sha256": "46ed0bef3c0ae49b394235c8da4573db5891fd4a89beaa437aefca99db26ea9d"
     },
     {
       "bytes": 9618,
@@ -6169,10 +6169,16 @@
       "sha256": "a70fdd016daf374477ac9e66beafe81111001e378d3d803bba54a8e68778015a"
     },
     {
-      "bytes": 438347,
+      "bytes": 6047,
+      "mime_type": "text/javascript",
+      "path": "map-recovery.js",
+      "sha256": "c46e5c60df80861155f3520b5c912e09c2c71674a13a8b2c48cdc7d6a6470177"
+    },
+    {
+      "bytes": 438405,
       "mime_type": "application/json",
       "path": "release-allowlist.json",
-      "sha256": "d8aa89a73e15536d69c3c887c98d2256c7091ae0e2ac86168bb7ef6ecb59ac25"
+      "sha256": "6c143f4fd433c45da782e0d2ca4390b9646f66aa1a2d2730652c32df074b756e"
     },
     {
       "bytes": 642,
@@ -6265,10 +6271,10 @@
       "sha256": "f91d96afd3b0ec9d69c5aa41ad3fe6414f8abc26b77feacce13b010ca9762929"
     },
     {
-      "bytes": 32161,
+      "bytes": 32526,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "505a3a49898a2df27b6d4b4002b14ecbe6e564e718daacc048b44ee40eabacf5"
+      "sha256": "ee072d170128b8614dec925d30dbd85de68a87e145f635d137de1efc8a0edfcf"
     },
     {
       "bytes": 22774,
@@ -6289,10 +6295,10 @@
       "sha256": "f7cceac1b76fc45f9f69ae65ff16c11e9a4025c48ed0bf3bc0f685e9886f828a"
     },
     {
-      "bytes": 5584,
+      "bytes": 9505,
       "mime_type": "text/javascript",
       "path": "tests/forecast-risk.test.mjs",
-      "sha256": "8fc0e337fbbb9bfbd076ad80c6ce2acca4be2bdebf191e6fcf783762460d61ed"
+      "sha256": "9ec17013b58e9e4f9a0dfabe2874593f3bb676d049b9c35c8618466a807612ef"
     },
     {
       "bytes": 8804,
@@ -6317,6 +6323,12 @@
       "mime_type": "text/javascript",
       "path": "tests/live-temperature.test.mjs",
       "sha256": "a2e15a78877ad058a9fac684cd8915ef4e07b1057eea7224b54ef20164f70cae"
+    },
+    {
+      "bytes": 5590,
+      "mime_type": "text/javascript",
+      "path": "tests/map-recovery.test.mjs",
+      "sha256": "6588d25c68ab6b24f169a7f8d633177d1be65f6699ff48edc29e3994fb25b3f6"
     },
     {
       "bytes": 4863,
@@ -6415,7 +6427,7 @@
       "sha256": "938219194a6978ac72eb0dfe0f1361106aaf59be4ab44d4c81c4c64e79fe9224"
     }
   ],
-  "generated_at_utc": "2026-10-23T13:03:59+00:00",
+  "generated_at_utc": "2026-10-24T01:23:49+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

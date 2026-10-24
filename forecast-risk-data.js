@@ -3,8 +3,8 @@ import {utcTime,liveSlots} from "./live-temperature-data.js";
 export const RISK_RULES=Object.freeze([
   {color:"#75838c",label:"判定資料不足"},
   {color:"#000000",label:"指定条件に該当なし"},
-  {color:"#ffe032",label:"降水＋12時間以内に2℃以下",short:"降水→2℃以下"},
-  {color:"#ff8c24",label:"降水＋12時間以内に0℃以下",short:"降水→0℃以下"},
+  {color:"#ffe032",label:"対象時刻2℃以下＋前12時間に降水",short:"2℃以下・前12h降水"},
+  {color:"#ff8c24",label:"対象時刻0℃以下＋前12時間に降水",short:"0℃以下・前12h降水"},
   {color:"#ffb5b5",label:"雪の予報・降雪量1cm未満",short:"雪・降雪1cm未満"},
   {color:"#e53232",label:"3時間降雪量1cm以上3cm未満",short:"3時間降雪1〜2cm"},
   {color:"#f35ea7",label:"3時間降雪量3cm以上6cm未満",short:"3時間降雪3〜5cm"},
@@ -16,35 +16,48 @@ export const RISK_LEVELS=Object.freeze({
   snow3h:{"1<=cm<3":1,"3<=cm<6":3,"6<=cm":6,NoData:-1},
 });
 
-// Temperature samples cover the period end itself and +3, +6, +9, +12 h.
-// A missing later sample must not turn a wet road into a reassuring category.
-export function riskClass(weather,precipitation,snowfall,temperatures) {
+// Four consecutive 3 h periods ending at t, t-3, t-6 and t-9 cover (t-12, t].
+// Missing history never proves dryness; one confirmed wet period is sufficient.
+export function riskClass(weather,precipitation,snowfall,temperature,history) {
   if(snowfall>=6)return 7;
   if(snowfall>=3)return 6;
   if(snowfall>=1)return 5;
   if(weather===5 && snowfall===0)return 4;
   if([weather,precipitation,snowfall].some(v=>!Number.isFinite(v)) || weather<1 || precipitation<0 || snowfall<0)return 0;
-  const wet=precipitation>=1 || [3,4,5].includes(weather);
-  if(!wet)return 1;
-  if(temperatures.some(t=>Number.isFinite(t) && t<=0))return 3;
-  if(temperatures.length!==5 || temperatures.some(t=>!Number.isFinite(t)))return 0;
-  return Math.min(...temperatures)<=2?2:1;
+  if(!Number.isFinite(temperature))return 0;
+  if(temperature>2)return 1;
+  if(!Array.isArray(history) || history.length!==4)return 0;
+  const wet=history.some(sample=>sample?.precipitation>=1 || [3,4,5].includes(sample?.weather));
+  if(wet)return temperature<=0?3:2;
+  const complete=history.every(sample=>Number.isFinite(sample?.weather) && sample.weather>=1 && Number.isFinite(sample?.precipitation) && sample.precipitation>=0);
+  return complete?1:0;
 }
 
 export function riskSlots(manifest,target) {
   if(!target || !/^\d{14}$/.test(target.validtime) || !/^\d{14}$/.test(target.basetime))throw new Error("リスクの対象時刻が不正です");
   const end=Date.parse(utcTime(target.validtime));utcTime(target.basetime);
-  const result={};
+  const result={},lists={};
   for(const kind of Object.keys(RISK_LEVELS)) {
     const slots=manifest?.layers?.[kind]?.slots;
     if(!Array.isArray(slots) || slots.length>48)throw new Error("降水・降雪の対象一覧が不正です");
     const matches=slots.filter(s=>s.validtime===target.validtime && s.basetime===target.basetime && s.status==="available" && s.id===`${kind}_${target.validtime}`);
     if(matches.length!==1)throw new Error("天気と道路判定の予報発表・対象時刻が一致しません");
-    result[kind]=matches[0];
+    result[kind]=matches[0];lists[kind]=slots;
   }
   const temperatures=liveSlots(manifest,"temp3h");
-  result.temperatures=Array.from({length:5},(_,i)=>temperatures.find(s=>s.status!=="unavailable" && s.basetime===target.basetime && Date.parse(utcTime(s.validtime))===end+i*3*3600000) ?? null);
-  if(!result.temperatures.some(Boolean))throw new Error("同じ発表の予想気温がありません");
+  const matches=temperatures.filter(s=>s.status==="available" && s.basetime===target.basetime && s.validtime===target.validtime);
+  if(matches.length!==1)throw new Error("同じ発表・対象時刻の予想気温がありません");
+  result.temperature=matches[0];
+  result.history=Array.from({length:4},(_,i)=>{
+    const validtime=new Date(end-i*3*3600000).toISOString().replace(/[-:TZ.]/g,"").slice(0,14);
+    const period={validtime};
+    for(const kind of ["weather3h","precip3h"]) {
+      const found=lists[kind].filter(s=>s.status==="available" && s.basetime===target.basetime && s.validtime===validtime && s.id===`${kind}_${validtime}`);
+      if(found.length>1)throw new Error("降水履歴の対象時刻が重複しています");
+      period[kind]=found[0] ?? null;
+    }
+    return period;
+  });
   return result;
 }
 
@@ -112,14 +125,14 @@ export function projectRiskField(collection,grid,kind) {
   return values;
 }
 
-export function buildRiskData(grid,weather,precipitation,snowfall,samples) {
+export function buildRiskData(grid,weather,precipitation,snowfall,temperature,history) {
   const count=grid.count;
-  if([weather,precipitation,snowfall].some(a=>a.length!==count) || samples.length!==5 || samples.some(a=>a && a.length!==count))throw new Error("リスクの格子数が一致しません");
-  const classes=new Uint8Array(count),minimum=new Float32Array(count),complete=new Uint8Array(count),counts=Array(8).fill(0);
+  if([weather,precipitation,snowfall,temperature].some(a=>a.length!==count) || history.length!==4 || history.some(s=>[s.weather,s.precipitation].some(a=>a && a.length!==count)))throw new Error("リスクの格子数が一致しません");
+  const classes=new Uint8Array(count),complete=new Uint8Array(count),counts=Array(8).fill(0);
   for(let i=0;i<count;i++) {
-    const temperatures=samples.map(a=>a?.[i] ?? NaN),valid=temperatures.filter(Number.isFinite);
-    minimum[i]=valid.length?Math.min(...valid):NaN;complete[i]=valid.length===5?1:0;
-    classes[i]=riskClass(weather[i],precipitation[i],snowfall[i],temperatures);counts[classes[i]]++;
+    const periods=history.map(s=>({weather:s.weather?.[i] ?? NaN,precipitation:s.precipitation?.[i] ?? NaN}));
+    complete[i]=periods.every(s=>s.weather>=1 && s.precipitation>=0)?1:0;
+    classes[i]=riskClass(weather[i],precipitation[i],snowfall[i],temperature[i],periods);counts[classes[i]]++;
   }
-  return {grid,classes,minimum,complete,weather,precipitation,snowfall,counts};
+  return {grid,classes,temperature,complete,weather,precipitation,snowfall,counts};
 }

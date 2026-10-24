@@ -6,13 +6,16 @@ import { initSnow } from "./snow-control.js?v=20260926-weather-snow1";
 import { initLiveTemperature } from "./live-temperature-control.js?v=20261005-timeline1";
 import { initWeather } from "./weather-control.js?v=20261023-risk1";
 import { initLiveSnow } from "./live-snow-control.js?v=20261023-risk1";
-import { initForecastRisk } from "./forecast-risk-control.js?v=20261023-risk1";
-import { RISK_RULES } from "./forecast-risk-data.js";
+import { initForecastRisk } from "./forecast-risk-control.js?v=20261024-lookback1";
+import { RISK_RULES } from "./forecast-risk-data.js?v=20261024-lookback1";
 import { initForecastTimeline } from "./forecast-timeline.js?v=20261005-timeline1";
 import { lookupCell, binLabel } from "./temperature-layer.js";
+import { startMap, showMapState } from "./map-recovery.js?v=20261024-recovery1";
 
 maplibregl.setWorkerUrl(new URL("./vendor/maplibre-gl-worker.mjs", import.meta.url).href);
+document.getElementById("mapRetry").addEventListener("click", () => window.location.reload());
 
+async function startApplication() {
 const status = document.querySelector("#mapStatus");
 const mapElement = document.querySelector("#map");
 const details = document.querySelector("#roadDetails");
@@ -80,7 +83,7 @@ if (window.matchMedia("(max-width: 760px)").matches) {
   toggle.textContent = "詳細を開く";
 }
 
-const map = new maplibregl.Map({
+const started = await startMap(() => new maplibregl.Map({
   container: "map",
   style: createMapStyle(),
   bounds: JAPAN_VIEW.bounds,
@@ -93,7 +96,9 @@ const map = new maplibregl.Map({
   antialias: false,
   refreshExpiredTiles: false,
   validateStyle: true,
-});
+}), {onState: showMapState});
+if (!started) return;
+const {map, recovery} = started;
 
 // Fit the default extent to the available map area, including after the
 // forecast bar opens. A user's pan/zoom keeps their chosen view on resize.
@@ -232,7 +237,7 @@ document.querySelector("#liveView").addEventListener("change",event=>{
 document.querySelector("#normalMode").addEventListener("click", () => switchDisplayMode("normal"));
 document.querySelector("#liveMode").addEventListener("click", () => switchDisplayMode("observed"));
 document.querySelector("#forecastMode").addEventListener("click", () => switchDisplayMode("forecast"));
-map.on("load", () => {
+function initializeControllers() {
   setStatus("道路を表示中。細い一般道路は地図を拡大すると現れます", "ready");
   forecastTimeline = initForecastTimeline(map,()=>displayMode === "forecast" ? displayView==="risk" || isDistributionView(displayView) ? weather : liveTemperature : null);
   risk=initForecastRisk({
@@ -292,7 +297,9 @@ map.on("load", () => {
   document.querySelector("#normalMode").disabled = false;
   document.querySelector("#liveMode").disabled = false;
   document.querySelector("#forecastMode").disabled = false;
-});
+}
+initializeControllers();
+recovery.onRestored(() => applyDisplay());
 
 map.on("idle", () => {
   const visibleRoads = map.queryRenderedFeatures({ layers: interactiveLayers });
@@ -303,6 +310,7 @@ map.on("idle", () => {
 });
 
 map.on("error", (event) => {
+  if (mapElement.dataset.recoveryState !== "ready") return;
   if (event?.sourceId === "roads" || event?.sourceId === "background") {
     setStatus("地図データの一部を読み込めません。通信を確認して再読み込みしてください", "error");
   }
@@ -334,3 +342,6 @@ map.on("click", (event) => {
     : "一般道路として区分された道路です。車両通行の可否や道路名は保証していません。";
   details.hidden = false;
 });
+
+}
+void startApplication().catch(() => showMapState("error", "地図の初期化を完了できませんでした。「地図を再試行」で読み直せます。"));

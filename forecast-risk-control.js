@@ -1,5 +1,5 @@
 import {LIVE_ROOT,decodeLiveCSV,liveFile,timeLabel,utcTime} from "./live-temperature-data.js";
-import {riskSlots,projectRiskField,buildRiskData,RISK_RULES} from "./forecast-risk-data.js";
+import {riskSlots,projectRiskField,buildRiskData,RISK_RULES} from "./forecast-risk-data.js?v=20261024-lookback1";
 import {lookupCell} from "./temperature-layer.js";
 
 const $=id=>document.getElementById(id);
@@ -14,7 +14,7 @@ export function initForecastRisk(hooks={}) {
   function status(text,state) {$("riskStatus").textContent=text;$("riskStatus").dataset.state=state;hooks.onChange?.();}
   function clear(state="loading") {
     shown=null;hooks.onUnavailable?.(state);
-    for(const key of ["riskReady","riskTarget","riskBase","riskCounts","riskTemperatureThrough"])delete $("map").dataset[key];
+    for(const key of ["riskReady","riskTarget","riskBase","riskCounts","riskTemperatureThrough","riskPrecipitationFrom"])delete $("map").dataset[key];
   }
   async function get(file,json,signal) {
     if(!/^[a-z0-9_]+\.(json|csv|geojson)$/.test(file))throw new Error("リスクのデータ参照が不正です");
@@ -26,7 +26,7 @@ export function initForecastRisk(hooks={}) {
   async function load() {
     if(!active || !target)return;
     const request=++token,selected=target;abort?.abort();abort=new AbortController();const signal=abort.signal;clear();
-    $("riskUpdated").textContent="";status("道路用の天気・降水・降雪と12時間先までの気温を読み込んでいます","loading");
+    $("riskUpdated").textContent="";status("対象時刻の気温・降雪と、前12時間の降水を読み込んでいます","loading");
     try {
       let result,manifest,slots;
       for(let attempt=0;attempt<3;attempt++) {
@@ -34,31 +34,36 @@ export function initForecastRisk(hooks={}) {
         if(!Number.isFinite(Date.parse(manifest.generated_at)) || Date.now()-Date.parse(manifest.generated_at)>8*3600000)throw new Error("道路判定用の予報更新が遅れています");
         slots=riskSlots(manifest,selected);
         if(generation!==manifest.generated_at){cache.clear();generation=manifest.generated_at;}
+        const inflight=new Map();
         const cached=async(file,json)=>{
           if(cache.has(file))return cache.get(file);
-          const value=await get(file,json,signal);
-          if(request===token && !signal.aborted){cache.set(file,value);if(cache.size>36)cache.delete(cache.keys().next().value);}
-          return value;
+          if(inflight.has(file))return inflight.get(file);
+          const pending=get(file,json,signal).then(value=>{
+            if(request===token && !signal.aborted){cache.set(file,value);if(cache.size>64)cache.delete(cache.keys().next().value);}
+            return value;
+          });
+          inflight.set(file,pending);return pending;
         };
-        const [geometries,temperatures]=await Promise.all([
+        const [geometries,temperature,history]=await Promise.all([
           Promise.all(["weather3h","precip3h","snow3h"].map(kind=>cached(`forecast_${slots[kind].id}_value.geojson`,true))),
-          Promise.all(slots.temperatures.map(s=>s?cached(liveFile("temp3h",s),false).then(text=>decodeLiveCSV(text,"temp3h",s)):null)),
+          cached(liveFile("temp3h",slots.temperature),false).then(text=>decodeLiveCSV(text,"temp3h",slots.temperature)),
+          Promise.all(slots.history.map(period=>Promise.all(["weather3h","precip3h"].map(kind=>period[kind]?cached(`forecast_${period[kind].id}_value.geojson`,true):null)))),
         ]);
-        const grid=temperatures.find(Boolean).grid;
-        for(const data of temperatures.filter(Boolean))if(data.grid.count!==grid.count || data.grid.rows.some((row,i)=>row!==grid.rows[i] || data.grid.cols[i]!==grid.cols[i]))throw new Error("予想気温の格子が一致しません");
+        const grid=temperature.grid;
         const after=await get("forecast_manifest.json",true,signal);
         if(JSON.stringify(after)!==JSON.stringify(manifest)){cache.clear();continue;}
-        result=buildRiskData(grid,...geometries.map((g,i)=>projectRiskField(g,grid,["weather3h","precip3h","snow3h"][i])),temperatures.map(d=>d?.values ?? null));break;
+        result=buildRiskData(grid,...geometries.map((g,i)=>projectRiskField(g,grid,["weather3h","precip3h","snow3h"][i])),temperature.values,history.map(pair=>({weather:pair[0]?projectRiskField(pair[0],grid,"weather3h"):null,precipitation:pair[1]?projectRiskField(pair[1],grid,"precip3h"):null})));break;
       }
       if(!result)throw new Error("予報データが更新中です");
       if(!active || request!==token)return;
       shown=result;
-      const available=slots.temperatures.filter(Boolean),through=utcTime(available.at(-1).validtime);
-      $("riskUpdated").textContent=`予報発表：${timeLabel(selected.base)} · 気温：期間終端〜${timeLabel(through)}${available.length<5?"（12時間先まで未配信のため一部判定不可）":"（12時間先まで・3時間刻み）"}`;
+      const through=utcTime(slots.temperature.validtime),from=new Date(Date.parse(through)-12*3600000).toISOString();
+      const missing=slots.history.some(s=>!s.weather3h || !s.precip3h);
+      $("riskUpdated").textContent=`予報発表：${timeLabel(selected.base)} · 気温：${timeLabel(through)} · 降水：${timeLabel(from)}〜${timeLabel(through)}${missing?"（前12時間に未配信のコマあり。降水を確認できない低温格子は資料不足）":"（3時間分×4コマ）"}`;
       const total=result.counts.slice(2).reduce((a,b)=>a+b,0);
       status(`指定条件あり ${total.toLocaleString()}格子 · 資料不足 ${result.counts[0].toLocaleString()}格子。色は道路だけに適用します。`,"ready");
       $("map").dataset.riskReady="true";$("map").dataset.riskTarget=selected.end;$("map").dataset.riskBase=selected.base;
-      $("map").dataset.riskCounts=result.counts.join(",");$("map").dataset.riskTemperatureThrough=through;
+      $("map").dataset.riskCounts=result.counts.join(",");$("map").dataset.riskTemperatureThrough=through;$("map").dataset.riskPrecipitationFrom=from;
       hooks.onData?.(result,selected);hooks.onChange?.();
     }catch(error) {
       if(!active || request!==token || error.name==="AbortError")return;
@@ -81,7 +86,7 @@ export function initForecastRisk(hooks={}) {
       if(!shown)return "道路の判定資料を準備中・取得不能";
       const i=lookupCell(shown.grid,lng,lat);if(i<0)return "判定対象の格子なし";
       const label=RISK_RULES[shown.classes[i]].label;
-      const temperature=Number.isFinite(shown.minimum[i])?` · ${shown.complete[i]?"12時間内":"配信範囲内"}の最低気温 ${shown.minimum[i].toFixed(1)}℃`:"";
+      const temperature=Number.isFinite(shown.temperature[i])?` · 対象時刻の気温 ${shown.temperature[i].toFixed(1)}℃`:"";
       return label+temperature;
     },
   };

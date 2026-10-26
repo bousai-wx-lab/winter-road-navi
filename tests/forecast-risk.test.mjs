@@ -13,7 +13,7 @@ test("current temperature uses inclusive 0/2°C, including precipitation six hou
   }
   assert.equal(riskClass(1,0,0,-5,dry()),1);
   assert.equal(riskClass(1,0,0,5,[null,null,null,null]),1);
-  assert.deepEqual(RISK_RULES.slice(2).map(r=>r.color),["#ffe032","#ff8c24","#ffb5b5","#e53232","#f35ea7","#8d38c9"]);
+  assert.deepEqual(RISK_RULES.slice(2).map(r=>r.color),["#ffe032","#ff8c24","#f35ea7","#e53232","#8d38c9","#000000"]);
 });
 
 test("snow retains priority; unknown history is not dry, but confirmed rain is sufficient",()=>{

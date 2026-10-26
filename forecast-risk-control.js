@@ -1,5 +1,5 @@
 import {LIVE_ROOT,decodeLiveCSV,liveFile,timeLabel,utcTime} from "./live-temperature-data.js";
-import {riskSlots,projectRiskField,buildRiskData,RISK_RULES} from "./forecast-risk-data.js?v=20261024-lookback1";
+import {riskSlots,projectRiskField,buildRiskData,RISK_RULES} from "./forecast-risk-data.js?v=20261026-risk-colors1";
 import {lookupCell} from "./temperature-layer.js";
 
 const $=id=>document.getElementById(id);

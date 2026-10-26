@@ -5,10 +5,10 @@ export const RISK_RULES=Object.freeze([
   {color:"#000000",label:"指定条件に該当なし"},
   {color:"#ffe032",label:"対象時刻2℃以下＋前12時間に降水",short:"2℃以下・前12h降水"},
   {color:"#ff8c24",label:"対象時刻0℃以下＋前12時間に降水",short:"0℃以下・前12h降水"},
-  {color:"#ffb5b5",label:"雪の予報・降雪量1cm未満",short:"雪・降雪1cm未満"},
+  {color:"#f35ea7",label:"雪の予報・降雪量1cm未満",short:"雪・降雪1cm未満"},
   {color:"#e53232",label:"3時間降雪量1cm以上3cm未満",short:"3時間降雪1〜2cm"},
-  {color:"#f35ea7",label:"3時間降雪量3cm以上6cm未満",short:"3時間降雪3〜5cm"},
-  {color:"#8d38c9",label:"3時間降雪量6cm以上",short:"3時間降雪6cm以上"},
+  {color:"#8d38c9",label:"3時間降雪量3cm以上6cm未満",short:"3時間降雪3〜5cm"},
+  {color:"#000000",label:"3時間降雪量6cm以上",short:"3時間降雪6cm以上"},
 ]);
 export const RISK_LEVELS=Object.freeze({
   weather3h:{Clear:1,Cloudy:2,Rain:3,"Rain/snow":4,Snow:5,NoData:-1},

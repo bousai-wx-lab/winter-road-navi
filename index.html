@@ -10,7 +10,7 @@
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
     <link rel="stylesheet" href="./styles.css?v=20261024-recovery1">
-    <script type="module" src="./app.js?v=20261024-recovery-risk1" referrerpolicy="no-referrer"></script>
+    <script type="module" src="./app.js?v=20261026-risk-colors1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -69,8 +69,8 @@
           <p id="riskUpdated" class="live-meta"></p>
           <button id="riskRefresh" type="button">道路リスクを再読込</button>
           <p id="riskSnowStatus" class="live-meta" role="status"></p>
-          <p class="risk-note">雪は紫→ピンク→赤→薄赤を優先。降水後の低温はオレンジ→黄。灰色は資料不足、該当なしは道路区分色です。</p>
-          <details class="live-data-details"><summary>道路色・積雪線の見方</summary><p class="live-meta">降水ありは3時間降水量1mm以上、または天気が雨・雨または雪・雪の予報。対象期間の終わりの気温が2℃以下のとき、その時刻までの前12時間に降水があったかを見ます。対象コマを含む3時間分の4コマが対象です。0℃以下はオレンジ、0℃超〜2℃以下は黄色。降水を1コマでも確認すれば着色し、前12時間に欠けた資料があって降水を確認できない場合は灰色です。2℃超なら降水履歴を理由に灰色にしません。</p><p class="live-meta">降雪1cm・3cm・6cmは、それぞれ赤・ピンク・紫。雪の予報で有効な降雪量が1cm未満なら薄赤です。雪の量が資料なしの場合を1cm未満として扱いません。</p><p class="live-meta">背景の色は予測天気です。積雪深の線は最新の実況観測から補間した参考値で、選択した未来の積雪深ではありません。観測範囲外や資料不足では線を描きません。道路の積雪、凍結、通行可否は判定しません。</p></details>
+          <p class="risk-note">雪は黒→紫→赤→ピンクを優先。降水後の低温はオレンジ→黄。灰色は資料不足、該当なしは道路区分色です。</p>
+          <details class="live-data-details"><summary>道路色・積雪線の見方</summary><p class="live-meta">降水ありは3時間降水量1mm以上、または天気が雨・雨または雪・雪の予報。対象期間の終わりの気温が2℃以下のとき、その時刻までの前12時間に降水があったかを見ます。対象コマを含む3時間分の4コマが対象です。0℃以下はオレンジ、0℃超〜2℃以下は黄色。降水を1コマでも確認すれば着色し、前12時間に欠けた資料があって降水を確認できない場合は灰色です。2℃超なら降水履歴を理由に灰色にしません。</p><p class="live-meta">降雪1cm・3cm・6cmは、それぞれ赤・紫・黒。雪の予報で有効な降雪量が1cm未満ならピンクです。雪の量が資料なしの場合を1cm未満として扱いません。</p><p class="live-meta">背景の色は予測天気です。積雪深の線は最新の実況観測から補間した参考値で、選択した未来の積雪深ではありません。観測範囲外や資料不足では線を描きません。道路の積雪、凍結、通行可否は判定しません。</p></details>
         </section>
         <section id="weatherControls" class="temperature-controls dynamic-controls" aria-label="天気の設定" hidden>
           <h3 id="weatherTitle">推計気象分布（天気）</h3>

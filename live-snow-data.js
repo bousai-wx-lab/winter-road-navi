@@ -37,9 +37,12 @@ export function decodeSnowStations(table,data,hour) {
   if(!points.length || points.length>1000)throw new Error("積雪観測点がありません");
   return points;
 }
+export function snowStationValue(point) {
+  return point.value===null?"資料なし":point.value===0?"-":`${point.value}cm`;
+}
 export function snowStationLabel(point) {
   if(point.value===null)return "資料なし（観測休止・欠測等）";
-  return `${point.value}cm${point.value===0?"（1cm未満を含み得ます）":""}${point.quality!==0?"・参考値":""}`;
+  return `${snowStationValue(point)}${point.value===0?"（1cm未満・積雪の有無は判別不可）":""}${point.quality!==0?"・参考値":""}`;
 }
 
 function triangle(a,b,c,points) {
@@ -117,21 +120,28 @@ export function snowContours(grid,values) {
       if(hits.length===2 && Math.hypot(hits[0][0]-hits[1][0],hits[0][1]-hits[1][1])>1e-10)segments[level].push(hits);
     }
   }
-  const supported=point=>{
+  const estimate=point=>{
     const x=point[0]*80-.5,y=point[1]*120-.5;
     // Include either neighbouring square when a point lies on their shared edge.
     for(const col of new Set([Math.floor(x-1e-8),Math.floor(x+1e-8)]))
-      for(const row of new Set([Math.floor(y-1e-8),Math.floor(y+1e-8)]))
-        if(supportedSquares.has(row*20000+col))return true;
-    return false;
+      for(const row of new Set([Math.floor(y-1e-8),Math.floor(y+1e-8)])) {
+        const key=row*20000+col;if(!supportedSquares.has(key))continue;
+        const [a,b,c,d]=[0,1,20000,20001].map(offset=>values[index.get(key+offset)]);
+        const u=Math.max(0,Math.min(1,x-col)),v=Math.max(0,Math.min(1,y-row));
+        return u>=v?a+(b-a)*u+(d-b)*v:a+(d-c)*u+(c-a)*v;
+      }
+    return NaN;
   };
-  const supportedSegment=(a,b)=>{
+  const supportedSegment=(a,b,threshold)=>{
     const steps=Math.max(1,Math.ceil(Math.max(Math.abs(b[0]-a[0])*80,Math.abs(b[1]-a[1])*120)*4));
-    for(let i=0;i<=steps;i++)if(!supported(a.map((v,axis)=>v+(b[axis]-v)*i/steps)))return false;
+    for(let i=0;i<=steps;i++) {
+      const value=estimate(a.map((v,axis)=>v+(b[axis]-v)*i/steps));
+      if(!Number.isFinite(value) || Math.abs(value-threshold)>Math.max(.5,threshold*.1))return false;
+    }
     return true;
   };
   return {type:"FeatureCollection",features:segments.flatMap((edges,i)=>{
-    const coordinates=joinSnowContours(edges).map(line=>smoothSnowContour(line,supportedSegment));
+    const coordinates=joinSnowContours(edges).map(line=>smoothSnowContour(line,(a,b)=>supportedSegment(a,b,LIVE_SNOW_LEVELS[i])));
     return coordinates.length?[{type:"Feature",properties:{depth:LIVE_SNOW_LEVELS[i]},geometry:{type:"MultiLineString",coordinates}}]:[];
   })};
 }
@@ -220,7 +230,8 @@ function smoothSnowContour(line,supportedSegment) {
   };
   const valid=segment=>segment.every((p,j)=>j===0 || supportedSegment(segment[j-1],p));
   // Shared tangents make a continuous cubic spline through all control points.
-  // Constrain only the neighbouring tangents when an arc reaches a data hole.
+  // Constrain neighbouring tangents at a data hole or when rounding moves the
+  // line away from its depth. The underlying station/surface values stay intact.
   for(let pass=0;pass<11;pass++) {
     const bad=Array.from({length:count},(_,i)=>i).filter(i=>!valid(curve(i)));
     if(!bad.length)break;
@@ -237,7 +248,7 @@ function smoothSnowContour(line,supportedSegment) {
 
 export function snowSurfaceBins(values,scale=LIVE_SNOW_DEFAULT_SCALE) {
   if(!LIVE_SNOW_SCALES.includes(scale))throw new Error("積雪深の表示上限が不正です");
-  return Uint8Array.from(values,value=>Number.isFinite(value) && value>=0?1+Math.round(Math.min(1,value/scale)*80):0);
+  return Uint8Array.from(values,value=>Number.isFinite(value) && value>=1?1+Math.round(Math.min(1,(value-1)/(scale-1))*80):0);
 }
 export function snowColor(bin) {
   if(!Number.isInteger(bin) || bin<1 || bin>81)throw new Error("積雪深の表示色が不正です");
@@ -246,5 +257,5 @@ export function snowColor(bin) {
 }
 export function snowSurfaceLabel(surface,grid,lng,lat) {
   const index=lookupCell(grid,lng,lat),value=index<0?NaN:surface?.values[index];
-  return Number.isFinite(value)?`約${value.toFixed(1)}cm（独自推定）`:"推定なし（観測範囲外・資料不足）";
+  return Number.isFinite(value)?value<1?"1cm未満（独自推定・塗りなし）":`約${value.toFixed(1)}cm（独自推定）`:"推定なし（観測範囲外・資料不足）";
 }

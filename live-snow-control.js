@@ -1,6 +1,6 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import {createTemperatureLayer} from "./temperature-layer.js";
-import {AMEDAS_ROOT,snowHour,snowMapKey,decodeSnowStations,snowStationValue,snowStationLabel,makeSnowSurface,snowColor,snowSurfaceBins,snowSurfaceLabel} from "./live-snow-data.js?v=20261107-snow3";
+import {AMEDAS_ROOT,snowHour,snowMapKey,decodeSnowStations,snowStationValue,snowStationLabel,makeSnowSurface,snowColor,snowSurfaceBins,snowSurfaceLabel} from "./live-snow-data.js?v=20261107-snow4";
 import {timeLabel} from "./live-temperature-data.js";
 
 const $=id=>document.getElementById(id),EMPTY={type:"FeatureCollection",features:[]};

@@ -20,7 +20,7 @@ test("zero, absent values, inactive observations and reference values remain dif
   const table={10001:meta,10002:{...meta,lon:[137,10]},10003:{...meta,lon:[137,20]},10004:{...meta,lon:[137,30]},10005:{...meta,elems:"11112010"}};
   const decoded=decodeSnowStations(table,{10001:{snow:[0,0]},10002:{snow:[null,5]},10003:{snow:[25,4]}},hour);
   assert.equal(decoded.length,4);assert.equal(decoded[0].value,0);assert.equal(decoded[0].usable,true);
-  assert.match(snowStationLabel(decoded[0]),/1cm未満/);assert.equal(decoded[1].value,null);assert.equal(decoded[3].value,null);
+  assert.match(snowStationLabel(decoded[0]),/^-（1cm未満・積雪の有無は判別不可）$/);assert.equal(decoded[1].value,null);assert.equal(decoded[3].value,null);
   assert.match(snowStationLabel(decoded[1]),/資料なし/);assert.equal(decoded[2].value,25);assert.equal(decoded[2].usable,false);assert.match(snowStationLabel(decoded[2]),/参考値/);
   assert.throws(()=>decodeSnowStations(table,{10001:{snow:[-1,0]}},hour));
 });
@@ -58,18 +58,34 @@ test("contours lie on their stated depths and never cross a missing square",()=>
   assert.equal(snowContours({...grid,count:4,rows:Uint16Array.from([4440,4440,4441,4441]),cols:Uint16Array.from([10960,10961,10960,10961])},Float32Array.from([0,10,NaN,10])).features.length,0);
 });
 
-test("selectable snow scales reveal shallow snow, saturate at the chosen depth and keep missing cells transparent",()=>{
-  const values=Float32Array.from([NaN,0,1,5,10,20,50,100,200,350]);
+test("snow fill starts at white 1cm, hides zero and sub-centimetre estimates, and saturates at the chosen depth",()=>{
+  const values=Float32Array.from([NaN,-1,0,.5,.999,1,5,10,20,50,100,200,350]);
   for(const scale of LIVE_SNOW_SCALES) {
     const bins=snowSurfaceBins(values,scale);
-    assert.equal(bins[0],0);assert.equal(snowColor(bins[1]),"#ffffff");
+    assert.ok(bins.slice(0,5).every(b=>b===0));assert.equal(snowColor(bins[5]),"#ffffff");
     assert.equal(snowColor(bins[values.indexOf(scale)]),"#000000");
-    for(let i=2;i<bins.length;i++)assert.ok(bins[i]>=bins[i-1]);
+    for(let i=6;i<bins.length;i++)assert.ok(bins[i]>=bins[i-1]);
   }
-  assert.ok(snowSurfaceBins(values,10)[3]>snowSurfaceBins(values,50)[3]);
-  assert.notEqual(snowColor(snowSurfaceBins(values,10)[2]),"#ffffff","1cm is visible at the shallowest scale");
-  assert.equal(snowColor(snowSurfaceBins(Float32Array.of(25),50)[0]),"#808080");
+  assert.ok(snowSurfaceBins(values,10)[6]>snowSurfaceBins(values,50)[6]);
+  assert.equal(snowColor(snowSurfaceBins(Float32Array.of(25.5),50)[0]),"#808080");
   assert.throws(()=>snowSurfaceBins(values,0));assert.throws(()=>snowSurfaceBins(values,75));
+});
+
+test("zero anchors remain in interpolation but do not produce a white snow area or claim snow absence",()=>{
+  const grid=smallGrid(),surface=makeSnowSurface(points.map(p=>({...p,value:0})),grid);
+  assert.ok(surface.count>0);assert.ok(surface.bins.every(b=>b===0));assert.equal(surface.contours.features.length,0);
+  assert.match(snowSurfaceLabel(surface,grid,137.05,37.05),/1cm未満.*塗りなし/);
+  assert.match(snowSurfaceLabel(surface,grid,138,38),/推定なし/);
+});
+
+test("interior hills and an exact-threshold saddle retain closed contour rings",()=>{
+  const grid=expandGrid({cell_count:169,runs:Array.from({length:13},(_,i)=>[4440+i,10960,13]).flat()});
+  for(const field of [(x,y)=>Math.max(0,10-2.5*Math.min(Math.hypot(x-4,y-6),Math.hypot(x-8,y-6))),
+    (x,y)=>Math.abs(x-6)<=3&&Math.abs(y-6)<=3?Math.max(0,5+(x-6)*(y-6)):0]) {
+    const contours=snowContours(grid,Float32Array.from(grid.rows,(row,i)=>field(grid.cols[i]-10960,row-4440)));
+    assert.ok(contours.features.length>0);
+    for(const feature of contours.features)for(const line of feature.geometry.coordinates)assert.deepEqual(line[0],line.at(-1));
+  }
 });
 
 test("connected summit contours are rounded closed curves without changing the underlying estimates",()=>{
@@ -82,6 +98,10 @@ test("connected summit contours are rounded closed curves without changing the u
   assert.equal(feature.geometry.coordinates.length,1);
   const line=feature.geometry.coordinates[0];assert.deepEqual(line[0],line.at(-1));
   assert.ok(line.length>30);
+  for(const [lng,lat] of line) {
+    const expected=20-4*(Math.abs(lat*120-.5-4444)+Math.abs(lng*80-.5-10964));
+    assert.ok(Math.abs(expected-10)<=1.00001,"rounding stays near the 10cm contour of the independent analytic field");
+  }
   for(let i=1;i<line.length-1;i++) {
     const a=[(line[i][0]-line[i-1][0])*80,(line[i][1]-line[i-1][1])*120];
     const b=[(line[i+1][0]-line[i][0])*80,(line[i+1][1]-line[i][1])*120];

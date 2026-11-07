@@ -61,6 +61,7 @@ export function initWeather(map,hooks={}) {
         map.addLayer({id,type:"raster",source:id,minzoom:z===4?0:z-1,...(z<10?{maxzoom:z+1}:{}),paint:{"raster-opacity":Number($("weatherOpacity").value)/100,"raster-resampling":"nearest","raster-fade-duration":0}},"general-road-casing");
       }
       $("map").dataset.weatherMode=mode;$("map").dataset.weatherElement=requestProduct.element;$("map").dataset.weatherTarget=slot.end;$("map").dataset.weatherBase=slot.base;
+      hooks.onLayersReady?.();
       $("mapTemperatureLabel").textContent=`${slot.label} · ${requestProduct.label}`;
       loaded();
     }catch(error) {

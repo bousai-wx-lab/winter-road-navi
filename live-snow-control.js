@@ -1,6 +1,6 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import {createTemperatureLayer} from "./temperature-layer.js";
-import {AMEDAS_ROOT,snowHour,snowMapKey,decodeSnowStations,snowStationLabel,makeSnowSurface,snowColor,snowSurfaceBins,snowSurfaceLabel} from "./live-snow-data.js?v=20261107-curves-scale1";
+import {AMEDAS_ROOT,snowHour,snowMapKey,decodeSnowStations,snowStationLabel,makeSnowSurface,snowColor,snowSurfaceBins,snowSurfaceLabel} from "./live-snow-data.js?v=20261107-display2";
 import {timeLabel} from "./live-temperature-data.js";
 
 const $=id=>document.getElementById(id),EMPTY={type:"FeatureCollection",features:[]};
@@ -9,22 +9,24 @@ export function initLiveSnow(map,hooks={}) {
   let coloredSurface=null,coloredScale=null;
   const mapLabel=text=>{if(!overlay)$("mapTemperatureLabel").textContent=text;};
   map.addSource("live-snow-points",{type:"geojson",data:EMPTY});
-  map.addSource("live-snow-lines",{type:"geojson",data:EMPTY});
+  map.addSource("live-snow-lines",{type:"geojson",data:EMPTY,tolerance:0});
   map.addLayer({id:"live-snow-lines",type:"line",source:"live-snow-lines",layout:{visibility:"none","line-join":"round","line-cap":"round"},paint:{"line-color":"#355277","line-width":1.4,"line-opacity":.9}});
   map.addLayer({id:"live-snow-points",type:"circle",source:"live-snow-points",layout:{visibility:"none"},paint:{"circle-radius":["interpolate",["linear"],["zoom"],5,3.5,9,6],"circle-color":["case",["get","available"],["case",[">",["get","value"],0],"#247db3","#ffffff"],"#777777"],"circle-stroke-color":"#153c5a","circle-stroke-width":1}});
   function status(message,state) {$("liveSnowStatus").textContent=message;$("liveSnowStatus").dataset.state=state;hooks.onChange?.();}
+  function raiseSurface() {if(layer && map.getLayer(layer.id))map.moveLayer(layer.id,"general-road-casing");}
   function paint() {
+    raiseSurface();
     const scale=Number($("liveSnowScale").value);
     if(layer && surface && (coloredSurface!==surface || coloredScale!==scale)) {
       layer.setBins(snowSurfaceBins(surface.values,scale));coloredSurface=surface;coloredScale=scale;
     }
     $("liveSnowScaleValue").textContent=`${scale}cm以上`;
     $("liveSnowScaleLegend").setAttribute("aria-label",`推定積雪深の色：0cmは白、${scale}cm以上は黒`);
-    layer?.setVisible(active && !overlay && $("liveSnowSurface").checked && !!surface?.count);layer?.setOpacity(Number($("liveSnowOpacity").value)/100);
-    map.setLayoutProperty("live-snow-points","visibility",active && !overlay && $("liveSnowPoints").checked?"visible":"none");
-    map.setLayoutProperty("live-snow-lines","visibility",active && (overlay || $("liveSnowContours").checked)?"visible":"none");
+    layer?.setVisible(active && $("liveSnowSurface").checked && !!surface?.count);layer?.setOpacity(Number($("liveSnowOpacity").value)/100);
+    map.setLayoutProperty("live-snow-points","visibility",active && $("liveSnowPoints").checked?"visible":"none");
+    map.setLayoutProperty("live-snow-lines","visibility",active && $("liveSnowContours").checked?"visible":"none");
     $("liveSnowOpacityValue").textContent=`${$("liveSnowOpacity").value}%`;
-    if(!active || overlay || !$("liveSnowPoints").checked)popup?.remove();
+    if(!active || !$("liveSnowPoints").checked)popup?.remove();
   }
   function clear() {
     stations=[];surface=null;layer?.setVisible(false);popup?.remove();popup=null;
@@ -66,7 +68,7 @@ export function initLiveSnow(map,hooks={}) {
       const [table,data]=await Promise.all([get("const/amedastable.json",true,signal),get(`data/map/${snowMapKey(selected)}.json`,true,signal)]);
       const decoded=decodeSnowStations(table,data,selected);
       if(!active || request!==token)return;
-      stations=decoded;$("liveSnowSlot").replaceChildren(...slots.map(s=>new Option(timeLabel(s),s)));$("liveSnowSlot").value=selected;$("liveSnowSlot").disabled=false;
+      stations=decoded;$("liveSnowSlot").replaceChildren(...slots.map(s=>new Option(timeLabel(s),s)));$("liveSnowSlot").value=selected;$("liveSnowSlot").disabled=overlay;
       $("liveSnowStation").replaceChildren(new Option("地図の点、または地点名から選択",""),...stations.map(s=>new Option(`${s.name} · ${s.value===null?"資料なし":`${s.value}cm`}`,s.id)));
       $("liveSnowStation").disabled=false;$("liveSnowStation").value=selectedStation ?? "";
       const features=stations.map(s=>({type:"Feature",properties:{id:s.id,available:s.value!==null,value:s.value ?? -1},geometry:{type:"Point",coordinates:[s.lng,s.lat]}}));
@@ -89,18 +91,18 @@ export function initLiveSnow(map,hooks={}) {
     title.textContent=`${station.name} · 観測点`;value.textContent=`積雪深：${snowStationLabel(station)}`;date.textContent=`${timeLabel(station.hour)} · 気象庁`;
     content.append(title,value,date);popup?.remove();popup=new maplibregl.Popup({maxWidth:"250px"}).setLngLat([station.lng,station.lat]).setDOMContent(content).addTo(map);
   }
-  map.on("click",event=>{if(!active || overlay || !$("liveSnowPoints").checked)return;const id=map.queryRenderedFeatures(event.point,{layers:["live-snow-points"]})[0]?.properties.id;const station=stations.find(s=>s.id===id);if(station)showStation(station);});
+  map.on("click",event=>{if(!active || !$("liveSnowPoints").checked)return;const id=map.queryRenderedFeatures(event.point,{layers:["live-snow-points"]})[0]?.properties.id;const station=stations.find(s=>s.id===id);if(station)showStation(station);});
   $("liveSnowStation").addEventListener("change",()=>{const station=stations.find(s=>s.id===$("liveSnowStation").value);if(station){map.easeTo({center:[station.lng,station.lat],zoom:Math.max(map.getZoom(),8),duration:0});showStation(station);}else{selectedStation=null;popup?.remove();}});
   for(const id of ["liveSnowSurface","liveSnowPoints","liveSnowContours"])$(id).addEventListener("change",paint);
   $("liveSnowScale").addEventListener("change",paint);
   $("liveSnowOpacity").addEventListener("input",paint);$("liveSnowRefresh").addEventListener("click",()=>void load(true));
   $("liveSnowSlot").addEventListener("change",()=>{selected=$("liveSnowSlot").value;void load();});
   document.addEventListener("visibilitychange",()=>{if(active && !document.hidden)void load(true);});
-  return {setGrid(value){grid=value;renderSurface();},setActive(value,contoursOnly=false){if(active && !overlay)observedSelection=selected;overlay=contoursOnly;selected=overlay?null:observedSelection;active=value;++token;abort?.abort();clearInterval(timer);clear();paint();if(value){void load(true);timer=setInterval(()=>{if(!document.hidden)void load(true);},600000);}},
+  return {raiseSurface,setGrid(value){grid=value;renderSurface();},setActive(value,latestOnly=false){if(active && !overlay)observedSelection=selected;overlay=latestOnly;selected=overlay?null:observedSelection;active=value;++token;abort?.abort();clearInterval(timer);clear();paint();if(value){void load(true);timer=setInterval(()=>{if(!document.hidden)void load(true);},600000);}},
     tooltipAt(lng,lat){
       if(!stations.length)return "積雪深を表示できません";
       const pixel=map.project([lng,lat]),station=stations.find(s=>{const p=map.project([s.lng,s.lat]);return Math.hypot(p.x-pixel.x,p.y-pixel.y)<=8;});
-      if(station && !overlay && $("liveSnowPoints").checked)return `${station.name}（観測）：${snowStationLabel(station)}`;
+      if(station && $("liveSnowPoints").checked)return `${station.name}（観測）：${snowStationLabel(station)}`;
       return grid?snowSurfaceLabel(surface,grid,lng,lat):"推定面を準備中";
     },label:()=>selected?timeLabel(selected):"積雪時刻を準備中"};
 }

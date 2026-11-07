@@ -9,6 +9,7 @@ class Element {
   addEventListener(name,fn){this.handlers[name]=fn;}
   replaceChildren(...options){this.options=options;}
   setAttribute(name,value){this[name]=value;}
+  getContext(){return {fillRect(){}};}
   emit(name){this.handlers[name]?.();}
 }
 async function until(fn){for(let i=0;i<1000;i++){if(fn())return;await nextTurn();}throw new Error("controller did not settle");}
@@ -36,13 +37,19 @@ test("live controller separates observations and forecasts, preserves selections
   try {
     assert.equal(calls,0);control.setActive(true);await until(()=>shown.length===1);
     assert.equal(shown[0].data.classes[0],4);assert.equal(pollMs,LIVE_POLL_MS);
+    assert.equal(shown[0].data.bins[0],41);
+    assert.equal(get("liveObservedLegend").hidden,false);assert.equal(get("liveLegend").hidden,true);
+    const observedLayer=map.getLayer("live-temperature");
     generation=1;poll();await until(()=>shown.length===2);
     assert.equal(shown[1].data.values[0],2.01);assert.equal(shown[1].data.classes[0],2);
     assert.equal(get("map").dataset.liveTarget,manifest().latest_time);
     assert.deepEqual(get("liveKind").options.map(x=>x.value),["current","observed"]);
     control.setMode("forecast");control.setActive(true);await until(()=>shown.length===3);
     assert.deepEqual(get("liveKind").options.map(x=>x.value),["temp3h","daily"]);
-    assert.equal(shown.at(-1).data.values[0],-1.2);assert.equal(get("map").dataset.liveKind,"temp3h");
+    assert.equal(shown.at(-1).data.values[0],-1.2);
+    assert.equal(shown.at(-1).data.bins[0],4);assert.equal(shown.at(-1).data.classes[0],4);
+    assert.notEqual(map.getLayer("live-temperature"),observedLayer);
+    assert.equal(get("liveObservedLegend").hidden,true);assert.equal(get("liveLegend").hidden,false);assert.equal(get("map").dataset.liveKind,"temp3h");
     assert.equal(control.timeline().slots[0].shortLabel,"1日12時");
     assert.equal(control.timeline().selected,"temp3h_20990101030000");
     get("liveKind").value="daily";get("liveKind").emit("change");await until(()=>shown.length===4);
@@ -50,10 +57,14 @@ test("live controller separates observations and forecasts, preserves selections
     assert.equal(control.timeline().selected,"tomorrow_max");assert.equal(control.timeline().slots[1].shortLabel,"1日最高");
     control.setMode("observed");control.setActive(true);await until(()=>shown.length===6);
     assert.equal(get("liveKind").value,"current");assert.equal(shown.at(-1).data.values[0],2.01);
+    assert.equal(shown.at(-1).data.bins[0],43);assert.equal(shown.at(-1).data.classes[0],2);
     assert.deepEqual(control.timeline().slots,[]);
     control.setMode("forecast");control.setActive(true);await until(()=>shown.length===7);
     assert.equal(get("liveKind").value,"daily");assert.equal(get("liveSlot").value,"tomorrow_max");
     assert.equal(shown.at(-1).slot.element,"max");assert.equal(shown.at(-1).data.values[0],-1.2);
+    assert.equal(shown.at(-1).data.bins[0],4);assert.equal(shown.at(-1).data.classes[0],4);
+    assert.notEqual(map.getLayer("live-temperature"),observedLayer);
+    assert.equal(get("liveObservedLegend").hidden,true);assert.equal(get("liveLegend").hidden,false);
     control.setMode("observed");control.setActive(true);await until(()=>shown.length===8);
     fail=true;get("liveRefresh").emit("click");await until(()=>get("liveStatus").dataset.state==="error");
     assert.equal(get("map").dataset.liveTarget,undefined);assert.equal(unavailable.at(-1),"error");

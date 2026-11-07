@@ -155,7 +155,7 @@ function joinSnowContours(edges) {
   return lines;
 }
 
-function coarseSnowContour(line) {
+function coarseSnowContour(line,supportedSegment) {
   // Remove redundant native-grid vertices so rounding is visible at regional
   // zooms, then cap each control edge at 12 km to avoid cutting large corners.
   const xy=line.map(p=>project(...p)),keep=new Set([0,line.length-1]),stack=[[0,line.length-1]];
@@ -167,7 +167,12 @@ function coarseSnowContour(line) {
       const d=(p[0]-a[0]-f*dx)**2+(p[1]-a[1]-f*dy)**2;
       if(d>distance){distance=d;furthest=i;}
     }
-    if(furthest>=0){keep.add(furthest);stack.push([start,furthest],[furthest,end]);}
+    // A coastal/data-hole corner must only prevent its own simplification,
+    // rather than reverting every other bend in a long contour to straight lines.
+    if(end-start>1 && (furthest>=0 || !supportedSegment(line[start],line[end]))) {
+      const split=furthest>=0?furthest:Math.floor((start+end)/2);
+      keep.add(split);stack.push([start,split],[split,end]);
+    }
   }
   const simple=[...keep].sort((a,b)=>a-b).map(i=>line[i]),result=[simple[0]];
   for(let i=1;i<simple.length;i++) {
@@ -177,24 +182,57 @@ function coarseSnowContour(line) {
   return result;
 }
 
+function resampleSnowContour(line,supportedSegment) {
+  const distance=[0];
+  for(let i=1;i<line.length;i++){const a=project(...line[i-1]),b=project(...line[i]);distance.push(distance.at(-1)+Math.hypot(b[0]-a[0],b[1]-a[1]));}
+  const total=distance.at(-1);if(total<.01)return line;
+  const closed=line[0].every((v,i)=>Math.abs(v-line.at(-1)[i])<1e-9);
+  const count=Math.max(closed?8:2,Math.ceil(total/6)),result=[line[0]];
+  let cursor=1,previous=0;
+  for(let step=1;step<=count;step++) {
+    const at=total*step/count;
+    while(cursor<line.length-1 && distance[cursor]<at)cursor++;
+    const length=distance[cursor]-distance[cursor-1],fraction=length?(at-distance[cursor-1])/length:0;
+    const point=step===count?line.at(-1):line[cursor-1].map((v,j)=>v+(line[cursor][j]-v)*fraction);
+    if(!supportedSegment(result.at(-1),point))for(let i=1;i<cursor;i++)if(distance[i]>previous && distance[i]<at)result.push(line[i]);
+    result.push(point);previous=at;
+  }
+  return result;
+}
+
 function smoothSnowContour(line,supportedSegment) {
   const closed=line[0].every((v,i)=>Math.abs(v-line.at(-1)[i])<1e-9);
-  const coarse=coarseSnowContour(line),base=coarse.every((point,i)=>i===0 || supportedSegment(coarse[i-1],point))?coarse:line;
-  let current=closed?base.slice(0,-1):base;
-  if(current.length<3)return line;
-  // Three Chaikin passes round only the drawing, with bounded control edges.
-  // Keep open endpoints fixed and reject a pass that enters an unsupported cell.
-  for(let pass=0;pass<3;pass++) {
-    const next=closed?[]:[current[0]],count=closed?current.length:current.length-1;
-    for(let i=0;i<count;i++) {
-      const a=current[i],b=current[(i+1)%current.length];
-      next.push(a.map((v,j)=>.75*v+.25*b[j]),a.map((v,j)=>.25*v+.75*b[j]));
-    }
-    if(!closed)next.push(current.at(-1));
-    if(!next.every((point,i)=>i===0 || supportedSegment(next[i-1],point)) || closed && !supportedSegment(next.at(-1),next[0]))break;
-    current=next;
+  const coarse=resampleSnowContour(coarseSnowContour(line,supportedSegment),supportedSegment),points=closed?coarse.slice(0,-1):coarse;
+  if(points.length<3)return line;
+  const n=points.length,tangents=points.map((p,i)=>{
+    const a=points[(i-1+n)%n],c=points[(i+1)%n];
+    let t=!closed && i===0?c.map((v,j)=>v-p[j]):!closed && i===n-1?p.map((v,j)=>v-a[j]):c.map((v,j)=>(v-a[j])/2);
+    const q=project(...p),ta=project(...a),tc=project(...c),end=project(p[0]+t[0],p[1]+t[1]);
+    const length=Math.hypot(end[0]-q[0],end[1]-q[1]);
+    const limit=!closed && i===0?Math.hypot(tc[0]-q[0],tc[1]-q[1]):!closed && i===n-1?Math.hypot(ta[0]-q[0],ta[1]-q[1]):Math.min(Math.hypot(ta[0]-q[0],ta[1]-q[1]),Math.hypot(tc[0]-q[0],tc[1]-q[1]));
+    if(length>limit)t=t.map(v=>v*limit/length);
+    return t;
+  });
+  const count=closed?n:n-1;
+  const curve=i=>{
+    const j=(i+1)%n,a=points[i],b=points[j],c=a.map((v,k)=>v+tangents[i][k]/3),d=b.map((v,k)=>v-tangents[j][k]/3);
+    return Array.from({length:33},(_,step)=>{const t=step/32,u=1-t;return a.map((v,k)=>u*u*u*v+3*u*u*t*c[k]+3*u*t*t*d[k]+t*t*t*b[k]);});
+  };
+  const valid=segment=>segment.every((p,j)=>j===0 || supportedSegment(segment[j-1],p));
+  // Shared tangents make a continuous cubic spline through all control points.
+  // Constrain only the neighbouring tangents when an arc reaches a data hole.
+  for(let pass=0;pass<11;pass++) {
+    const bad=Array.from({length:count},(_,i)=>i).filter(i=>!valid(curve(i)));
+    if(!bad.length)break;
+    const affected=new Set(bad.flatMap(i=>[i,(i+1)%n]));
+    for(const i of affected)tangents[i]=tangents[i].map(v=>v*(pass<8?.5:0));
   }
-  return closed?[...current,current[0]]:current;
+  const result=[];
+  for(let i=0;i<count;i++) {
+    const candidate=curve(i),segment=valid(candidate)?candidate:[points[i],points[(i+1)%n]];
+    result.push(...(i?segment.slice(1):segment));
+  }
+  return result;
 }
 
 export function snowSurfaceBins(values,scale=LIVE_SNOW_DEFAULT_SCALE) {

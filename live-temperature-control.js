@@ -1,6 +1,6 @@
-import {createTemperatureLayer, lookupCell} from "./temperature-layer.js";
+import {createTemperatureLayer, lookupCell, paletteColor} from "./temperature-layer.js";
 import {roadClassLabel} from "./temperature-display-data.js";
-import {LIVE_ROOT,LIVE_KINDS,LIVE_POLL_MS,liveSlots,liveFile,liveSlotKey,chooseLiveSlot,decodeLiveCSV,timeLabel,utcTime,liveFreshness} from "./live-temperature-data.js";
+import {LIVE_ROOT,LIVE_KINDS,LIVE_POLL_MS,liveSlots,liveFile,liveSlotKey,chooseLiveSlot,decodeLiveCSV,timeLabel,utcTime,liveFreshness} from "./live-temperature-data.js?v=20261107-display2";
 import {forecastTickLabel} from "./forecast-timeline.js";
 
 const $=id=>document.getElementById(id);
@@ -8,7 +8,9 @@ const FACE_COLORS=["#00000000","#b8dfd0","#e8bd20","#f08020","#da3434"];
 const MODE_KINDS={observed:["current","observed"],forecast:["temp3h","daily"]};
 export function initLiveTemperature(map,hooks={}) {
   let active=false,request=0,abort=null,timer=null,loading=false;
-  let manifest=null,slots=[],selectedId=null,selectedTarget=null,followingLatest=true,shown=null,layer=null,grid=null,pinned=null;
+  let manifest=null,slots=[],selectedId=null,selectedTarget=null,followingLatest=true,shown=null,layer=null,grid=null,pinned=null,layerMode=null;
+  const legend=$("liveTemperatureGradient").getContext("2d");
+  for(let bin=1;bin<=81;bin++){legend.fillStyle=paletteColor(bin);legend.fillRect((bin-1)*4,0,4,18);}
   const select=$("liveSlot"),kindSelect=$("liveKind"),status=$("liveStatus"),point=$("livePoint");
   let mode="observed",kind=kindSelect.value;
   const selections={observed:null,forecast:{kind:"temp3h",selectedId:null,selectedTarget:null,followingLatest:false}};
@@ -25,6 +27,11 @@ export function initLiveTemperature(map,hooks={}) {
     $("liveControls").setAttribute("aria-label",`${label}気温の設定`);
     $("liveKindLabel").textContent=`表示する${label}気温`;
     $("liveLegend").setAttribute("aria-label",`${label}気温面の色分け`);
+    $("liveLegend").hidden=mode==="observed";
+    $("liveObservedLegend").hidden=mode!=="observed";
+    $("liveColorNote").textContent=mode==="observed"
+      ? "気温の面は平年値モードと同じ1℃ごとの配色。道路は従来どおり0・2・5℃で着色します。欠測の面は無色・道路は灰色です。"
+      : "気温面と道路を同じ閾値で着色。欠測の面は無色・道路は灰色です。平年の積雪はこのモードでは表示しません。";
     $("liveUpdateNote").textContent="天気分布予報プラスと同じ数値を使用。10分ごと・タブ復帰時に更新を確認します。"+(mode==="observed"?"実況の最新枠を選択中は最新時刻へ進み、過去の対象を選んだ場合はその対象を保ちます。":"選択した予想の対象日時を保ちます。実況値は実況値モードで確認できます。");
     controls();
   }
@@ -104,10 +111,11 @@ export function initLiveTemperature(map,hooks={}) {
       }
       if(!data) throw new Error("更新途中です");
       const same=grid?.count===data.grid.count && data.grid.rows.every((row,i)=>row===grid.rows[i] && data.grid.cols[i]===grid.cols[i]);
-      if(!same) {
+      if(!same || layerMode!==mode) {
         if(layer && map.getLayer(layer.id)) map.removeLayer(layer.id);
-        grid=data.grid;
-        layer=createTemperatureLayer(grid,{id:"live-temperature",colorForBin:bin=>FACE_COLORS[bin] || FACE_COLORS[1]});
+        if(!same)grid=data.grid;
+        layerMode=mode;
+        layer=createTemperatureLayer(grid,{id:"live-temperature",colorForBin:observed?paletteColor:bin=>FACE_COLORS[bin] || FACE_COLORS[1]});
         map.addLayer(layer,"general-road-casing");
       }
       data.grid=grid;layer.setBins(data.bins);

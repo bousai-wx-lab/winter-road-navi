@@ -3,9 +3,9 @@ import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=2026
 import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20260926-weather-snow1";
 import { createRoadTemperature } from "./road-temperature.js?v=20261023-zoomcolor1";
 import { initSnow } from "./snow-control.js?v=20260926-weather-snow1";
-import { initLiveTemperature } from "./live-temperature-control.js?v=20261005-timeline1";
-import { initWeather } from "./weather-control.js?v=20261023-risk1";
-import { initLiveSnow } from "./live-snow-control.js?v=20261107-curves-scale1";
+import { initLiveTemperature } from "./live-temperature-control.js?v=20261107-display2";
+import { initWeather } from "./weather-control.js?v=20261107-display2";
+import { initLiveSnow } from "./live-snow-control.js?v=20261107-display2";
 import { initForecastRisk } from "./forecast-risk-control.js?v=20261026-risk-colors1";
 import { RISK_RULES } from "./forecast-risk-data.js?v=20261026-risk-colors1";
 import { initForecastTimeline } from "./forecast-timeline.js?v=20261005-timeline1";
@@ -188,7 +188,12 @@ function applyDisplay() {
   const weatherLegend=document.querySelector("#weatherLegend");
   if(riskView)document.querySelector("#riskWeatherLegend").append(weatherLegend);
   else document.querySelector("#weatherControls").insertBefore(weatherLegend,document.querySelector("#precipitationLegend"));
-  document.querySelector("#liveSnowControls").hidden = mode !== "observed" || displayView !== "snow";
+  const snowControls=document.querySelector("#liveSnowControls");
+  document.querySelector(riskView?"#forecastCompositeControls":"#liveSnowControlsHome").append(snowControls);
+  snowControls.hidden = !riskView && (mode !== "observed" || displayView !== "snow");
+  document.querySelector("#liveSnowTitle").textContent=riskView?"最新の実況積雪深":"実況積雪深";
+  document.querySelector("#liveSnowTimeSelection").hidden=riskView;
+  document.querySelector("#liveSnowModeNote").hidden=!riskView;
   document.querySelector(".temperature-options").hidden = !temperature;
   document.querySelector(".road-section .road-temperature-legend").hidden = !temperature;
   for(const small of document.querySelectorAll(".road-section small"))small.hidden = !temperature;
@@ -203,7 +208,7 @@ function applyDisplay() {
   document.querySelector("#map").dataset.displayMode = mode;
   document.querySelector("#map").dataset.displayView = live ? displayView : "temperature";
   document.querySelector("#dataMeaning").textContent = !live ? "気温・積雪とも平年の推定分布です。予報・実況・路面状態ではありません。" : displayView === "snow" ? "積雪深の点は観測値、面と等値線は独自推定です。道路上の積雪ではありません。" : displayView === "precipitation" ? "予測降水量は約5kmメッシュ内の平均3時間降水量（mm）です。" : displayView === "snowfall" ? "予測降雪量は約5kmメッシュ内の平均3時間降雪量（cm）です。積雪深ではありません。" : displayView === "weather" ? mode === "observed" ? "実況天気は気象庁の推計気象分布です。各地点の実測値ではありません。" : "予測天気は気象庁の3時間の代表的な天気です。" : `${label}の格子気温です。路面温度・凍結・通行可否を示しません。`;
-  if(riskView)document.querySelector("#dataMeaning").textContent="色付きの線は道路の独自リスク区分、地図の面は予測天気、細い青線は最新の実況積雪深から推定した等値線です。";
+  if(riskView)document.querySelector("#dataMeaning").textContent="色付きの線は道路の独自リスク区分、背景は予測天気です。白黒の面・細い青線・観測点は最新の実況積雪深で、未来の積雪深ではありません。";
   document.querySelector(".road-section .road-temperature-legend").setAttribute("aria-label", live ? `道路の${label}気温の色分け` : "道路の平年気温の色分け");
   document.querySelector("#map-heading").textContent = live ? `${label}${viewName}と全国の道路地図` : "全国の1km気温・積雪平年メッシュと道路地図";
   snow?.setActive(mode === "normal");
@@ -245,17 +250,8 @@ function initializeControllers() {
     onUnavailable(state){if(displayMode!=="forecast" || displayView!=="risk")return;roadTemperature?.clear();setRoadTemperatureState(state);},
     onChange:refreshTooltip,
   });
-  weather = initWeather(map,{onChange(){if(displayMode==="forecast" && displayView==="risk")risk.setTarget(weather?.current());refreshTooltip();forecastTimeline.render();}});
-  liveSnow = initLiveSnow(map,{onChange(){
-    if(displayMode==="forecast" && displayView==="risk") {
-      document.querySelector("#riskSnowUpdated").textContent=document.querySelector("#liveSnowUpdated").textContent;
-      document.querySelector("#riskSnowStatus").textContent=document.querySelector("#liveSnowStatus").textContent.replace("観測点と独自推定の面・等値線を表示中。","観測から独自推定した等値線を重ねています。");
-      document.querySelector("#riskSnowStatus").dataset.state=document.querySelector("#liveSnowStatus").dataset.state;
-      document.querySelector("#riskSnowNotice").textContent=document.querySelector("#liveSnowNotice").textContent;
-      document.querySelector("#riskSnowNotice").hidden=!document.querySelector("#riskSnowNotice").textContent;
-    }
-    refreshTooltip();
-  }});
+  weather = initWeather(map,{onChange(){if(displayMode==="forecast" && displayView==="risk")risk.setTarget(weather?.current());refreshTooltip();forecastTimeline.render();},onLayersReady(){if(displayMode==="forecast" && displayView==="risk")liveSnow?.raiseSurface();}});
+  liveSnow = initLiveSnow(map,{onChange:refreshTooltip});
   liveTemperature = initLiveTemperature(map, {
     onChange(){forecastTimeline.render();},
     onData(shown) {

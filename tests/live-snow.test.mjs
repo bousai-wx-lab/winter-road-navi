@@ -18,7 +18,7 @@ test("zero, absent values, inactive observations and reference values remain dif
 });
 
 test("point colors match the supplied snow-depth classes at every boundary",()=>{
-  const colors=["#d6dadd","#9fd2ff","#228cff","#0041ff","#faf500","#ff9900","#fe2900","#b40068"];
+  const colors=["#f7f9fa","#9fd2ff","#228cff","#0041ff","#faf500","#ff9900","#fe2900","#b40068"];
   assert.deepEqual(LIVE_SNOW_BANDS.map(b=>b.min),[0,1,5,20,50,100,150,200]);
   assert.deepEqual(LIVE_SNOW_BANDS.map(b=>b.color),colors);
   for(let i=0;i<LIVE_SNOW_BANDS.length;i++) {

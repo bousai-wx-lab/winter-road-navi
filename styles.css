@@ -1188,7 +1188,7 @@ main {
 .live-snow-legend { gap:12px 14px; padding:4px; font-size:12px; }
 .live-snow-legend > span { display:inline-flex; align-items:center; gap:7px; }
 .live-snow-point-key { display:inline-block; flex-shrink:0; width:16px; height:16px; border:1px solid #213e53; border-radius:50%; box-shadow:0 0 0 3px #fff; }
-.live-snow-point-key.missing { background:repeating-linear-gradient(135deg,#798690 0 1px,#fff 1px 4px); }
+.live-snow-point-key.missing { background:repeating-linear-gradient(135deg,#445c6e 0 1.3px,#c1cbd2 1.3px 4px); }
 .maplibregl-popup-content { color:#153d58; font-size:12px; line-height:1.6; }
 .maplibregl-popup-content p { margin:5px 0; }
 @media (max-width: 760px) {

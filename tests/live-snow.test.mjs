@@ -20,7 +20,7 @@ test("zero, absent values, inactive observations and reference values remain dif
   const table={10001:meta,10002:{...meta,lon:[137,10]},10003:{...meta,lon:[137,20]},10004:{...meta,lon:[137,30]},10005:{...meta,elems:"11112010"}};
   const decoded=decodeSnowStations(table,{10001:{snow:[0,0]},10002:{snow:[null,5]},10003:{snow:[25,4]}},hour);
   assert.equal(decoded.length,4);assert.equal(decoded[0].value,0);assert.equal(decoded[0].usable,true);
-  assert.match(snowStationLabel(decoded[0]),/^-（1cm未満・積雪の有無は判別不可）$/);assert.equal(decoded[1].value,null);assert.equal(decoded[3].value,null);
+  assert.equal(snowStationLabel(decoded[0]),"0cm");assert.equal(decoded[1].value,null);assert.equal(decoded[3].value,null);
   assert.match(snowStationLabel(decoded[1]),/資料なし/);assert.equal(decoded[2].value,25);assert.equal(decoded[2].usable,false);assert.match(snowStationLabel(decoded[2]),/参考値/);
   assert.throws(()=>decodeSnowStations(table,{10001:{snow:[-1,0]}},hour));
 });
@@ -31,11 +31,15 @@ test("triangular interpolation agrees with an independent linear field and stati
   assert.ok(Number.isNaN(triangleSnow(triangles[0],137.3,37.3)));
   assert.equal(snowTriangles([points[0],points[1],station("10004",137,39,60)]).length,0);
 });
-test("missing and reference stations block interpolation rather than bridging holes",()=>{
+test("missing and reference stations do not affect interpolation geometry, as if they did not exist",()=>{
   const square=[station("10001",137,37,0),station("10002",137.3,37,30),station("10003",137,37.3,60),station("10004",137.3,37.3,90)];
   assert.equal(snowTriangles(square).length,2);
-  const missing=station("10005",137.15,37.15,null);assert.equal(snowTriangles([...square,missing]).length,0);
-  assert.equal(snowTriangles([...square,{...missing,value:35,quality:4,usable:false}]).length,0);
+  const missing=station("10005",137.15,37.15,null);
+  assert.deepEqual(snowTriangles([...square,missing]),snowTriangles(square));
+  assert.deepEqual(snowTriangles([...square,{...missing,value:35,quality:4,usable:false}]),snowTriangles(square));
+  const grid=smallGrid(),base=makeSnowSurface(square,grid),withoutMissing=makeSnowSurface([...square,missing],grid);
+  assert.deepEqual(withoutMissing.values,base.values);assert.deepEqual(withoutMissing.contours,base.contours);
+  assert.equal(snowTriangles([square[0],square[1],missing]).length,0);
   assert.equal(snowTriangles(square.map(s=>({...s,value:null,usable:false}))).length,0);
 });
 test("land-mask surface follows the analytic field and leaves unsupported cells transparent",()=>{

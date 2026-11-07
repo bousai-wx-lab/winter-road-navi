@@ -10,7 +10,7 @@
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
     <link rel="stylesheet" href="./styles.css?v=20261107-display2">
-    <script type="module" src="./app.js?v=20261107-snow3" referrerpolicy="no-referrer"></script>
+    <script type="module" src="./app.js?v=20261107-snow4" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -92,15 +92,15 @@
           <div class="live-snow-toggles"><label><input id="liveSnowPoints" type="checkbox" checked>観測点</label><label><input id="liveSnowSurface" type="checkbox" checked>推定面</label><label><input id="liveSnowContours" type="checkbox" checked>等値線</label></div>
           <p id="liveSnowStatus" class="temperature-status" role="status">積雪深を選ぶと読み込みます</p>
           <p id="liveSnowUpdated" class="live-meta"></p><p id="liveSnowNotice" class="live-notice" role="status" hidden></p>
-          <div class="live-snow-legend" aria-label="積雪観測点の凡例"><span>○ -（1cm未満）</span><span>● 1cm以上</span><span>● 灰色：資料なし</span></div>
-          <p class="live-meta">配信値0cmは「-」と表示します。雪なしと1cm未満の積雪を区別できないため、現象なしとは断定しません。面の白色は1cmからで、1cm未満は塗りません。</p>
+          <div class="live-snow-legend" aria-label="積雪観測点の凡例"><span>○ 0cm</span><span>● 1cm以上</span><span>● 灰色：資料なし</span></div>
+          <p class="live-meta">0cmは雪なしと1cm未満の積雪を区別しない共通表示です。面の白色は1cmからで、1cm未満は塗りません。</p>
           <p class="live-meta">観測点を押すと、地図内で地点名・積雪深・時刻を確認できます。</p>
           <label for="liveSnowScale">黒になる積雪深</label><select id="liveSnowScale"><option value="10">10cm以上</option><option value="20">20cm以上</option><option value="50" selected>50cm以上</option><option value="100">100cm以上</option><option value="200">200cm以上</option><option value="350">350cm以上</option></select>
           <div id="liveSnowScaleLegend" class="live-snow-scale" aria-label="推定積雪深の色：1cmは白、50cm以上は黒、1cm未満は塗りなし"></div><p class="snow-depth-scale-label"><span>1cm</span><output id="liveSnowScaleValue">50cm以上</output></p>
           <p class="live-meta">等値線：1・5・10・20・50・100cm（滑らかな推定線）。資料不足の場所は面も線も描きません。</p>
           <p id="liveSnowContourBoundary" class="live-meta" hidden>海岸・欠測・推定範囲の端で終わる等値線があります。線の端より先は推定していません。</p>
           <label for="liveSnowOpacity">推定面の濃さ <output id="liveSnowOpacityValue">75%</output></label><input id="liveSnowOpacity" type="range" min="0" max="100" value="75"><button id="liveSnowRefresh" type="button">積雪深を再読込</button>
-          <details class="live-data-details"><summary>推定の範囲と限界</summary><p class="live-meta">正常な観測点3点で囲まれ、点同士が80km以内、最寄りの点が40km以内の陸域だけを直線的に補間します。欠測・参考値の点に接する範囲は補間しません。1km格子は表示の細かさで、精度ではありません。標高や山の遮蔽は補正せず、山間部の雪や局地的な違いを再現できません。配信値0cmでは、雪なしと1cm未満の積雪を区別できません。</p><p class="live-meta">過去24時間の正時を選べます。10分ごと・タブ復帰時に配信を確認します。面と等値線は公式解析ではなく、路面の雪や通行可否を示しません。</p></details>
+          <details class="live-data-details"><summary>推定の範囲と限界</summary><p class="live-meta">正常な観測点3点で囲まれ、点同士が80km以内、最寄りの点が40km以内の陸域だけを直線的に補間します。欠測・参考値の点は面・等値線の計算から除外し、周囲の有効な観測点から推定します。1km格子は表示の細かさで、精度ではありません。標高や山の遮蔽は補正せず、山間部の雪や局地的な違いを再現できません。配信値0cmでは、雪なしと1cm未満の積雪を区別できません。</p><p class="live-meta">過去24時間の正時を選べます。10分ごと・タブ復帰時に配信を確認します。面と等値線は公式解析ではなく、路面の雪や通行可否を示しません。</p></details>
         </section>
         </div>
         <section id="liveControls" class="temperature-controls" aria-label="実況気温の設定" hidden>

@@ -38,11 +38,11 @@ export function decodeSnowStations(table,data,hour) {
   return points;
 }
 export function snowStationValue(point) {
-  return point.value===null?"資料なし":point.value===0?"-":`${point.value}cm`;
+  return point.value===null?"資料なし":`${point.value}cm`;
 }
 export function snowStationLabel(point) {
   if(point.value===null)return "資料なし（観測休止・欠測等）";
-  return `${snowStationValue(point)}${point.value===0?"（1cm未満・積雪の有無は判別不可）":""}${point.quality!==0?"・参考値":""}`;
+  return `${snowStationValue(point)}${point.quality!==0?"・参考値":""}`;
 }
 
 function triangle(a,b,c,points) {
@@ -55,9 +55,9 @@ function triangle(a,b,c,points) {
   return {a,b,c,x,y,r2:(x-p.x)**2+(y-p.y)**2};
 }
 export function snowTriangles(stations) {
-  // Missing/flagged stations participate in triangulation, then all triangles
-  // touching them are rejected. This avoids bridging an observed data hole.
-  const points=stations.map(s=>{const [x,y]=project(s.lng,s.lat);return {...s,x,y};});
+  // Only usable observations define the geometry. Missing/reference stations
+  // remain visible as points but have no effect on the interpolated surface.
+  const points=stations.filter(s=>s.usable).map(s=>{const [x,y]=project(s.lng,s.lat);return {...s,x,y};});
   if(points.length<3)return [];
   const count=points.length;
   points.push({x:-10000,y:-6000},{x:10000,y:-6000},{x:0,y:10000});
@@ -68,7 +68,7 @@ export function snowTriangles(stations) {
     const remove=new Set(bad);triangles=triangles.filter(t=>!remove.has(t));
     for(const edge of edges.values())if(edge.count===1){const t=triangle(edge.a,edge.b,i,points);if(t)triangles.push(t);}
   }
-  return triangles.filter(t=>[t.a,t.b,t.c].every(i=>i<count && points[i].usable))
+  return triangles.filter(t=>[t.a,t.b,t.c].every(i=>i<count))
     .map(t=>[points[t.a],points[t.b],points[t.c]])
     .filter(t=>t.every((p,i)=>Math.hypot(p.x-t[(i+1)%3].x,p.y-t[(i+1)%3].y)<=SNOW_MAX_EDGE_KM));
 }

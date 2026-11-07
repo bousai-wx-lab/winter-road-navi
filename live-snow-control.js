@@ -1,18 +1,25 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import {createTemperatureLayer} from "./temperature-layer.js";
-import {AMEDAS_ROOT,snowHour,snowMapKey,decodeSnowStations,snowStationLabel,makeSnowSurface,snowColor,snowSurfaceLabel} from "./live-snow-data.js";
+import {AMEDAS_ROOT,snowHour,snowMapKey,decodeSnowStations,snowStationLabel,makeSnowSurface,snowColor,snowSurfaceBins,snowSurfaceLabel} from "./live-snow-data.js?v=20261107-curves-scale1";
 import {timeLabel} from "./live-temperature-data.js";
 
 const $=id=>document.getElementById(id),EMPTY={type:"FeatureCollection",features:[]};
 export function initLiveSnow(map,hooks={}) {
   let active=false,overlay=false,observedSelection=null,token=0,abort=null,timer=null,grid=null,layer=null,stations=[],surface=null,selected=null,latest=null,popup=null,selectedStation=null;
+  let coloredSurface=null,coloredScale=null;
   const mapLabel=text=>{if(!overlay)$("mapTemperatureLabel").textContent=text;};
   map.addSource("live-snow-points",{type:"geojson",data:EMPTY});
   map.addSource("live-snow-lines",{type:"geojson",data:EMPTY});
-  map.addLayer({id:"live-snow-lines",type:"line",source:"live-snow-lines",layout:{visibility:"none"},paint:{"line-color":"#355277","line-width":1.4,"line-opacity":.9}});
+  map.addLayer({id:"live-snow-lines",type:"line",source:"live-snow-lines",layout:{visibility:"none","line-join":"round","line-cap":"round"},paint:{"line-color":"#355277","line-width":1.4,"line-opacity":.9}});
   map.addLayer({id:"live-snow-points",type:"circle",source:"live-snow-points",layout:{visibility:"none"},paint:{"circle-radius":["interpolate",["linear"],["zoom"],5,3.5,9,6],"circle-color":["case",["get","available"],["case",[">",["get","value"],0],"#247db3","#ffffff"],"#777777"],"circle-stroke-color":"#153c5a","circle-stroke-width":1}});
   function status(message,state) {$("liveSnowStatus").textContent=message;$("liveSnowStatus").dataset.state=state;hooks.onChange?.();}
   function paint() {
+    const scale=Number($("liveSnowScale").value);
+    if(layer && surface && (coloredSurface!==surface || coloredScale!==scale)) {
+      layer.setBins(snowSurfaceBins(surface.values,scale));coloredSurface=surface;coloredScale=scale;
+    }
+    $("liveSnowScaleValue").textContent=`${scale}cm以上`;
+    $("liveSnowScaleLegend").setAttribute("aria-label",`推定積雪深の色：0cmは白、${scale}cm以上は黒`);
     layer?.setVisible(active && !overlay && $("liveSnowSurface").checked && !!surface?.count);layer?.setOpacity(Number($("liveSnowOpacity").value)/100);
     map.setLayoutProperty("live-snow-points","visibility",active && !overlay && $("liveSnowPoints").checked?"visible":"none");
     map.setLayoutProperty("live-snow-lines","visibility",active && (overlay || $("liveSnowContours").checked)?"visible":"none");
@@ -31,7 +38,7 @@ export function initLiveSnow(map,hooks={}) {
     if(!active || !grid || !stations.length)return;
     surface=makeSnowSurface(stations,grid);
     if(!layer){layer=createTemperatureLayer(grid,{id:"live-snow-surface",colorForBin:snowColor});map.addLayer(layer,"general-road-casing");}
-    layer.setBins(surface.bins);map.getSource("live-snow-lines").setData(surface.contours);
+    map.getSource("live-snow-lines").setData(surface.contours);
     $("map").dataset.liveSnowCells=String(surface.count);$("map").dataset.liveSnowTriangles=String(surface.triangleCount);paint();reportStations();hooks.onChange?.();
   }
   function reportStations() {
@@ -85,6 +92,7 @@ export function initLiveSnow(map,hooks={}) {
   map.on("click",event=>{if(!active || overlay || !$("liveSnowPoints").checked)return;const id=map.queryRenderedFeatures(event.point,{layers:["live-snow-points"]})[0]?.properties.id;const station=stations.find(s=>s.id===id);if(station)showStation(station);});
   $("liveSnowStation").addEventListener("change",()=>{const station=stations.find(s=>s.id===$("liveSnowStation").value);if(station){map.easeTo({center:[station.lng,station.lat],zoom:Math.max(map.getZoom(),8),duration:0});showStation(station);}else{selectedStation=null;popup?.remove();}});
   for(const id of ["liveSnowSurface","liveSnowPoints","liveSnowContours"])$(id).addEventListener("change",paint);
+  $("liveSnowScale").addEventListener("change",paint);
   $("liveSnowOpacity").addEventListener("input",paint);$("liveSnowRefresh").addEventListener("click",()=>void load(true));
   $("liveSnowSlot").addEventListener("change",()=>{selected=$("liveSnowSlot").value;void load();});
   document.addEventListener("visibilitychange",()=>{if(active && !document.hidden)void load(true);});

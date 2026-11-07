@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、実況積雪深の観測点と独自推定面にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261024-recovery1">
-    <script type="module" src="./app.js?v=20261026-risk-colors1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261107-curves-scale1">
+    <script type="module" src="./app.js?v=20261107-curves-scale1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -94,8 +94,9 @@
           <p id="liveSnowUpdated" class="live-meta"></p><p id="liveSnowNotice" class="live-notice" role="status" hidden></p>
           <div class="live-snow-legend" aria-label="積雪観測点の凡例"><span>○ 0cm</span><span>● 数値あり</span><span>● 灰色：資料なし</span></div>
           <p class="live-meta">観測点を押すと、地図内で地点名・積雪深・時刻を確認できます。</p>
-          <div class="live-snow-scale" aria-label="推定積雪深の色：0cmは白、350cm以上は濃い青"></div><p class="snow-depth-scale-label"><span>0cm</span><span>350cm以上</span></p>
-          <p class="live-meta">等値線：1・5・10・20・50・100cm。資料不足の場所は面も線も描きません。</p>
+          <label for="liveSnowScale">黒になる積雪深</label><select id="liveSnowScale"><option value="10">10cm以上</option><option value="20">20cm以上</option><option value="50" selected>50cm以上</option><option value="100">100cm以上</option><option value="200">200cm以上</option><option value="350">350cm以上</option></select>
+          <div id="liveSnowScaleLegend" class="live-snow-scale" aria-label="推定積雪深の色：0cmは白、50cm以上は黒"></div><p class="snow-depth-scale-label"><span>0cm</span><output id="liveSnowScaleValue">50cm以上</output></p>
+          <p class="live-meta">等値線：1・5・10・20・50・100cm（滑らかな推定線）。資料不足の場所は面も線も描きません。</p>
           <label for="liveSnowOpacity">推定面の濃さ <output id="liveSnowOpacityValue">75%</output></label><input id="liveSnowOpacity" type="range" min="0" max="100" value="75"><button id="liveSnowRefresh" type="button">積雪深を再読込</button>
           <details class="live-data-details"><summary>推定の範囲と限界</summary><p class="live-meta">正常な観測点3点で囲まれ、点同士が80km以内、最寄りの点が40km以内の陸域だけを直線的に補間します。欠測・参考値の点に接する範囲は補間しません。1km格子は表示の細かさで、精度ではありません。標高や山の遮蔽は補正せず、山間部の雪や局地的な違いを再現できません。0cmも1cm未満の積雪を含み得ます。</p><p class="live-meta">過去24時間の正時を選べます。10分ごと・タブ復帰時に配信を確認します。面と等値線は公式解析ではなく、路面の雪や通行可否を示しません。</p></details>
         </section>

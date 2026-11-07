@@ -62,3 +62,17 @@ test("daily forecasts keep their date across the morning today/tomorrow rollover
   assert.equal(chooseLiveSlot(rolled,{kind:"daily",id:old.id,target:liveSlotKey(old,"daily"),followLatest:true}),rolled[1]);
   assert.equal(liveSlotKey({...old,target_time:"2026-09-27T09:00:00+09:00"},"observed"),liveSlotKey({...old,target_time:"2026-09-27T09:10:00+09:00"},"observed"));
 });
+
+test("observed face bins match normal one-degree intervals without changing road classes or forecast faces",()=>{
+  const target={target_date:"2026-09-26",target_time:"2026-09-26T12:10:00+09:00"};
+  const values=[-60,-40,-39,-.01,0,.99,1,2,2.01,5,5.01,40,60,""];
+  const text=header+"\n"+values.map((v,i)=>`${((2230+i+.5)/16).toFixed(5)},35.67500,999,,${v},2026-09-26,${target.target_time}`).join("\n");
+  for(const kind of ["current","observed"]) {
+    const data=decodeLiveCSV(text,kind,target,values.length);
+    assert.deepEqual([...data.bins],[1,1,2,40,41,41,42,43,43,46,46,81,81,0]);
+    assert.deepEqual([...data.classes],[4,4,4,4,4,3,3,3,2,2,1,1,1,0]);
+    assert.equal(data.values[3],-.01);assert.equal(data.values[8],2.01);assert.ok(Number.isNaN(data.values.at(-1)));
+  }
+  const forecast=decodeLiveCSV(csv([0,.99,2.01,5.01,""]),"temp3h",slot,5);
+  assert.deepEqual([...forecast.bins],[4,3,2,1,0]);
+});

@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、実況積雪深の観測点と独自推定面にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261107-curves-scale1">
-    <script type="module" src="./app.js?v=20261107-curves-scale1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261107-display2">
+    <script type="module" src="./app.js?v=20261107-display2" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -64,13 +64,11 @@
           <div id="riskLegend" class="risk-legend" aria-label="道路だけに適用する6色の凡例"></div>
           <div id="riskWeatherLegend" aria-label="地図の面：予測天気の凡例"></div>
           <p class="risk-snow-caption">細い青線：最新の実況積雪深（独自推定）<br>等値線 1・5・10・20・50・100cm</p>
-          <p id="riskSnowUpdated" class="live-meta"></p><p id="riskSnowNotice" class="live-notice" role="status" hidden></p>
           <p id="riskStatus" class="temperature-status" role="status">予測の天気に合わせて道路条件を計算します</p>
           <p id="riskUpdated" class="live-meta"></p>
           <button id="riskRefresh" type="button">道路リスクを再読込</button>
-          <p id="riskSnowStatus" class="live-meta" role="status"></p>
           <p class="risk-note">雪は黒→紫→赤→ピンクを優先。降水後の低温はオレンジ→黄。灰色は資料不足、該当なしは道路区分色です。</p>
-          <details class="live-data-details"><summary>道路色・積雪線の見方</summary><p class="live-meta">降水ありは3時間降水量1mm以上、または天気が雨・雨または雪・雪の予報。対象期間の終わりの気温が2℃以下のとき、その時刻までの前12時間に降水があったかを見ます。対象コマを含む3時間分の4コマが対象です。0℃以下はオレンジ、0℃超〜2℃以下は黄色。降水を1コマでも確認すれば着色し、前12時間に欠けた資料があって降水を確認できない場合は灰色です。2℃超なら降水履歴を理由に灰色にしません。</p><p class="live-meta">降雪1cm・3cm・6cmは、それぞれ赤・紫・黒。雪の予報で有効な降雪量が1cm未満ならピンクです。雪の量が資料なしの場合を1cm未満として扱いません。</p><p class="live-meta">背景の色は予測天気です。積雪深の線は最新の実況観測から補間した参考値で、選択した未来の積雪深ではありません。観測範囲外や資料不足では線を描きません。道路の積雪、凍結、通行可否は判定しません。</p></details>
+          <details class="live-data-details"><summary>道路色・積雪線の見方</summary><p class="live-meta">降水ありは3時間降水量1mm以上、または天気が雨・雨または雪・雪の予報。対象期間の終わりの気温が2℃以下のとき、その時刻までの前12時間に降水があったかを見ます。対象コマを含む3時間分の4コマが対象です。0℃以下はオレンジ、0℃超〜2℃以下は黄色。降水を1コマでも確認すれば着色し、前12時間に欠けた資料があって降水を確認できない場合は灰色です。2℃超なら降水履歴を理由に灰色にしません。</p><p class="live-meta">降雪1cm・3cm・6cmは、それぞれ赤・紫・黒。雪の予報で有効な降雪量が1cm未満ならピンクです。雪の量が資料なしの場合を1cm未満として扱いません。</p><p class="live-meta">背景の色は予測天気です。白黒の積雪面・細い青線・観測点は最新の実況観測で、選択した未来の積雪深ではありません。積雪面の濃さを下げると予測天気を確認しやすくなります。観測範囲外や資料不足では面と線を描きません。道路の積雪、凍結、通行可否は判定しません。</p></details>
         </section>
         <section id="weatherControls" class="temperature-controls dynamic-controls" aria-label="天気の設定" hidden>
           <h3 id="weatherTitle">推計気象分布（天気）</h3>
@@ -85,9 +83,11 @@
           <p id="weatherDescription" class="live-meta">気象庁の天気画像をそのまま表示。無色は海域・資料なしです。10分ごと・タブ復帰時に更新を確認します。</p>
         </section>
         </div>
+        <div id="liveSnowControlsHome">
         <section id="liveSnowControls" class="temperature-controls dynamic-controls" aria-label="実況積雪深の設定" hidden>
-          <h3>実況積雪深 <span>点：観測／面：独自推定</span></h3>
-          <label for="liveSnowSlot">積雪の観測時刻（正時）</label><select id="liveSnowSlot"></select>
+          <h3><b id="liveSnowTitle">実況積雪深</b> <span>点：観測／面：独自推定</span></h3>
+          <p id="liveSnowModeNote" class="live-meta" hidden>予測時刻とは別の、最新の実況積雪深を重ねています。</p>
+          <div id="liveSnowTimeSelection"><label for="liveSnowSlot">積雪の観測時刻（正時）</label><select id="liveSnowSlot"></select></div>
           <label for="liveSnowStation">積雪の観測地点</label><select id="liveSnowStation" disabled><option value="">地図の点、または地点名から選択</option></select>
           <div class="live-snow-toggles"><label><input id="liveSnowPoints" type="checkbox" checked>観測点</label><label><input id="liveSnowSurface" type="checkbox" checked>推定面</label><label><input id="liveSnowContours" type="checkbox" checked>等値線</label></div>
           <p id="liveSnowStatus" class="temperature-status" role="status">積雪深を選ぶと読み込みます</p>
@@ -100,6 +100,7 @@
           <label for="liveSnowOpacity">推定面の濃さ <output id="liveSnowOpacityValue">75%</output></label><input id="liveSnowOpacity" type="range" min="0" max="100" value="75"><button id="liveSnowRefresh" type="button">積雪深を再読込</button>
           <details class="live-data-details"><summary>推定の範囲と限界</summary><p class="live-meta">正常な観測点3点で囲まれ、点同士が80km以内、最寄りの点が40km以内の陸域だけを直線的に補間します。欠測・参考値の点に接する範囲は補間しません。1km格子は表示の細かさで、精度ではありません。標高や山の遮蔽は補正せず、山間部の雪や局地的な違いを再現できません。0cmも1cm未満の積雪を含み得ます。</p><p class="live-meta">過去24時間の正時を選べます。10分ごと・タブ復帰時に配信を確認します。面と等値線は公式解析ではなく、路面の雪や通行可否を示しません。</p></details>
         </section>
+        </div>
         <section id="liveControls" class="temperature-controls" aria-label="実況気温の設定" hidden>
           <label id="liveKindLabel" for="liveKind">表示する実況気温</label>
           <select id="liveKind"><option value="current">実況気温（アメダス10分値）</option><option value="observed">実況の日最低・日最高</option></select>
@@ -111,8 +112,9 @@
           <p id="liveUpdated" class="live-meta"></p>
           <details class="live-data-details"><summary>データ・更新について</summary><p id="liveSource" class="live-meta"></p>
           <p id="liveUpdateNote" class="live-meta">天気分布予報プラスと同じ数値を使用。10分ごと・タブ復帰時に更新を確認します。実況の最新枠を選択中は最新時刻へ進み、過去の対象を選んだ場合はその対象を保ちます。</p></details>
-          <div id="liveLegend" class="road-temperature-legend" aria-label="実況気温面の色分け"><span><i class="road-red" aria-hidden="true"></i>0℃以下</span><span><i class="road-orange" aria-hidden="true"></i>0℃超〜2℃</span><span><i class="road-yellow" aria-hidden="true"></i>2℃超〜5℃</span><span><i class="live-warm" aria-hidden="true"></i>5℃超</span></div>
-          <p class="live-meta">気温面と道路を同じ閾値で着色。欠測の面は無色・道路は灰色です。平年の積雪はこのモードでは表示しません。</p>
+          <div id="liveObservedLegend" class="temperature-legend" aria-label="実況気温面の色分け：平年値と同じ1℃階級"><canvas id="liveTemperatureGradient" class="live-legend-gradient" width="324" height="18" aria-label="寒い紫・青から、0度付近の薄緑、暖かい黄・赤へ"></canvas><div class="legend-ticks"><span>−40</span><span>−20</span><span>0</span><span>20</span><span>40℃</span></div><small>1℃ごとの色分け・欠測／未収録は無色</small></div>
+          <div id="liveLegend" class="road-temperature-legend" aria-label="予測気温面の色分け" hidden><span><i class="road-red" aria-hidden="true"></i>0℃以下</span><span><i class="road-orange" aria-hidden="true"></i>0℃超〜2℃</span><span><i class="road-yellow" aria-hidden="true"></i>2℃超〜5℃</span><span><i class="live-warm" aria-hidden="true"></i>5℃超</span></div>
+          <p id="liveColorNote" class="live-meta">気温の面は平年値モードと同じ1℃ごとの配色。道路は従来の気温区分で着色します。</p>
           <p id="livePoint" class="temperature-point">地図をクリックすると、その格子の気温と道路の色区分を確認できます。</p><button id="clearLivePoint" type="button" hidden>地点選択を解除</button>
         </section>
         <section id="normalControls" class="temperature-controls" aria-labelledby="temperature-title">

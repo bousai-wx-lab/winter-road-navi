@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {expandGrid} from "../temperature-layer.js";
-import {snowHour,snowMapKey,decodeSnowStations,snowStationLabel,snowTriangles,triangleSnow,makeSnowSurface,snowContours,snowSurfaceLabel} from "../live-snow-data.js";
+import {snowHour,snowMapKey,decodeSnowStations,snowStationLabel,snowTriangles,triangleSnow,makeSnowSurface,snowContours,snowSurfaceLabel,snowSurfaceBins,snowColor,LIVE_SNOW_SCALES} from "../live-snow-data.js";
 
 const hour="2026-01-22T20:00:00+09:00";
 const station=(id,lng,lat,value)=>({id,name:id,lng,lat,value,quality:0,usable:value!==null});
@@ -56,4 +56,42 @@ test("contours lie on their stated depths and never cross a missing square",()=>
     assert.ok(Math.abs(100*(lng-137)+200*(lat-37)-feature.properties.depth)<1e-4);
   }
   assert.equal(snowContours({...grid,count:4,rows:Uint16Array.from([4440,4440,4441,4441]),cols:Uint16Array.from([10960,10961,10960,10961])},Float32Array.from([0,10,NaN,10])).features.length,0);
+});
+
+test("selectable snow scales reveal shallow snow, saturate at the chosen depth and keep missing cells transparent",()=>{
+  const values=Float32Array.from([NaN,0,1,5,10,20,50,100,200,350]);
+  for(const scale of LIVE_SNOW_SCALES) {
+    const bins=snowSurfaceBins(values,scale);
+    assert.equal(bins[0],0);assert.equal(snowColor(bins[1]),"#ffffff");
+    assert.equal(snowColor(bins[values.indexOf(scale)]),"#000000");
+    for(let i=2;i<bins.length;i++)assert.ok(bins[i]>=bins[i-1]);
+  }
+  assert.ok(snowSurfaceBins(values,10)[3]>snowSurfaceBins(values,50)[3]);
+  assert.notEqual(snowColor(snowSurfaceBins(values,10)[2]),"#ffffff","1cm is visible at the shallowest scale");
+  assert.equal(snowColor(snowSurfaceBins(Float32Array.of(25),50)[0]),"#808080");
+  assert.throws(()=>snowSurfaceBins(values,0));assert.throws(()=>snowSurfaceBins(values,75));
+});
+
+test("connected summit contours are rounded closed curves without changing the underlying estimates",()=>{
+  const runs=[];for(let row=4440;row<4449;row++)runs.push(row,10960,9);
+  const grid=expandGrid({cell_count:81,runs});
+  const values=Float32Array.from(grid.rows,(row,i)=>Math.max(0,20-4*(Math.abs(row-4444)+Math.abs(grid.cols[i]-10964))));
+  const before=Array.from(values),contours=snowContours(grid,values);
+  assert.deepEqual(Array.from(values),before);
+  const feature=contours.features.find(f=>f.properties.depth===10);
+  assert.equal(feature.geometry.coordinates.length,1);
+  const line=feature.geometry.coordinates[0];assert.deepEqual(line[0],line.at(-1));
+  assert.ok(line.length>30);
+  for(let i=1;i<line.length-1;i++) {
+    const a=[(line[i][0]-line[i-1][0])*80,(line[i][1]-line[i-1][1])*120];
+    const b=[(line[i+1][0]-line[i][0])*80,(line[i+1][1]-line[i][1])*120];
+    const length=Math.hypot(...a)*Math.hypot(...b);
+    if(length>1e-15)assert.ok((a[0]*b[0]+a[1]*b[1])/length>.85,"the former sharp corners are rounded");
+  }
+  const missing=values.slice();
+  for(let i=0;i<missing.length;i++)if(grid.cols[i]===10964)missing[i]=NaN;
+  for(const f of snowContours(grid,missing).features)for(const part of f.geometry.coordinates) {
+    const xs=part.map(p=>p[0]*80-.5);
+    assert.ok(Math.max(...xs)<=10963+1e-7 || Math.min(...xs)>=10965-1e-7,"no curve bridges the missing column");
+  }
 });

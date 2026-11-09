@@ -33,11 +33,13 @@ export function initLiveSnow(map,hooks={}) {
   const hatch=missingHatch();
   map.addImage("live-snow-missing-hatch",hatch.getContext("2d").getImageData(0,0,hatch.width,hatch.height),{pixelRatio:2});
   const layers=["live-snow-point-halos","live-snow-points","live-snow-missing","live-snow-values"];
-  map.addLayer({id:layers[0],type:"circle",source:"live-snow-points",layout:{visibility:"none"},paint:{"circle-radius":zoomSize(POINT_SIZES.observed.halo),"circle-color":"#ffffff"}});
+  // Both fallback road colours and the risk colours must draw over snow markers.
+  const beforeRoads="general-road-casing";
+  map.addLayer({id:layers[0],type:"circle",source:"live-snow-points",layout:{visibility:"none"},paint:{"circle-radius":zoomSize(POINT_SIZES.observed.halo),"circle-color":"#ffffff"}},beforeRoads);
   const colors=["step",["get","value"],LIVE_SNOW_BANDS[0].color,...LIVE_SNOW_BANDS.slice(1).flatMap(band=>[band.min,band.color])];
-  map.addLayer({id:layers[1],type:"circle",source:"live-snow-points",layout:{visibility:"none"},paint:{"circle-radius":zoomSize(POINT_SIZES.observed.radius),"circle-color":["case",["get","available"],colors,MISSING_FILL],"circle-stroke-color":"#213e53","circle-stroke-width":1.2}});
-  map.addLayer({id:layers[2],type:"symbol",source:"live-snow-points",filter:["!",["get","available"]],layout:{visibility:"none","icon-image":"live-snow-missing-hatch","icon-size":zoomSize(POINT_SIZES.observed.radius.map(r=>r/10)),"icon-allow-overlap":true,"icon-ignore-placement":true}});
-  map.addLayer({id:layers[3],type:"symbol",source:"live-snow-points",minzoom:LIVE_SNOW_LABEL_ZOOM,filter:["get","available"],layout:{visibility:"none","text-field":["to-string",["get","value"]],"text-font":["sans-serif"],"text-size":12,"text-anchor":"top","text-offset":[0,1.25],"text-padding":2},paint:{"text-color":"#143c54","text-halo-color":"#ffffff","text-halo-width":2}});
+  map.addLayer({id:layers[1],type:"circle",source:"live-snow-points",layout:{visibility:"none"},paint:{"circle-radius":zoomSize(POINT_SIZES.observed.radius),"circle-color":["case",["get","available"],colors,MISSING_FILL],"circle-stroke-color":"#213e53","circle-stroke-width":1.2}},beforeRoads);
+  map.addLayer({id:layers[2],type:"symbol",source:"live-snow-points",filter:["!",["get","available"]],layout:{visibility:"none","icon-image":"live-snow-missing-hatch","icon-size":zoomSize(POINT_SIZES.observed.radius.map(r=>r/10)),"icon-allow-overlap":true,"icon-ignore-placement":true}},beforeRoads);
+  map.addLayer({id:layers[3],type:"symbol",source:"live-snow-points",minzoom:LIVE_SNOW_LABEL_ZOOM,filter:["get","available"],layout:{visibility:"none","text-field":["to-string",["get","value"]],"text-font":["sans-serif"],"text-size":12,"text-anchor":"top","text-offset":[0,1.25],"text-padding":2},paint:{"text-color":"#143c54","text-halo-color":"#ffffff","text-halo-width":2}},beforeRoads);
   const legend=$("liveSnowPointLegend");
   for(const band of [{label:"資料なし",color:null},...LIVE_SNOW_BANDS]) {
     const item=document.createElement("span"),key=document.createElement("i"),label=document.createElement("span");

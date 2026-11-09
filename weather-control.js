@@ -4,6 +4,7 @@ import {forecastTickLabel} from "./forecast-timeline.js";
 
 const $=id=>document.getElementById(id);
 export function initWeather(map,hooks={}) {
+  const beforeLayer=hooks.beforeLayer ?? "general-road-casing";
   let active=false,mode="observed",view="weather",slots=[],selected=null,token=0,abort=null,timer=null,current=null;
   const saved={observed:null,forecast:null},sources=[],layers=[];
   const product=()=>weatherProduct(mode,view);
@@ -58,7 +59,7 @@ export function initWeather(map,hooks={}) {
       for(const z of [4,6,8,10]) {
         const tile=weatherTile(mode,slot,z,view),id=`weather-${request}-${z}`;sources.push(id);layers.push(id);
         map.addSource(id,{type:"raster",tiles:[tile.url],tileSize:tile.tileSize,minzoom:tile.nativeZoom,maxzoom:tile.nativeZoom,bounds:[122,20,154,48],attribution:'<a href="https://www.jma.go.jp/bosai/'+(mode==="observed"?'suikei':'wdist')+'/" target="_blank" rel="noopener noreferrer">気象庁の'+requestProduct.name+'</a>'});
-        map.addLayer({id,type:"raster",source:id,minzoom:z===4?0:z-1,...(z<10?{maxzoom:z+1}:{}),paint:{"raster-opacity":Number($("weatherOpacity").value)/100,"raster-resampling":"nearest","raster-fade-duration":0}},"general-road-casing");
+        map.addLayer({id,type:"raster",source:id,minzoom:z===4?0:z-1,...(z<10?{maxzoom:z+1}:{}),paint:{"raster-opacity":Number($("weatherOpacity").value)/100,"raster-resampling":"nearest","raster-fade-duration":0}},beforeLayer);
       }
       $("map").dataset.weatherMode=mode;$("map").dataset.weatherElement=requestProduct.element;$("map").dataset.weatherTarget=slot.end;$("map").dataset.weatherBase=slot.base;
       hooks.onLayersReady?.();

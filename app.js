@@ -4,8 +4,8 @@ import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=2
 import { createRoadTemperature } from "./road-temperature.js?v=20261023-zoomcolor1";
 import { initSnow } from "./snow-control.js?v=20260926-weather-snow1";
 import { initLiveTemperature } from "./live-temperature-control.js?v=20261107-display2";
-import { initWeather } from "./weather-control.js?v=20261107-display2";
-import { initLiveSnow } from "./live-snow-control.js?v=20261109-marker1";
+import { initWeather } from "./weather-control.js?v=20261109-roads1";
+import { initLiveSnow } from "./live-snow-control.js?v=20261109-roads1";
 import { initForecastRisk } from "./forecast-risk-control.js?v=20261026-risk-colors1";
 import { RISK_RULES } from "./forecast-risk-data.js?v=20261026-risk-colors1";
 import { initForecastTimeline } from "./forecast-timeline.js?v=20261005-timeline1";
@@ -250,8 +250,8 @@ function initializeControllers() {
     onUnavailable(state){if(displayMode!=="forecast" || displayView!=="risk")return;roadTemperature?.clear();setRoadTemperatureState(state);},
     onChange:refreshTooltip,
   });
-  weather = initWeather(map,{onChange(){if(displayMode==="forecast" && displayView==="risk"){risk.setTarget(weather?.current());liveSnow?.setForecastTarget(weather?.current());}refreshTooltip();forecastTimeline.render();}});
   liveSnow = initLiveSnow(map,{onChange:refreshTooltip});
+  weather = initWeather(map,{beforeLayer:"live-snow-point-halos",onChange(){if(displayMode==="forecast" && displayView==="risk"){risk.setTarget(weather?.current());liveSnow?.setForecastTarget(weather?.current());}refreshTooltip();forecastTimeline.render();}});
   liveTemperature = initLiveTemperature(map, {
     onChange(){forecastTimeline.render();},
     onData(shown) {

@@ -44,7 +44,7 @@ export function createMapStyle() {
       },
       overview: {
         type: "geojson",
-        data: new URL("./assets/coastline-overview.geojson", import.meta.url).href,
+        data: new URL("./assets/coastline-overview.json", import.meta.url).href,
         maxzoom: 4,
         attribution: '<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">地理院地図Vector</a>',
       },

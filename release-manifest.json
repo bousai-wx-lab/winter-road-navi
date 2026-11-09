@@ -44,8 +44,8 @@
     },
     {
       "bytes": 89227,
-      "mime_type": "application/octet-stream",
-      "path": "assets/coastline-overview.geojson",
+      "mime_type": "application/json",
+      "path": "assets/coastline-overview.json",
       "sha256": "d380a9447c9c7c0255a91eed6042157baf08b863779809b893d506559f917688"
     },
     {
@@ -6187,10 +6187,10 @@
       "sha256": "c46e5c60df80861155f3520b5c912e09c2c71674a13a8b2c48cdc7d6a6470177"
     },
     {
-      "bytes": 438511,
+      "bytes": 438508,
       "mime_type": "application/json",
       "path": "release-allowlist.json",
-      "sha256": "9332d517d32440af9d540364884433bcc112c3e5f566016335216bace56c6d63"
+      "sha256": "b1a2a645e7071c0f38d8f6f4c0cbe8734facf12f4ae12a61731c226b0973a4eb"
     },
     {
       "bytes": 642,
@@ -6205,10 +6205,10 @@
       "sha256": "a7e39df38e51d0f3f85e7ad8d6e459aac9859c1a08666836a2fa3d82fe606004"
     },
     {
-      "bytes": 4967,
+      "bytes": 4964,
       "mime_type": "text/javascript",
       "path": "road-style.js",
-      "sha256": "65eda59574a4f4298cb2549970bfbf4e9eedca420b9f342278eec2f6eead589a"
+      "sha256": "e65e6a38efc8f67fb9fdf3c25f3ccb02449e90b77b9bf098d78a1e390cc82fbf"
     },
     {
       "bytes": 20565,
@@ -6445,7 +6445,7 @@
       "sha256": "938219194a6978ac72eb0dfe0f1361106aaf59be4ab44d4c81c4c64e79fe9224"
     }
   ],
-  "generated_at_utc": "2026-11-09T23:09:49+00:00",
+  "generated_at_utc": "2026-11-09T23:20:23+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

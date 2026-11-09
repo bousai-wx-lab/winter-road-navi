@@ -1,10 +1,8 @@
 import {createTemperatureLayer, lookupCell, paletteColor} from "./temperature-layer.js";
-import {roadClassLabel} from "./temperature-display-data.js";
-import {LIVE_ROOT,LIVE_KINDS,LIVE_POLL_MS,liveSlots,liveFile,liveSlotKey,chooseLiveSlot,decodeLiveCSV,timeLabel,utcTime,liveFreshness} from "./live-temperature-data.js?v=20261107-display2";
+import {LIVE_ROOT,LIVE_KINDS,LIVE_POLL_MS,liveSlots,liveFile,liveSlotKey,chooseLiveSlot,decodeLiveCSV,timeLabel,utcTime,liveFreshness} from "./live-temperature-data.js?v=20261109-panel3";
 import {forecastTickLabel} from "./forecast-timeline.js";
 
 const $=id=>document.getElementById(id);
-const FACE_COLORS=["#00000000","#b8dfd0","#e8bd20","#f08020","#da3434"];
 const MODE_KINDS={observed:["current","observed"],forecast:["temp3h","daily"]};
 export function initLiveTemperature(map,hooks={}) {
   let active=false,request=0,abort=null,timer=null,loading=false;
@@ -21,21 +19,16 @@ export function initLiveTemperature(map,hooks={}) {
       ({kind,selectedId,selectedTarget,followingLatest}=selections[next]);
       mode=next;slots=[];
     }
-    kindSelect.replaceChildren(...MODE_KINDS[mode].map(key=>new Option(LIVE_KINDS[key].label,key)));
+    kindSelect.replaceChildren(...MODE_KINDS[mode].map(key=>new Option(({current:"現在の気温",observed:"日最低・日最高",temp3h:"3時間ごとの気温",daily:"日最低・日最高"})[key],key)));
     kindSelect.value=kind;
     const label=mode==="observed"?"実況":"予測";
     $("liveControls").setAttribute("aria-label",`${label}気温の設定`);
-    $("liveKindLabel").textContent=`表示する${label}気温`;
-    $("liveLegend").setAttribute("aria-label",`${label}気温面の色分け`);
-    $("liveLegend").hidden=mode==="observed";
-    $("liveObservedLegend").hidden=mode!=="observed";
-    $("liveColorNote").textContent=mode==="observed"
-      ? "気温の面は平年値モードと同じ1℃ごとの配色。道路は従来どおり0・2・5℃で着色します。欠測の面は無色・道路は灰色です。"
-      : "気温面と道路を同じ閾値で着色。欠測の面は無色・道路は灰色です。平年の積雪はこのモードでは表示しません。";
+    $("liveKindLabel").textContent="気温の種類";
+    $("liveColorNote").textContent="気温の面は全モード共通の1℃ごとの配色。道路は0・2・5℃で着色します。欠測の面は無色・道路は灰色です。";
     $("liveUpdateNote").textContent="天気分布予報プラスと同じ数値を使用。10分ごと・タブ復帰時に更新を確認します。"+(mode==="observed"?"実況の最新枠を選択中は最新時刻へ進み、過去の対象を選んだ場合はその対象を保ちます。":"選択した予想の対象日時を保ちます。実況値は実況値モードで確認できます。");
     controls();
   }
-  function setStatus(text,state) {status.textContent=text;status.dataset.state=state;hooks.onChange?.();}
+  function setStatus(text,state) {status.textContent=text;status.dataset.state=state;$("liveRefresh").hidden=state!=="error";hooks.onChange?.();}
   function controls() {
     const index=slots.findIndex(s=>s.id===selectedId);
     $("livePrevious").disabled=index<=0;
@@ -46,7 +39,7 @@ export function initLiveTemperature(map,hooks={}) {
   function valueAt(lng,lat) {
     if(!shown) return {label:loading?"気温を準備中":"気温を表示できません"};
     const index=lookupCell(grid,lng,lat),value=index<0?NaN:shown.data.values[index];
-    return {label:Number.isFinite(value)?`${value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}℃ · ${roadClassLabel(shown.data.classes[index])}`:"気温なし",value,roadClass:index<0?0:shown.data.classes[index]};
+    return {label:Number.isFinite(value)?`${value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}℃`:"気温なし",value,roadClass:index<0?0:shown.data.classes[index]};
   }
   function refreshPoint() {
     if(!pinned) return;
@@ -115,11 +108,11 @@ export function initLiveTemperature(map,hooks={}) {
         if(layer && map.getLayer(layer.id)) map.removeLayer(layer.id);
         if(!same)grid=data.grid;
         layerMode=mode;
-        layer=createTemperatureLayer(grid,{id:"live-temperature",colorForBin:observed?paletteColor:bin=>FACE_COLORS[bin] || FACE_COLORS[1]});
+        layer=createTemperatureLayer(grid,{id:"live-temperature",colorForBin:paletteColor});
         map.addLayer(layer,"general-road-casing");
       }
       data.grid=grid;layer.setBins(data.bins);
-      const title=kind==="daily" || kind==="observed"?`${observed?"実況":"予想"}${slot.element==="min"?"最低":"最高"}気温`:LIVE_KINDS[kind].label;
+      const title=kind==="daily" || kind==="observed"?`${observed?"実況":"予想"}${slot.element==="min"?"最低":"最高"}気温`:observed?"実況気温":"予想気温";
       shown={data,slot,label,title};loading=false;
       const day=slot.target_date.slice(5,10);
       hooks.onData?.({...shown,day});paint();
@@ -156,6 +149,7 @@ export function initLiveTemperature(map,hooks={}) {
       if(value) {void load(true);timer=setInterval(()=>{if(!document.hidden && !loading)void load(true);},LIVE_POLL_MS);}
       else {delete $("map").dataset.liveTarget;delete $("map").dataset.liveUpdated;}
     },
+    timing:()=>shown?{issued:shown.slot.basetime?utcTime(shown.slot.basetime):null,observed:shown.slot.target_time || shown.slot.target_date}:null,
     tooltipAt:valueAt,
     title:()=>shown?.title || LIVE_KINDS[kind].label,
     label:()=>shown?.label || "対象時刻を準備中",

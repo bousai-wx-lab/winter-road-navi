@@ -19,10 +19,10 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "bytes": 40281,
+      "bytes": 40189,
       "mime_type": "text/markdown",
       "path": "README.md",
-      "sha256": "1600f0abc856937a319b196506e75986d708c0415d88be3f6344d575247a1dc4"
+      "sha256": "0253990ad301335d3582f99d1c26d53e08bf6c8f845a7f8806b4ed5485ff6946"
     },
     {
       "bytes": 1298,
@@ -31,10 +31,10 @@
       "sha256": "732472f1859e857b5e764b2f8765294cbfedf8cd3adac2f422d3d5436efb61ce"
     },
     {
-      "bytes": 22033,
+      "bytes": 22832,
       "mime_type": "text/javascript",
       "path": "app.js",
-      "sha256": "589a720d63a524a029e67d759d7b630238cae0cfef86efcea1f9a1c599180422"
+      "sha256": "044dae485b454e8ff2f51dfde4ee9a5d3cba91fbe139dca3988b30b9d5e42a4f"
     },
     {
       "bytes": 266670,
@@ -6121,22 +6121,22 @@
       "sha256": "7704fbd5a1bcee94880257656eaf7b3baf0425e82ad785a27ba1fc52b1bf299a"
     },
     {
-      "bytes": 6587,
+      "bytes": 6640,
       "mime_type": "text/javascript",
       "path": "forecast-risk-control.js",
-      "sha256": "b4515897bfb16a4c151f972ba565e53ab1002e63492b30b7e34270355c0dee17"
+      "sha256": "47b4818a2c89828a294aebd5ed3e10e3485e4beab7d499b62164429288b6e0f9"
     },
     {
-      "bytes": 8430,
+      "bytes": 8553,
       "mime_type": "text/javascript",
       "path": "forecast-risk-data.js",
-      "sha256": "6eb3573bc8d1abbc680dba724406ec24e185debbb697e927434a8ac2bbad47f0"
+      "sha256": "07e062733c24e1b61aa3f353cd654c03285893e409ad9bdd884578b6471a8423"
     },
     {
-      "bytes": 5707,
+      "bytes": 5227,
       "mime_type": "text/javascript",
       "path": "forecast-snow-data.js",
-      "sha256": "f23e43c4b29a6c483d6e8791b9b1f2a13bf26d3cff1e112cd1c771c4a2a31374"
+      "sha256": "1d069131d150d12a217646a5e9e9b26f2ab89ca7427700ecee316e0f6c8d2c30"
     },
     {
       "bytes": 3113,
@@ -6145,16 +6145,16 @@
       "sha256": "2d391e0a3a79b72c578970efc8d862dddd809bd3de2c88ccfe7bbde34f0789bf"
     },
     {
-      "bytes": 31188,
+      "bytes": 27572,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "72e41ecd2ac3a162fd4df24d69431015b3c0d2c5e58a78b898013af854594f4c"
+      "sha256": "89dba684d5440cf2eee4211e162552f73912db99af691bccdaa25f51acf2308a"
     },
     {
-      "bytes": 16132,
+      "bytes": 16240,
       "mime_type": "text/javascript",
       "path": "live-snow-control.js",
-      "sha256": "e56debea5c85034806903902247eda52f5837aa0af215f74b4edb1d8e5f245a4"
+      "sha256": "97d2bbac50a1e00c305537e3612167e9b29de8e6676a7e1b4a5c5fad779129d9"
     },
     {
       "bytes": 3380,
@@ -6163,16 +6163,16 @@
       "sha256": "394a6d42a26ba67fab1ecc4523217bf6c2b171cb035fdad129b287bce5bd8852"
     },
     {
-      "bytes": 12049,
+      "bytes": 11725,
       "mime_type": "text/javascript",
       "path": "live-temperature-control.js",
-      "sha256": "328a8b0d5af700f92b259509afd3c6ee8fb390ab01b641cbcfa8d48925f98119"
+      "sha256": "b7c1dd91011ed1e6c748fa76d01f0ff87f634546ed91d66204d82ed041315598"
     },
     {
-      "bytes": 8460,
+      "bytes": 8377,
       "mime_type": "text/javascript",
       "path": "live-temperature-data.js",
-      "sha256": "9aeeb35c7746d32efbcf10cfe9381ab9be02e9a0652774749ae4fb68c743867f"
+      "sha256": "065e994a945a0acb09f9806868081ac61ede9b1d0e1c57473f87a68ad6c88d72"
     },
     {
       "bytes": 6047,
@@ -6265,10 +6265,10 @@
       "sha256": "fd6ed230929021b14a0d1c9e340a3bbb38410b7614a06c7d64f9e10fd27336a8"
     },
     {
-      "bytes": 12558,
+      "bytes": 12562,
       "mime_type": "text/javascript",
       "path": "snow-control.js",
-      "sha256": "7faeb39b05d5c157fb94a2e3617653725c890d0eb008d34879b7a6b8c5e0e65f"
+      "sha256": "b3ea44e36bc6a1d3689a7c175a373752d6171074eaae80da24fbda4d164945a0"
     },
     {
       "bytes": 5568,
@@ -6277,16 +6277,16 @@
       "sha256": "f91d96afd3b0ec9d69c5aa41ad3fe6414f8abc26b77feacce13b010ca9762929"
     },
     {
-      "bytes": 32941,
+      "bytes": 27367,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "278aec59bb655aac48bc4ce508aa4e9261b0f655f0d0128a197a6e90d4fe26a7"
+      "sha256": "d3d1cb3e1e414e57aefc2f3c326205aca3f4544f9a2dea386c098876e9f10e24"
     },
     {
-      "bytes": 22774,
+      "bytes": 22733,
       "mime_type": "text/javascript",
       "path": "temperature-control.js",
-      "sha256": "655db8918928dfb5a8123ee981d42450ad4a8783cd2d7772eed57ed6573fdbe1"
+      "sha256": "6d71e50c290a2cd5744dd6e605f94045aff7b8b0bd914bfe742795cf77c608e1"
     },
     {
       "bytes": 3182,
@@ -6301,16 +6301,16 @@
       "sha256": "f7cceac1b76fc45f9f69ae65ff16c11e9a4025c48ed0bf3bc0f685e9886f828a"
     },
     {
-      "bytes": 9505,
+      "bytes": 10024,
       "mime_type": "text/javascript",
       "path": "tests/forecast-risk.test.mjs",
-      "sha256": "4e8b39acd47914fbce40a9dcacf578a2e87eadd87a1ce4a6f2b51dd961543815"
+      "sha256": "ff49cba38e99530c15149049c984064fb7f9fd6d336316b9aae3a3f969f6f1dc"
     },
     {
-      "bytes": 7097,
+      "bytes": 7761,
       "mime_type": "text/javascript",
       "path": "tests/forecast-snow.test.mjs",
-      "sha256": "73f2a29984d8996571d99d7a4d85c67a09cc3cf06e4b778f0ee4196aabc0f5bb"
+      "sha256": "e4c9ebd683adb98cdd9795a8381f10346d9b3ce732e219086eb8b3c2cb6ea9ca"
     },
     {
       "bytes": 8804,
@@ -6319,10 +6319,10 @@
       "sha256": "eb4d69072fb41b2c97380924eaf016e7ddec2f91b6f15cef689c59fbbadb7ce6"
     },
     {
-      "bytes": 6940,
+      "bytes": 6810,
       "mime_type": "text/javascript",
       "path": "tests/live-control.test.mjs",
-      "sha256": "4b673dc212fecd542eb4fe94e32ef8197911183b4572ff4c187ec46e295302e3"
+      "sha256": "f3dabc44043f703e000196e3ed06235f9bf8b3339853f57b360df0972fb3936a"
     },
     {
       "bytes": 2818,
@@ -6331,10 +6331,10 @@
       "sha256": "856845069e76412a1d4fa26d984a1c3e1d06634ab4f163736bc9f17988267cd3"
     },
     {
-      "bytes": 5646,
+      "bytes": 5697,
       "mime_type": "text/javascript",
       "path": "tests/live-temperature.test.mjs",
-      "sha256": "5d0719ae6a73e67fdc4921f781b951649429478415b1c1a0ed2abedbf259da67"
+      "sha256": "a3434479440beddb8e0baa5907f20126a730fcb8715131f24d926d336c247234"
     },
     {
       "bytes": 5590,
@@ -6343,10 +6343,10 @@
       "sha256": "6588d25c68ab6b24f169a7f8d633177d1be65f6699ff48edc29e3994fb25b3f6"
     },
     {
-      "bytes": 4863,
+      "bytes": 4842,
       "mime_type": "text/javascript",
       "path": "tests/page-contract.test.mjs",
-      "sha256": "53eb23212b93694ae7f4a7d90c16fd410ee854a51bdc14dc60aff88c861c018b"
+      "sha256": "8980ad7150b96239999f83ab9d93024cf775aec81c94a4367e828f6537f530f1"
     },
     {
       "bytes": 6090,
@@ -6427,10 +6427,10 @@
       "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
     },
     {
-      "bytes": 7680,
+      "bytes": 7735,
       "mime_type": "text/javascript",
       "path": "weather-control.js",
-      "sha256": "1d9e2905bce5b47bb1676d67aee90d8dca692039054455a1c267528bb4a1f2f8"
+      "sha256": "590ff0d05441e0e840aeedc380a57251b43a63259a7ff35412bd1fa1f9c63c3a"
     },
     {
       "bytes": 3503,
@@ -6439,7 +6439,7 @@
       "sha256": "938219194a6978ac72eb0dfe0f1361106aaf59be4ab44d4c81c4c64e79fe9224"
     }
   ],
-  "generated_at_utc": "2026-11-09T06:39:44+00:00",
+  "generated_at_utc": "2026-11-09T13:28:59+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

@@ -16,19 +16,19 @@ test("current temperature uses inclusive 0/2°C, including precipitation six hou
   assert.deepEqual(RISK_RULES.slice(2).map(r=>r.color),["#ffe032","#ff8c24","#f35ea7","#e53232","#8d38c9","#000000"]);
 });
 
-test("snow retains priority; unknown history is not dry, but confirmed rain is sufficient",()=>{
+test("snow retains priority; missing amount/history contributes zero while confirmed rain remains sufficient",()=>{
   for(const temperature of [-2,NaN,12]) {
     for(const [snow,expected] of [[0,4],[1,5],[2,5],[3,6],[5,6],[6,7]])assert.equal(riskClass(5,1,snow,temperature,[null,null,null,null]),expected);
   }
-  assert.equal(riskClass(1,0,0,1,[null,...dry().slice(1)]),0);
+  assert.equal(riskClass(1,0,0,1,[null,...dry().slice(1)]),1);
   assert.equal(riskClass(3,1,0,1,[wet()[0],null,null,null]),2);
   assert.equal(riskClass(1,0,0,0,[null,null,wet()[0],null]),3);
   assert.equal(riskClass(1,0,0,1,[{weather:3,precipitation:-1},...dry().slice(1)]),2,"rain below 1 mm also establishes wet conditions");
-  assert.equal(riskClass(1,0,0,1,[{weather:-1,precipitation:0},...dry().slice(1)]),0);
+  assert.equal(riskClass(1,0,0,1,[{weather:-1,precipitation:0},...dry().slice(1)]),1);
   assert.equal(riskClass(1,0,0,NaN,dry()),0);
-  assert.equal(riskClass(5,1,-1,1,wet()),0);
+  assert.equal(riskClass(5,1,-1,1,wet()),4);
   assert.equal(riskClass(-1,0,0,1,wet()),0);
-  assert.equal(riskClass(1,-1,0,1,wet()),0);
+  assert.equal(riskClass(1,-1,0,1,wet()),2);
 });
 
 const square=(x0,y0,x1,y1)=>[[x0,y0],[x1,y0],[x1,y1],[x0,y1],[x0,y0]];
@@ -135,4 +135,13 @@ test("changing targets while a shared history request is pending cannot strand l
     assert.equal(get("map").dataset.riskTarget,"2026-10-23T09:00:00Z");
     controller.setActive(false);
   } finally {release();globalThis.document=oldDocument;globalThis.fetch=oldFetch;}
+});
+
+test("missing forecast amounts do not grey dry roads or erase known snow",()=>{
+  assert.equal(riskClass(1,-1,-1,-2,[null,null,null,null]),1);
+  assert.equal(riskClass(1,-1,3,-2,[null,null,null,null]),6);
+  assert.equal(riskClass(1,-1,-1,-2,[null,wet()[0],null,null]),3);
+  assert.equal(riskClass(1,-1,-1,NaN,dry()),0);
+  const m=manifest();m.layers.precip3h.slots=[];m.layers.snow3h.slots=[];
+  const slots=riskSlots(m,target);assert.equal(slots.precip3h,null);assert.equal(slots.snow3h,null);
 });

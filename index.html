@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、白縁の丸で示す実況積雪深や、実況に予想降雪を加算した簡易積雪目安にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261109-marker1">
-    <script type="module" src="./app.js?v=20261109-roads1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261109-panel1">
+    <script type="module" src="./app.js?v=20261109-panel1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -42,162 +42,89 @@
 
     <main class="tool-layout">
       <aside class="control-panel" aria-label="気温・積雪・道路表示の設定">
-        <div class="control-heading">
-          <div>
-            <p class="eyebrow">CLIMATE &amp; ROADS</p>
-            <h2 id="panelHeading">平年の寒さ・雪と道路</h2>
-          </div>
-          <button id="panelToggle" type="button" aria-expanded="true">詳細を閉じる</button>
-        </div>
-
+        <div class="control-heading"><h2 id="panelHeading">地図の表示</h2><button id="panelToggle" type="button" aria-expanded="true" aria-controls="panelBody">設定を閉じる</button></div>
         <div class="display-mode-buttons" role="group" aria-label="表示モード">
-          <button id="normalMode" type="button" aria-pressed="true" disabled>平年値モード</button>
-          <button id="liveMode" type="button" aria-pressed="false" disabled>実況値モード</button>
-          <button id="forecastMode" type="button" aria-pressed="false" disabled>予測値モード</button>
+          <button id="normalMode" type="button" aria-pressed="true" disabled>平年値</button><button id="liveMode" type="button" aria-pressed="false" disabled>実況値</button><button id="forecastMode" type="button" aria-pressed="false" disabled>予測値</button>
         </div>
-        <div id="liveViewControls" class="live-view-controls" hidden>
-          <label for="liveView">表示する情報</label><select id="liveView"><option value="temperature">気温</option><option value="weather">天気</option><option value="snow">積雪深</option></select>
-        </div>
-        <div id="forecastCompositeControls">
-        <section id="riskControls" class="temperature-controls dynamic-controls" aria-label="道路リスクの設定と凡例" hidden>
-          <h3>道路のリスク色 <span>独自区分</span></h3>
-          <div id="riskLegend" class="risk-legend" aria-label="道路だけに適用する6色の凡例"></div>
-          <div id="riskWeatherLegend" aria-label="地図の面：予測天気の凡例"></div>
-          <p class="risk-snow-caption">白縁の丸：実況＋予想降雪の簡易積雪目安</p>
-          <p id="riskStatus" class="temperature-status" role="status">予測の天気に合わせて道路条件を計算します</p>
-          <p id="riskUpdated" class="live-meta"></p>
-          <button id="riskRefresh" type="button">道路リスクを再読込</button>
-          <p class="risk-note">雪は黒→紫→赤→ピンクを優先。降水後の低温はオレンジ→黄。灰色は資料不足、該当なしは道路区分色です。</p>
-          <details class="live-data-details"><summary>道路色・積雪の見方</summary><p class="live-meta">降水ありは3時間降水量1mm以上、または天気が雨・雨または雪・雪の予報。対象期間の終わりの気温が2℃以下のとき、その時刻までの前12時間に降水があったかを見ます。対象コマを含む3時間分の4コマが対象です。0℃以下はオレンジ、0℃超〜2℃以下は黄色。降水を1コマでも確認すれば着色し、前12時間に欠けた資料があって降水を確認できない場合は灰色です。2℃超なら降水履歴を理由に灰色にしません。</p><p class="live-meta">降雪1cm・3cm・6cmは、それぞれ赤・紫・黒。雪の予報で有効な降雪量が1cm未満ならピンクです。雪の量が資料なしの場合を1cm未満として扱いません。</p><p class="live-meta">背景の色は予測天気です。白縁の丸は最新実況に、選択した時刻までの3時間予想降雪量の代表値を累積した簡易目安です。丸のない場所の積雪深は推定しません。道路の積雪、凍結、通行可否は判定しません。</p></details>
+        <div id="panelBody">
+        <div id="dataTiming" class="data-timing" aria-live="polite" hidden><div id="issueTimeRow" hidden><span>気象庁発表</span><strong id="issueTime"></strong></div><div id="observationTimeRow" hidden><span id="observationTimeLabel">実況</span><strong id="observationTime"></strong></div></div>
+        <div id="liveViewControls" class="live-view-controls" hidden><label for="liveView">表示</label><select id="liveView"><option value="temperature">気温</option><option value="weather">天気</option><option value="snow">積雪深</option></select></div>
+        <section id="normalControls" class="temperature-controls" aria-label="選択日の平年値">
+          <h3>表示する日 <span>平年値</span></h3>
+          <p class="section-hint">気温・積雪とも、この月日の平年値を表示</p>
+          <div class="calendar-controls"><div class="date-row"><button id="previousDay" type="button" aria-label="前の日" disabled>‹</button><div class="date-selects"><label><span class="visually-hidden">月</span><select id="monthSelect" disabled></select></label><span>月</span><label><span class="visually-hidden">日</span><select id="daySelect" disabled></select></label><span>日</span></div><button id="nextDay" type="button" aria-label="次の日" disabled>›</button></div><div class="play-row"><button id="playYear" type="button" disabled>▶ 再生</button><label><span class="visually-hidden">再生速度</span><select id="playSpeed"><option value="12000">12秒</option><option value="36000">36秒</option></select></label></div></div>
+          <label for="dateSlider" class="visually-hidden">9月15日から翌6月15日までの表示日</label><input id="dateSlider" type="range" min="0" max="274" value="0" disabled>
+          <div class="month-ticks" aria-hidden="true"><span>9/15</span><span>12/15</span><span>3/15</span><span>6/15</span></div>
+          <p id="temperatureStatus" class="temperature-status" role="status">気温を読み込み中</p><button id="retryTemperature" type="button" hidden>気温を再読込</button>
+          <div class="normal-temperature-layer">
+            <div class="section-heading"><h3 id="temperature-title"><b id="temperatureTitleText">平均最低気温</b></h3><select id="temperatureMode" aria-label="平年値の気温の種類" disabled><option value="tmin" selected>最低気温</option><option value="tmax">最高気温</option></select></div>
+            <div id="normalAppearance"><div class="temperature-options"><label class="check-label"><input id="temperatureToggle" type="checkbox" checked>気温を表示</label><div class="opacity-control"><label for="temperatureOpacity">濃さ <output id="opacityValue">65%</output></label><input id="temperatureOpacity" type="range" min="0" max="100" value="65"></div></div></div>
+          <div class="temperature-legend" aria-label="最低気温の色の凡例">
+            <canvas class="legend-gradient" width="324" height="18" aria-label="寒い紫・青から、0度付近の薄緑、暖かい黄・赤へ"></canvas><div class="legend-ticks"><span>−40</span><span>−20</span><span>0</span><span>20</span><span>40℃</span></div>
+
+          </div>
+
+          </div>
+          <p id="temperaturePoint" class="temperature-point"></p><button id="clearTemperaturePoint" type="button" hidden>地点選択を解除</button>
         </section>
-        <section id="weatherControls" class="temperature-controls dynamic-controls" aria-label="天気の設定" hidden>
-          <h3 id="weatherTitle">推計気象分布（天気）</h3>
-          <label id="weatherSlotLabel" for="weatherSlot">天気の対象時刻・期間</label><select id="weatherSlot" disabled></select>
-          <div class="live-time-buttons"><button id="weatherPrevious" type="button" disabled>‹ 前へ</button><button id="weatherNext" type="button" disabled>次へ ›</button><button id="weatherRefresh" type="button">再読込</button></div>
-          <p id="weatherStatus" class="temperature-status" role="status">天気を選ぶと読み込みます</p>
-          <p id="weatherUpdated" class="live-meta"></p><p id="weatherNotice" class="live-notice" role="status" hidden></p>
+        <section id="liveControls" class="temperature-controls" aria-label="実況気温の設定" hidden>
+          <div class="field-row"><label id="liveKindLabel" for="liveKind">気温の種類</label><select id="liveKind"><option value="current">現在の気温</option><option value="observed">日最低・日最高</option></select></div>
+          <div class="forecast-time-selection"><label class="field-label" for="liveSlot">対象日時</label><select id="liveSlot" disabled></select>
+          <div class="live-time-buttons"><button id="livePrevious" type="button" disabled>‹ 前へ</button><button id="liveNext" type="button" disabled>次へ ›</button></div></div><button id="liveRefresh" class="temperature-refresh" type="button" hidden>再試行</button>
+          <p id="liveStatus" class="temperature-status" role="status"></p><p id="liveNotice" class="live-notice" role="status" hidden></p>
+          <div id="liveAppearance"></div>
+          <div id="liveObservedLegend" class="temperature-legend" aria-label="気温面の色分け：平年値と同じ1℃階級"><canvas id="liveTemperatureGradient" class="live-legend-gradient" width="324" height="18" aria-label="寒い紫・青から、0度付近の薄緑、暖かい黄・赤へ"></canvas><div class="legend-ticks"><span>−40</span><span>−20</span><span>0</span><span>20</span><span>40℃</span></div></div>
+
+
+          <p id="livePoint" class="temperature-point"></p><button id="clearLivePoint" type="button" hidden>地点選択を解除</button>
+        </section>
+        <div id="forecastCompositeControls">
+          <section id="weatherControls" class="temperature-controls dynamic-controls" aria-label="天気の設定" hidden>
+            <h3 id="weatherTitle">天気</h3>
+            <div class="forecast-time-selection"><label id="weatherSlotLabel" class="field-label" for="weatherSlot">対象日時</label><select id="weatherSlot" disabled></select>
+            <div class="live-time-buttons"><button id="weatherPrevious" type="button" disabled>‹ 前へ</button><button id="weatherNext" type="button" disabled>次へ ›</button></div></div>
+            <p id="weatherStatus" class="temperature-status" role="status"></p><p id="weatherNotice" class="live-notice" role="status" hidden></p>
           <div id="weatherLegend" class="weather-legend" aria-label="天気の凡例"><span><i class="weather-sun"></i>晴れ</span><span><i class="weather-cloud"></i>くもり</span><span><i class="weather-rain"></i>雨</span><span><i class="weather-mix"></i>雨または雪</span><span><i class="weather-snow"></i>雪</span></div>
           <div id="precipitationLegend" class="weather-legend" aria-label="3時間降水量の凡例（mm/3h）" hidden><span><i class="amount-1"></i>1〜4mm</span><span><i class="amount-5"></i>5〜9mm</span><span><i class="amount-10"></i>10〜14mm</span><span><i class="amount-15"></i>15〜19mm</span><span><i class="amount-20"></i>20mm以上</span></div>
           <div id="snowfallLegend" class="weather-legend" aria-label="3時間降雪量の凡例（cm/3h）" hidden><span><i class="amount-1"></i>1〜2cm</span><span><i class="amount-5"></i>3〜5cm</span><span><i class="amount-10"></i>6cm以上</span></div>
-          <label for="weatherOpacity"><span id="weatherOpacityLabelText">天気の濃さ </span><output id="weatherOpacityValue">75%</output></label><input id="weatherOpacity" type="range" min="0" max="100" value="75">
-          <p id="weatherDescription" class="live-meta">気象庁の天気画像をそのまま表示。無色は海域・資料なしです。10分ごと・タブ復帰時に更新を確認します。</p>
-        </section>
+
+            <div class="weather-opacity-row"><div class="opacity-control"><label for="weatherOpacity"><span id="weatherOpacityLabelText">天気の濃さ </span><output id="weatherOpacityValue">75%</output></label><input id="weatherOpacity" type="range" min="0" max="100" value="75"></div><button id="weatherRefresh" type="button" hidden>再試行</button></div>
+          </section>
+
         </div>
         <div id="liveSnowControlsHome">
-        <section id="liveSnowControls" class="temperature-controls dynamic-controls" aria-label="実況積雪深の設定" hidden>
-          <h3><b id="liveSnowTitle">実況積雪深</b> <span>観測点</span></h3>
-          <p id="liveSnowModeNote" class="live-meta" hidden>最新実況＋選択時刻までの予想降雪（1・3・6cm）の簡易加算です。</p>
-          <p id="liveSnowForecastNotice" class="live-meta" hidden></p>
-          <div id="liveSnowTimeSelection"><label for="liveSnowSlot">積雪の観測時刻（正時）</label><select id="liveSnowSlot"></select></div>
-          <label for="liveSnowStation">積雪の観測地点</label><select id="liveSnowStation" disabled><option value="">地図の点、または地点名から選択</option></select>
-          <div class="live-snow-toggles"><label><input id="liveSnowPoints" type="checkbox" checked>観測点を表示</label></div>
-          <p id="liveSnowStatus" class="temperature-status" role="status">積雪深を選ぶと読み込みます</p>
-          <p id="liveSnowUpdated" class="live-meta"></p><p id="liveSnowNotice" class="live-notice" role="status" hidden></p>
-          <div id="liveSnowPointLegend" class="live-snow-legend" aria-label="積雪観測点の色分け（cm）"></div>
-          <p id="liveSnowDisplayHelp" class="live-meta">地図を拡大すると観測値（cm）を表示します。丸を押すと、地点名・積雪深・時刻を確認できます。</p>
-          <p class="live-meta">0cmは雪なしと1cm未満の積雪を区別しない共通表示です。丸のない場所の積雪深は推定しません。</p>
-          <button id="liveSnowRefresh" type="button">積雪深を再読込</button>
-          <details class="live-data-details"><summary>観測・予測計算について</summary><p class="live-meta">気象庁アメダス等の積雪深を観測点の丸で表示します。斜線は観測休止・欠測等の資料なしです。参考値は地点を選ぶと区別できます。</p><p class="live-meta">実況では過去24時間の正時を選べます。予測の丸は最新実況を基準に、同じ発表回の各3時間降雪予報を、1〜2cmは1cm、3〜5cmは3cm、6cm以上は6cmとして累積します。降雪なしの区分は0cm加算です。最初の枠は実況時刻と重なる時間も全量加算します。融雪・沈降は計算しません。実況や途中の降雪予報が資料なしの場合は計算不能とし、斜線で表示します。10分ごと・タブ復帰時に配信を確認します。観測点の積雪深は、道路上の積雪や通行可否を示しません。</p></details>
-        </section>
-        </div>
-        <section id="liveControls" class="temperature-controls" aria-label="実況気温の設定" hidden>
-          <label id="liveKindLabel" for="liveKind">表示する実況気温</label>
-          <select id="liveKind"><option value="current">実況気温（アメダス10分値）</option><option value="observed">実況の日最低・日最高</option></select>
-          <label for="liveSlot">対象時刻・日付</label>
-          <select id="liveSlot" disabled></select>
-          <div class="live-time-buttons"><button id="livePrevious" type="button" disabled>‹ 前へ</button><button id="liveNext" type="button" disabled>次へ ›</button><button id="liveRefresh" type="button">再読込</button></div>
-          <p id="liveStatus" class="temperature-status" role="status">実況値・予測値モードを選ぶと読み込みます</p>
-          <p id="liveNotice" class="live-notice" role="status" hidden></p>
-          <p id="liveUpdated" class="live-meta"></p>
-          <details class="live-data-details"><summary>データ・更新について</summary><p id="liveSource" class="live-meta"></p>
-          <p id="liveUpdateNote" class="live-meta">天気分布予報プラスと同じ数値を使用。10分ごと・タブ復帰時に更新を確認します。実況の最新枠を選択中は最新時刻へ進み、過去の対象を選んだ場合はその対象を保ちます。</p></details>
-          <div id="liveObservedLegend" class="temperature-legend" aria-label="実況気温面の色分け：平年値と同じ1℃階級"><canvas id="liveTemperatureGradient" class="live-legend-gradient" width="324" height="18" aria-label="寒い紫・青から、0度付近の薄緑、暖かい黄・赤へ"></canvas><div class="legend-ticks"><span>−40</span><span>−20</span><span>0</span><span>20</span><span>40℃</span></div><small>1℃ごとの色分け・欠測／未収録は無色</small></div>
-          <div id="liveLegend" class="road-temperature-legend" aria-label="予測気温面の色分け" hidden><span><i class="road-red" aria-hidden="true"></i>0℃以下</span><span><i class="road-orange" aria-hidden="true"></i>0℃超〜2℃</span><span><i class="road-yellow" aria-hidden="true"></i>2℃超〜5℃</span><span><i class="live-warm" aria-hidden="true"></i>5℃超</span></div>
-          <p id="liveColorNote" class="live-meta">気温の面は平年値モードと同じ1℃ごとの配色。道路は従来の気温区分で着色します。</p>
-          <p id="livePoint" class="temperature-point">地図をクリックすると、その格子の気温と道路の色区分を確認できます。</p><button id="clearLivePoint" type="button" hidden>地点選択を解除</button>
-        </section>
-        <section id="normalControls" class="temperature-controls" aria-labelledby="temperature-title">
-          <h3 id="temperature-title"><b id="temperatureTitleText">日別の平均最低気温</b> <span>独自算出</span></h3>
-          <label class="temperature-mode-row" for="temperatureMode"><span>表示する気温</span><select id="temperatureMode" disabled><option value="tmin" selected>最低気温モード</option><option value="tmax">最高気温モード</option></select></label>
-          <p class="baseline-label">1991〜2020年の日別平年値を基に内挿 · 9/15〜翌6/15</p>
-          <div class="date-row">
-            <button id="previousDay" type="button" aria-label="前の日" disabled>‹</button>
-            <div class="date-selects"><label><span class="visually-hidden">月</span><select id="monthSelect" disabled></select></label><span>月</span><label><span class="visually-hidden">日</span><select id="daySelect" disabled></select></label><span>日</span></div>
-            <button id="nextDay" type="button" aria-label="次の日" disabled>›</button>
-          </div>
-          <label for="dateSlider" class="visually-hidden">9月15日から翌6月15日までの表示日</label>
-          <input id="dateSlider" type="range" min="0" max="274" value="0" disabled>
-          <div class="month-ticks" aria-hidden="true"><span>9/15</span><span>12/15</span><span>3/15</span><span>6/15</span></div>
-          <div class="play-row"><button id="playYear" type="button" disabled>▶ 冬季を再生</button><label><span class="visually-hidden">再生速度</span><select id="playSpeed"><option value="12000">全期間 約12秒</option><option value="36000">全期間 約36秒</option></select></label></div>
-          <p id="temperatureStatus" class="temperature-status" role="status">気温データを読み込んでいます</p>
-          <p id="seasonPreparationStatus" class="temperature-status" aria-live="polite">冬季データの準備を開始します</p>
-          <button id="retryTemperature" type="button" hidden>気温データを再読込</button>
-          <div class="temperature-legend" aria-label="最低気温の色の凡例">
-            <canvas class="legend-gradient" width="324" height="18" aria-label="寒い紫・青から、0度付近の薄緑、暖かい黄・赤へ"></canvas><div class="legend-ticks"><span>−40</span><span>−20</span><span>0</span><span>20</span><span>40℃</span></div>
-            <small>1℃ごとの色分け・欠測／未収録は無色</small>
-          </div>
-          <p id="temperaturePoint" class="temperature-point">地図をクリックすると、その格子の気温帯を確認できます。</p>
-          <button id="clearTemperaturePoint" type="button" hidden>地点選択を解除</button>
-        </section>
-
-        <label class="mesh-tooltip-option"><input id="meshTooltipToggle" type="checkbox" checked> マウス・タップ位置の情報を表示</label>
-        <div class="panel-collapsible">
-          <div class="temperature-options"><label><input id="temperatureToggle" type="checkbox" checked> 気温を重ねる</label><label for="temperatureOpacity">濃さ <output id="opacityValue">65%</output></label><input id="temperatureOpacity" type="range" min="0" max="100" value="65"></div>
-          <section class="panel-section snow-section" aria-labelledby="snow-section-title">
-            <div class="section-title"><span>01</span><h3 id="snow-section-title">日最深積雪の平年値 <small>独自推定</small></h3></div>
-            <p class="snow-intro">選択日の1km格子の雪域を重ねます。道路上の積雪ではありません。</p>
-            <div class="snow-options">
-              <label><input id="snowToggle" type="checkbox" disabled> 積雪を重ねる</label>
-              <label for="snowOpacity">濃さ <output id="snowOpacityValue">100%</output></label>
-              <input id="snowOpacity" type="range" min="0" max="100" value="100">
-              <button id="snowPositiveOnly" type="button" aria-pressed="false">1cm以上のみ表示</button>
-            </div>
-            <div class="snow-depth-scale" aria-label="表示される最小の積雪は白、約350cm以上は黒の連続的な濃淡"></div>
-            <p class="snow-depth-scale-label"><span id="snowScaleStart">現象あり0cm・白</span> <span>約350cm以上・黒</span></p>
-            <p id="snowContourCaption" class="snow-contour-caption">細い実線：積雪域の境界と各深さ以上の境界</p>
-            <div class="snow-contour-legend" aria-label="積雪の等値線">
-              <span id="snowZeroContourLegend"><i class="snow-line-0" aria-hidden="true"></i>雪域の境界</span>
-              <span><i class="snow-line-1" aria-hidden="true"></i>1cm</span>
-              <span><i class="snow-line-5" aria-hidden="true"></i>5cm</span>
-              <span><i class="snow-line-10" aria-hidden="true"></i>10cm</span>
-              <span><i class="snow-line-20" aria-hidden="true"></i>20cm</span>
-              <span><i class="snow-line-50" aria-hidden="true"></i>50cm</span>
-              <span><i class="snow-line-100" aria-hidden="true"></i>100cm</span>
-            </div>
-            <p class="snow-note">現象なしは無色。「1cm以上のみ表示」ONでは現象あり0cmも無色にし、1cmから白く表示します。判定不能・欠測も塗らず、境界線を引きません。線は推定した1km格子境界に沿います。</p>
-            <p id="snowStatus" class="temperature-status" role="status">積雪表示を準備しています</p>
-            <p id="snowPreparationStatus" class="temperature-status" aria-live="polite"></p>
-            <button id="retrySnow" type="button" hidden>積雪データを再読込</button>
-            <p id="snowPoint" class="temperature-point">地図をクリックすると、その格子の積雪階級を確認できます。</p>
-          </section>
-          <section class="panel-section road-section" aria-labelledby="road-section-title">
-            <div class="section-title road-title-row">
-              <span>02</span>
-              <h3 id="road-section-title">道路表示</h3>
-              <button id="resetView" type="button">全国表示</button>
-            </div>
-            <label class="layer-toggle highway-toggle">
-              <input id="highwayToggle" type="checkbox" checked>
-              <span class="legend-line highway-line" aria-hidden="true"></span>
-              <span><strong>高速道路</strong><small>太い線。5℃超は青緑色</small></span>
-            </label>
-            <label class="layer-toggle general-toggle">
-              <input id="generalToggle" type="checkbox" checked>
-              <span class="legend-line general-line" aria-hidden="true"></span>
-              <span><strong>一般道路</strong><small>細い線。5℃超は青色。拡大で細街路も表示</small></span>
-            </label>
-            <div class="road-temperature-legend" aria-label="道路の最低気温の色分け">
-              <span><i class="road-red" aria-hidden="true"></i>0℃以下</span>
-              <span><i class="road-orange" aria-hidden="true"></i>0℃超〜2℃</span>
-              <span><i class="road-yellow" aria-hidden="true"></i>2℃超〜5℃</span>
-              <span><i class="road-missing" aria-hidden="true"></i>気温なし</span>
-            </div>
-            <p class="road-temperature-note">線の色は1km格子の気温区分です。路面凍結の判定ではありません。</p>
-            <p id="roadTemperatureStatus" class="road-temperature-note" role="status">道路の着色を準備しています</p>
+          <section id="liveSnowControls" class="temperature-controls dynamic-controls" aria-label="実況積雪深の設定" hidden>
+            <div class="section-heading"><h3><b id="liveSnowTitle">実況積雪深</b> <span>cm · 拡大で数値</span></h3><label class="check-label"><input id="liveSnowPoints" type="checkbox" checked>表示</label></div>
+            <p id="liveSnowModeNote" class="section-hint" hidden>実況に予想降雪を加算。融雪は未考慮。</p>
+            <div id="liveSnowTimeSelection" class="field-row"><label for="liveSnowSlot">観測時刻</label><select id="liveSnowSlot"></select></div>
+            <div class="station-row"><label for="liveSnowStation" class="visually-hidden">積雪の観測地点</label><select id="liveSnowStation" disabled><option value="">地点を選択</option></select><button id="liveSnowRefresh" type="button" hidden>再試行</button></div>
+            <div id="liveSnowPointLegend" class="live-snow-legend" aria-label="積雪観測点の色分け（cm）"></div>
+            <p id="liveSnowStatus" class="temperature-status" role="status"></p><p id="liveSnowNotice" class="live-notice" role="status" hidden></p>
           </section>
         </div>
-
-        <p id="mapStatus" class="map-status" role="status" aria-live="polite">道路データを読み込んでいます</p>
+        <section class="panel-section snow-section" aria-labelledby="snow-section-title">
+          <div class="section-heading"><h3 id="snow-section-title">選択日の積雪平年値</h3><output id="snowSelectedDate" aria-live="polite">9月15日</output></div>
+          <div class="snow-options"><label class="check-label"><input id="snowToggle" type="checkbox" disabled>積雪を表示</label><div class="opacity-control"><label for="snowOpacity">濃さ <output id="snowOpacityValue">100%</output></label><input id="snowOpacity" type="range" min="0" max="100" value="100"></div></div>
+          <div class="snow-depth-scale" aria-label="積雪深：白から黒の濃淡"></div><p class="snow-depth-scale-label"><span id="snowScaleStart">積雪あり0cm</span><span>350cm以上</span></p>
+          <div class="snow-filter-row"><button id="snowPositiveOnly" type="button" aria-pressed="false">1cm以上のみ</button><span class="section-hint">日最深積雪の独自推定</span></div>
+          <p class="snow-contour-legend"><i aria-hidden="true"></i><span id="snowContourCaption">境界：1・5・10・20・50・100cm</span><span id="snowZeroContourLegend">＋雪域</span></p>
+          <p id="snowStatus" class="temperature-status" role="status"></p><button id="retrySnow" type="button" hidden>積雪を再読込</button><p id="snowPoint" class="temperature-point" hidden></p>
+        </section>
+        <section class="panel-section road-section" aria-labelledby="road-section-title">
+          <div class="section-heading"><h3 id="road-section-title">道路</h3><label id="snowRoadOrderControl" hidden><span class="visually-hidden">道路と積雪の重ね順</span><select id="snowRoadOrder"><option value="roads">道路を手前</option><option value="snow">積雪を手前</option></select></label></div>
+          <div class="road-toggles"><label class="layer-toggle"><input id="highwayToggle" type="checkbox" checked><span class="legend-line highway-line" aria-hidden="true"></span><span>高速道路</span></label><label class="layer-toggle"><input id="generalToggle" type="checkbox" checked><span class="legend-line general-line" aria-hidden="true"></span><span>一般道路</span></label></div>
+          <div class="road-temperature-legend" aria-label="道路の気温区分"><span><i class="road-red" aria-hidden="true"></i>0℃以下</span><span><i class="road-orange" aria-hidden="true"></i>0℃超〜2℃</span><span><i class="road-yellow" aria-hidden="true"></i>2℃超〜5℃</span><span><i class="road-missing" aria-hidden="true"></i>気温なし</span></div>
+          <div id="riskControls" class="road-conditions" aria-label="道路の気象条件の凡例" hidden>
+            <div class="section-heading"><span class="section-hint">気象条件による色分け</span><button id="riskRefresh" class="quiet-button" type="button" hidden>再試行</button></div>
+            <div id="riskLegend" class="risk-legend" aria-label="道路だけに適用する6色の凡例"></div>
+            <p class="section-hint">灰色は資料不足。該当なしは道路区分色。</p>
+            <p id="riskStatus" class="temperature-status" role="status"></p>
+          </div>
+<p id="roadTemperatureStatus" class="temperature-status" role="status"></p>
+        </section>
+        <div class="panel-utilities"><label class="mesh-tooltip-option"><input id="meshTooltipToggle" type="checkbox" checked>カーソル・タップ地点の情報</label></div>
+        <p id="mapStatus" class="map-status" role="status" aria-live="polite">道路を読み込み中</p>
+        </div>
       </aside>
 
       <div class="map-column">
@@ -215,6 +142,7 @@
         <section class="map-shell" aria-labelledby="map-heading">
           <h2 id="map-heading" class="visually-hidden">全国の1km気温・積雪平年メッシュと道路地図</h2>
           <div id="map" role="application" aria-label="日別の平均最低気温、日最深積雪の平年推定値と全国の道路を表示する地図"></div>
+          <button id="resetView" type="button" title="日本全国が収まる範囲に戻す">全国表示</button>
           <p id="mapTemperatureLabel" class="map-temperature-label">気温を準備中</p>
           <div id="mapRecovery" class="map-recovery" role="status" aria-live="polite" hidden>
             <p id="mapRecoveryMessage"></p>
@@ -224,7 +152,6 @@
             <strong id="meshTooltipDate"></strong>
             <span id="meshTooltipTemperature"></span>
             <span id="meshTooltipSnow"></span>
-            <small id="meshTooltipNote">1km格子の独自推定・表示階級</small>
           </div>
 
           <aside id="roadDetails" class="road-details" hidden aria-live="polite">
@@ -241,6 +168,15 @@
 
     <footer class="site-footer">
       <div class="footer-inner">
+        <details id="panelDetails" class="live-data-details"><summary>データと計算の詳細</summary>
+          <div data-help="normal"><h4>選択日の平年値</h4><p>気温は1℃ごとの色分け。欠測・未収録は無色です。</p><p>1991〜2020年を基に独自算出・内挿。気温と日最深積雪は、選択した同じ月日の平年推定値です。9月15日から翌6月15日までの275日に対応します。</p><p>積雪なし・欠測は無色。積雪あり0cmは白で、「1cm以上のみ」を選ぶと無色になります。細い実線は推定した1km格子境界に沿います。</p><p id="seasonPreparationStatus" aria-live="polite"></p><p id="snowPreparationStatus" aria-live="polite"></p></div>
+          <div data-help="temperature" hidden><h4>気温</h4><p id="liveUpdated"></p><p id="liveSource"></p><p id="liveColorNote"></p><p id="liveUpdateNote"></p></div>
+          <div data-help="weather" hidden><h4>天気・降水・降雪</h4><p id="weatherUpdated"></p><p id="weatherDescription"></p></div>
+          <div data-help="risk" hidden><h4>道路の気象条件</h4><p id="riskUpdated"></p><p>対象時刻の気温と前12時間の降水、3時間の天気・降雪から色分けします。降水後の低温は黄・オレンジ、雪は降雪量に応じてピンク・赤・紫・黒を優先。欠けた降水・降雪予報は、計算上0として扱います。</p></div>
+          <div data-help="snow" hidden><h4>積雪深</h4><p id="liveSnowDisplayHelp" class="section-hint">拡大すると数値を表示。丸を押すと地点の詳細。</p><p id="liveSnowUpdated"></p><p id="liveSnowForecastNotice" hidden></p><p>気象庁アメダス等の観測。0cmは雪なしと1cm未満の積雪を区別しません。斜線は実況の資料なし、または計算不能です。観測地点以外の積雪深は推定しません。</p><p>予測では最新実況に3時間降雪予報を累積。1〜2cmは1cm、3〜5cmは3cm、6cm以上は6cmを加算し、最初の枠は実況と重なっても全量加算します。融雪・沈降は計算しません。欠けた降雪予報は0cm加算。基準の実況がない地点は資料なしです。通信・形式・発表回の確認に失敗した場合は計算を止めます。</p><p>実況は過去24時間の正時を選択できます。10分ごと・タブ復帰時に配信を確認します。</p></div>
+          <p class="road-temperature-note"></p><p>高速道路は太線、一般道路は細線。拡大すると細街路も表示します。気温で着色する場合、0℃以下・0℃超〜2℃・2℃超〜5℃で区分し、5℃超は道路区分色です。</p>
+        </details>
+
         <section class="scope-note" aria-label="データの意味と注意">
           <span class="scope-icon" aria-hidden="true">i</span>
           <div>

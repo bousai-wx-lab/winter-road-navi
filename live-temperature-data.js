@@ -99,11 +99,9 @@ export function decodeLiveCSV(text, kind, slot, expectedCount = 31296) {
     grid.rows[i]=row;grid.cols[i]=col;
     grid.rects.set([(col/16+180)/360,mercatorY(row/20),((col+1)/16+180)/360,mercatorY((row+1)/20)],i*4);
     values[i]=value;classes[i]=classForTemperature(value);
-    // Observed faces share the normal-mode 1°C palette. Road classes retain
-    // their raw-value 0/2/5°C thresholds; forecast faces keep their old bands.
-    bins[i]=kind==="current" || kind==="observed"
-      ? Number.isFinite(value)?Math.max(1,Math.min(81,Math.floor(value)+41)):0
-      : classes[i];
+    // All temperature faces share the normal-mode 1°C palette. Road classes
+    // retain their independent raw-value 0/2/5°C thresholds.
+    bins[i]=Number.isFinite(value)?Math.min(81,Math.max(1,Math.floor(value)+41)):0;
   });
   return {grid,values,bins,classes};
 }

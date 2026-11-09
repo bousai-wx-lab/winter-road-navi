@@ -1,6 +1,6 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import {AMEDAS_ROOT,LIVE_SNOW_BANDS,LIVE_SNOW_LABEL_ZOOM,snowHour,snowMapKey,decodeSnowStations,snowStationValue,snowStationLabel} from "./live-snow-data.js?v=20261109-marker1";
-import {createSnowForecastLoader} from "./forecast-snow-data.js?v=20261108-addition1";
+import {createSnowForecastLoader} from "./forecast-snow-data.js?v=20261109-panel2";
 import {timeLabel} from "./live-temperature-data.js";
 
 const $=id=>document.getElementById(id),EMPTY={type:"FeatureCollection",features:[]};
@@ -33,7 +33,7 @@ export function initLiveSnow(map,hooks={}) {
   const hatch=missingHatch();
   map.addImage("live-snow-missing-hatch",hatch.getContext("2d").getImageData(0,0,hatch.width,hatch.height),{pixelRatio:2});
   const layers=["live-snow-point-halos","live-snow-points","live-snow-missing","live-snow-values"];
-  // Both fallback road colours and the risk colours must draw over snow markers.
+  // Default to roads in front; the user can move the whole marker group together.
   const beforeRoads="general-road-casing";
   map.addLayer({id:layers[0],type:"circle",source:"live-snow-points",layout:{visibility:"none"},paint:{"circle-radius":zoomSize(POINT_SIZES.observed.halo),"circle-color":"#ffffff"}},beforeRoads);
   const colors=["step",["get","value"],LIVE_SNOW_BANDS[0].color,...LIVE_SNOW_BANDS.slice(1).flatMap(band=>[band.min,band.color])];
@@ -62,12 +62,12 @@ export function initLiveSnow(map,hooks={}) {
     const ready=!overlay || ["ready","error"].includes(forecastState);
     const features=ready?stations.map(s=>{const p=pointFor(s);return {type:"Feature",properties:{id:s.id,available:p.value!==null,value:p.value ?? -1,observed:s.value ?? -1,added:p.added ?? -1},geometry:{type:"Point",coordinates:[s.lng,s.lat]}};}):[];
     map.getSource("live-snow-points").setData({type:"FeatureCollection",features});
-    $("liveSnowStation").replaceChildren(new Option("地図の点、または地点名から選択",""),...stations.map(s=>new Option(`${s.name} · ${overlay?pointLabel(s):snowStationValue(s)}`,s.id)));
+    $("liveSnowStation").replaceChildren(new Option("地点を選択",""),...stations.map(s=>new Option(`${s.name} · ${overlay?pointLabel(s):snowStationValue(s)}`,s.id)));
     $("liveSnowStation").disabled=!stations.length || !ready;$("liveSnowStation").value=selectedStation ?? "";
   }
   function updateMetadata() {
-    $("liveSnowControls").setAttribute("aria-label",overlay?"簡易積雪目安の設定":"実況積雪深の設定");
-    $("liveSnowDisplayHelp").textContent=`地図を拡大すると${overlay?"簡易加算の値":"観測値"}（cm）を表示します。丸を押すと、地点名・積雪深・時刻を確認できます。`;
+    $("liveSnowControls").setAttribute("aria-label",overlay?"積雪深の予測の設定":"実況積雪深の設定");
+    $("liveSnowDisplayHelp").textContent="拡大すると数値を表示。丸を押すと地点の詳細。";
     legend.firstElementChild.lastElementChild.textContent=overlay?"資料なし・計算不能":"資料なし";
     $("liveSnowForecastNotice").hidden=!overlay;
     let note="最初の3時間枠も全量加算（時間按分なし）。融雪・沈降は未考慮です。";
@@ -97,10 +97,10 @@ export function initLiveSnow(map,hooks={}) {
     }catch(error) {
       if(!active || !overlay || request!==forecastToken || error.name==="AbortError")return;
       forecastState="error";forecastError=/^[\u3040-\u30ff\u3400-\u9fff]/.test(error.message)?error.message:"降雪予報を取得・確認できません";
-      renderPoints();updateMetadata();status(`${forecastError}。簡易積雪目安は計算できません。実況モードで観測値を確認できます。`,"error");
+      renderPoints();updateMetadata();status(`${forecastError}。積雪深の予測は計算できません。実況モードで観測値を確認できます。`,"error");
     }
   }
-  function status(message,state) {$("liveSnowStatus").textContent=message;$("liveSnowStatus").dataset.state=state;hooks.onChange?.();}
+  function status(message,state) {$("liveSnowStatus").textContent=message;$("liveSnowStatus").dataset.state=state;$("liveSnowRefresh").hidden=state!=="error";hooks.onChange?.();}
   function paint() {
     const size=POINT_SIZES[overlay?"forecast":"observed"];
     map.setPaintProperty(layers[0],"circle-radius",zoomSize(size.halo));
@@ -121,7 +121,7 @@ export function initLiveSnow(map,hooks={}) {
   function reportStations() {
     const valid=stations.filter(s=>s.usable).length,reference=stations.filter(s=>s.value!==null && !s.usable).length,missing=stations.filter(s=>s.value===null).length;
     $("map").dataset.liveSnowValid=String(valid);$("map").dataset.liveSnowMissing=String(missing);$("map").dataset.liveSnowPoints=String(stations.length);
-    if(overlay){if(forecastState==="ready"){const count=stations.filter(s=>pointFor(s).value!==null).length;status(`簡易積雪目安 ${count}地点 · 実況が資料なし ${missing}地点 · 予報が資料不足 ${stations.length-count-missing}地点。実況＋予報階級の累積です。`,"ready");}}
+    if(overlay){if(forecastState==="ready"){const count=stations.filter(s=>pointFor(s).value!==null).length;status(`積雪深の予測 ${count}地点 · 実況が資料なし ${missing}地点 · 予報が資料不足 ${stations.length-count-missing}地点。実況＋予報階級の累積です。`,"ready");}}
     else status(`積雪観測点 ${stations.length}地点：有効 ${valid}・参考 ${reference}・資料なし ${missing}。丸は観測点の値です。`,"ready");
   }
   async function get(path,json,signal) {
@@ -160,7 +160,7 @@ export function initLiveSnow(map,hooks={}) {
   function showStation(station) {
     selectedStation=station.id;$("liveSnowStation").value=station.id;
     const content=document.createElement("div"),title=document.createElement("strong"),value=document.createElement("p"),date=document.createElement("small");
-    title.textContent=`${station.name} · ${overlay?"観測点位置の簡易予測":"観測点"}`;value.textContent=`${overlay?"簡易積雪目安":"積雪深"}：${pointLabel(station)}`;
+    title.textContent=`${station.name} · ${overlay?"観測点位置の簡易予測":"観測点"}`;value.textContent=`${overlay?"積雪深の予測":"積雪深"}：${pointLabel(station)}`;
     date.textContent=overlay?`基準実況 ${timeLabel(station.hour)} · 対象 ${timeLabel(forecastResult?.plan.end || target?.end)} · 気象庁の観測・降雪予報から簡易加算`:`${timeLabel(station.hour)} · 気象庁`;
     content.append(title,value,date);popup?.remove();popup=new maplibregl.Popup({maxWidth:"250px"}).setLngLat([station.lng,station.lat]).setDOMContent(content).addTo(map);
   }
@@ -169,7 +169,9 @@ export function initLiveSnow(map,hooks={}) {
   $("liveSnowPoints").addEventListener("change",paint);$("liveSnowRefresh").addEventListener("click",()=>void load(true));
   $("liveSnowSlot").addEventListener("change",()=>{selected=$("liveSnowSlot").value;void load();});
   document.addEventListener("visibilitychange",()=>{if(active && !document.hidden)void load(true);});
-  return {setActive(value,latestOnly=false){if(active && !overlay)observedSelection=selected;overlay=latestOnly;selected=overlay?null:observedSelection;active=value;++token;abort?.abort();clearInterval(timer);clear();paint();updateMetadata();if(value){void load(true);timer=setInterval(()=>{if(!document.hidden)void load(true);},600000);}},
+  return {setAboveRoads(above){
+    for(const id of layers)map.moveLayer(id,above?undefined:beforeRoads);
+  },setActive(value,latestOnly=false){if(active && !overlay)observedSelection=selected;overlay=latestOnly;selected=overlay?null:observedSelection;active=value;++token;abort?.abort();clearInterval(timer);clear();paint();updateMetadata();if(value){void load(true);timer=setInterval(()=>{if(!document.hidden)void load(true);},600000);}},
     setForecastTarget(value){const signature=value?`${value.basetime}:${value.validtime}`:"";if(signature===targetSignature)return;targetSignature=signature;target=value;if(active && overlay)void projectForecast();else cancelForecast();},
     tooltipAt(lng,lat){
       if(!stations.length)return "積雪深を表示できません";
@@ -178,6 +180,8 @@ export function initLiveSnow(map,hooks={}) {
       const radius=zoom<=5?r[0]+(r[1]-r[0])*(zoom-3)/2:r[1]+(r[2]-r[1])*(zoom-5)/4;
       let station=null,distance=Infinity;
       for(const s of stations){const p=map.project([s.lng,s.lat]),d=Math.hypot(p.x-pixel.x,p.y-pixel.y);if(d<=radius && d<distance){station=s;distance=d;}}
-      return station?`${station.name}（${overlay?"簡易予測":"観測"}）：${pointLabel(station)}`:"観測点のない場所（積雪深は推定しません）";
-    },title:()=>overlay?"積雪深の簡易目安":"実況積雪深",label:()=>overlay && target?timeLabel(target.end):selected?timeLabel(selected):"積雪時刻を準備中"};
+      if(!station)return "観測点なし";
+      const value=pointFor(station).value;
+      return `${station.name} ${value===null?"資料なし":`${value}cm`}${station.quality!==0 && value!==null?"（参考値）":""}`;
+    },observationTime:()=>stations.length?selected:null,title:()=>overlay?"積雪深の予測":"実況積雪深",label:()=>overlay && target?timeLabel(target.end):selected?timeLabel(selected):"積雪時刻を準備中"};
 }

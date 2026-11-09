@@ -31,10 +31,10 @@
       "sha256": "732472f1859e857b5e764b2f8765294cbfedf8cd3adac2f422d3d5436efb61ce"
     },
     {
-      "bytes": 22000,
+      "bytes": 22033,
       "mime_type": "text/javascript",
       "path": "app.js",
-      "sha256": "df8c62a8cb18dcb33e89acb2b68db056794568b36692c22546ecdc96689e5414"
+      "sha256": "589a720d63a524a029e67d759d7b630238cae0cfef86efcea1f9a1c599180422"
     },
     {
       "bytes": 266670,
@@ -6145,16 +6145,16 @@
       "sha256": "2d391e0a3a79b72c578970efc8d862dddd809bd3de2c88ccfe7bbde34f0789bf"
     },
     {
-      "bytes": 31189,
+      "bytes": 31188,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "4632348b7d7ac553f1854b8dab3dfd152442d9668203367e52d67f0051323f65"
+      "sha256": "72e41ecd2ac3a162fd4df24d69431015b3c0d2c5e58a78b898013af854594f4c"
     },
     {
-      "bytes": 15959,
+      "bytes": 16132,
       "mime_type": "text/javascript",
       "path": "live-snow-control.js",
-      "sha256": "c690f09492a0dbde081e5c6f6f86a7022d26db5e9b4cb2ee9280d04961d9d74f"
+      "sha256": "e56debea5c85034806903902247eda52f5837aa0af215f74b4edb1d8e5f245a4"
     },
     {
       "bytes": 3380,
@@ -6427,10 +6427,10 @@
       "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
     },
     {
-      "bytes": 7626,
+      "bytes": 7680,
       "mime_type": "text/javascript",
       "path": "weather-control.js",
-      "sha256": "733ff877c811fb15e6bc80470edabd8f27e9f24863ed0b9e465ccfde726e7e74"
+      "sha256": "1d9e2905bce5b47bb1676d67aee90d8dca692039054455a1c267528bb4a1f2f8"
     },
     {
       "bytes": 3503,
@@ -6439,7 +6439,7 @@
       "sha256": "938219194a6978ac72eb0dfe0f1361106aaf59be4ab44d4c81c4c64e79fe9224"
     }
   ],
-  "generated_at_utc": "2026-11-09T05:04:31+00:00",
+  "generated_at_utc": "2026-11-09T06:39:44+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

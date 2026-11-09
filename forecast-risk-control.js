@@ -1,5 +1,5 @@
 import {LIVE_ROOT,decodeLiveCSV,liveFile,timeLabel,utcTime} from "./live-temperature-data.js";
-import {riskSlots,projectRiskField,buildRiskData,RISK_RULES} from "./forecast-risk-data.js?v=20261026-risk-colors1";
+import {riskSlots,projectRiskField,buildRiskData,RISK_RULES} from "./forecast-risk-data.js?v=20261109-panel2";
 import {lookupCell} from "./temperature-layer.js";
 
 const $=id=>document.getElementById(id);
@@ -11,7 +11,7 @@ export function initForecastRisk(hooks={}) {
     const item=document.createElement("span"),color=document.createElement("i");
     color.style.backgroundColor=rule.color;item.append(color,document.createTextNode(rule.short));item.setAttribute("aria-label",rule.label);item.title=rule.label;item.dataset.riskClass=String(i+2);return item;
   }));
-  function status(text,state) {$("riskStatus").textContent=text;$("riskStatus").dataset.state=state;hooks.onChange?.();}
+  function status(text,state) {$("riskStatus").textContent=text;$("riskStatus").dataset.state=state;$("riskRefresh").hidden=state!=="error";hooks.onChange?.();}
   function clear(state="loading") {
     shown=null;hooks.onUnavailable?.(state);
     for(const key of ["riskReady","riskTarget","riskBase","riskCounts","riskTemperatureThrough","riskPrecipitationFrom"])delete $("map").dataset[key];
@@ -45,21 +45,21 @@ export function initForecastRisk(hooks={}) {
           inflight.set(file,pending);return pending;
         };
         const [geometries,temperature,history]=await Promise.all([
-          Promise.all(["weather3h","precip3h","snow3h"].map(kind=>cached(`forecast_${slots[kind].id}_value.geojson`,true))),
+          Promise.all(["weather3h","precip3h","snow3h"].map(kind=>slots[kind]?cached(`forecast_${slots[kind].id}_value.geojson`,true):null)),
           cached(liveFile("temp3h",slots.temperature),false).then(text=>decodeLiveCSV(text,"temp3h",slots.temperature)),
           Promise.all(slots.history.map(period=>Promise.all(["weather3h","precip3h"].map(kind=>period[kind]?cached(`forecast_${period[kind].id}_value.geojson`,true):null)))),
         ]);
         const grid=temperature.grid;
         const after=await get("forecast_manifest.json",true,signal);
         if(JSON.stringify(after)!==JSON.stringify(manifest)){cache.clear();continue;}
-        result=buildRiskData(grid,...geometries.map((g,i)=>projectRiskField(g,grid,["weather3h","precip3h","snow3h"][i])),temperature.values,history.map(pair=>({weather:pair[0]?projectRiskField(pair[0],grid,"weather3h"):null,precipitation:pair[1]?projectRiskField(pair[1],grid,"precip3h"):null})));break;
+        result=buildRiskData(grid,...geometries.map((g,i)=>g?projectRiskField(g,grid,["weather3h","precip3h","snow3h"][i]):new Int16Array(grid.count)),temperature.values,history.map(pair=>({weather:pair[0]?projectRiskField(pair[0],grid,"weather3h"):null,precipitation:pair[1]?projectRiskField(pair[1],grid,"precip3h"):null})));break;
       }
       if(!result)throw new Error("予報データが更新中です");
       if(!active || request!==token)return;
       shown=result;
       const through=utcTime(slots.temperature.validtime),from=new Date(Date.parse(through)-12*3600000).toISOString();
       const missing=slots.history.some(s=>!s.weather3h || !s.precip3h);
-      $("riskUpdated").textContent=`予報発表：${timeLabel(selected.base)} · 気温：${timeLabel(through)} · 降水：${timeLabel(from)}〜${timeLabel(through)}${missing?"（前12時間に未配信のコマあり。降水を確認できない低温格子は資料不足）":"（3時間分×4コマ）"}`;
+      $("riskUpdated").textContent=`予報発表：${timeLabel(selected.base)} · 気温：${timeLabel(through)} · 降水：${timeLabel(from)}〜${timeLabel(through)}${missing?"（欠けた降水予報は0として計算）":"（3時間分×4コマ）"}`;
       const total=result.counts.slice(2).reduce((a,b)=>a+b,0);
       status(`指定条件あり ${total.toLocaleString()}格子 · 資料不足 ${result.counts[0].toLocaleString()}格子。色は道路だけに適用します。`,"ready");
       $("map").dataset.riskReady="true";$("map").dataset.riskTarget=selected.end;$("map").dataset.riskBase=selected.base;
@@ -83,10 +83,11 @@ export function initForecastRisk(hooks={}) {
       if(value)void load();else{++token;abort?.abort();clear();status("天気の予測期間を準備中","loading");}
     },
     tooltipAt(lng,lat) {
-      if(!shown)return "道路の判定資料を準備中・取得不能";
-      const i=lookupCell(shown.grid,lng,lat);if(i<0)return "判定対象の格子なし";
-      const label=RISK_RULES[shown.classes[i]].label;
-      const temperature=Number.isFinite(shown.temperature[i])?` · 対象時刻の気温 ${shown.temperature[i].toFixed(1)}℃`:"";
+      if(!shown)return "準備中・取得不能";
+      const i=lookupCell(shown.grid,lng,lat);if(i<0)return "対象範囲外";
+      const rule=RISK_RULES[shown.classes[i]];
+      const label=rule.short || (shown.classes[i]===0?"資料なし":"該当なし");
+      const temperature=Number.isFinite(shown.temperature[i])?` · 気温 ${shown.temperature[i].toFixed(1)}℃`:"";
       return label+temperature;
     },
   };

@@ -21,23 +21,23 @@ test("selected time accumulates full 3h classes after the latest observation, in
   assert.equal(forecastSnowSlots(manifest(),target(12),hour).slots.length,1);
   assert.equal(forecastSnowSlots(manifest(),target(9),"2026-11-08T09:00:00+09:00").slots.length,0,"a period ending at the observation is already observed");
   assert.throws(()=>forecastSnowSlots(manifest(),target(9),hour),/実況より前/);
-  const gap=forecastSnowSlots(manifest([15,18]),target(18),"2026-11-08T11:00:00+09:00");assert.equal(gap.gapHours,1);assert.equal(gap.overlapHours,0);
-  assert.throws(()=>forecastSnowSlots(manifest([18]),target(18),hour),/欠落/);
+  const gap=forecastSnowSlots(manifest([15,18]),target(18),"2026-11-08T11:00:00+09:00");assert.equal(gap.gapHours,0);assert.equal(gap.overlapHours,2);assert.equal(gap.missingSlots,1);
+  assert.equal(forecastSnowSlots(manifest([18]),target(18),hour).missingSlots,2);
 });
-test("missing steps, another forecast issue, duplicates and unsupported target times fail closed",()=>{
-  assert.throws(()=>forecastSnowSlots(manifest([9,12,18]),target(18),hour),/途中/);
+test("missing steps become zero contributions; mixed forecast issues and duplicates still fail closed",()=>{
+  assert.equal(forecastSnowSlots(manifest([9,12,18]),target(18),hour).slots[1].missing,true);
   const mixed=manifest();mixed.layers.snow3h.slots[2].basetime="20261107230000";assert.throws(()=>forecastSnowSlots(mixed,target(18),hour),/発表回/);
-  const absent=manifest();absent.layers.snow3h.slots[1].status="missing";assert.throws(()=>forecastSnowSlots(absent,target(18),hour),/そろいません/);
+  const absent=manifest();absent.layers.snow3h.slots[1].status="missing";assert.equal(forecastSnowSlots(absent,target(18),hour).slots[0].missing,true);
   const duplicate=manifest();duplicate.layers.snow3h.slots.push({...duplicate.layers.snow3h.slots[1]});assert.throws(()=>forecastSnowSlots(duplicate,target(18),hour),/重複/);
-  assert.throws(()=>forecastSnowSlots(manifest(),{...target(18),basetime:"20261108020000"},hour),/一致/);
-  assert.throws(()=>forecastSnowSlots(manifest(),target(21),hour),/一致/);
+  assert.throws(()=>forecastSnowSlots(manifest(),{...target(18),basetime:"20261108020000"},hour),/発表回/);
+  assert.equal(forecastSnowSlots(manifest(),target(21),hour).slots.at(-1).missing,true);
 });
 test("stations use their own native 5km cell, preserving zero and explicit NoData rather than reading image transparency",()=>{
   const grid=forecastSnowGrid(stations);
   const fields=[geometry([1,0,6,-1]),geometry([3,0,6,0]),geometry([6,0,6,3])].map(g=>projectRiskField(g,grid,"snow3h"));
   assert.deepEqual(fields.map(a=>[...a]),[[1,0,6,-1],[3,0,6,0],[6,0,6,3]]);
-  assert.deepEqual(addForecastSnow(stations,fields).map(p=>p.value),[20,0,null,null]);
-  assert.deepEqual(addForecastSnow(stations,fields).map(p=>p.added),[10,0,null,null]);
+  assert.deepEqual(addForecastSnow(stations,fields).map(p=>p.value),[20,0,null,8]);
+  assert.deepEqual(addForecastSnow(stations,fields).map(p=>p.added),[10,0,null,3]);
   assert.deepEqual(stations.map(s=>s.value),[10,0,null,5],"the observed values remain untouched");
   const boundary=forecastSnowGrid([{lat:35,lng:137.5},{lat:35.0499,lng:137.56249},{lat:35.05,lng:137.5625}]);
   assert.deepEqual([...boundary.rows],[700,700,701]);assert.deepEqual([...boundary.cols],[2200,2200,2201]);
@@ -75,4 +75,15 @@ test("a late response to an aborted projection cannot produce a result",async()=
   let release,started;const pending=new Promise(r=>{release=r;}),ready=new Promise(r=>{started=r;});
   const load=createSnowForecastLoader({now:()=>Date.parse(hour),fetchImpl:async url=>{if(file(url)==="forecast_manifest.json")return response(manifest());started();await pending;return response(geometry([1,0,0,0]));}});
   const controller=new AbortController(),result=load(stations,hour,target(12),controller.signal);await ready;controller.abort();release();await assert.rejects(result,{name:"AbortError"});
+});
+
+test("missing forecast slots and NoData cells add zero without inventing an observation",async()=>{
+  const m=manifest([12,18]);const calls=[];
+  const load=createSnowForecastLoader({now:()=>Date.parse(hour),fetchImpl:async url=>{
+    const name=file(url);calls.push(name);return response(name==="forecast_manifest.json"?m:geometry([name.includes(stamp(12))?1:6,-1,6,0]));
+  }});
+  const result=await load(stations,hour,target(18));
+  assert.deepEqual(result.points.map(p=>p.value),[17,0,null,5]);
+  assert.equal(calls.filter(n=>n.endsWith("geojson")).length,2);
+  assert.equal(result.plan.missingSlots,1);
 });

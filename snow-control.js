@@ -45,6 +45,7 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
 
   function refreshPoint() {
     if (!selectedPoint) return;
+    point.hidden = false;
     if (!toggle.checked) { point.textContent = "選択地点：積雪表示はOFFです"; return; }
     if (displayedDay !== selectedDay || !bins) { point.textContent = "選択地点：積雪を準備中です"; return; }
     const index = lookupCell(grid, selectedPoint.lng, selectedPoint.lat);
@@ -55,8 +56,8 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
 
   function updateMode() {
     const active = positiveOnly.getAttribute("aria-pressed") === "true";
-    scaleStart.textContent = active ? "1cm・白" : "現象あり0cm・白";
-    contourCaption.textContent = active ? "細い実線：現象あり格子間の1・5・10・20・50・100cm境界" : "細い実線：積雪域の境界と各深さ以上の境界";
+    scaleStart.textContent = active ? "1cm" : "積雪あり0cm";
+    contourCaption.textContent = "境界：1・5・10・20・50・100cm";
     zeroContourLegend.hidden = active;
     contours?.setPositiveOnly(active);
     if (bins && displayedDay === selectedDay && layer) layer.setBins(snowFillBins(bins, active));
@@ -94,6 +95,7 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
 
   async function setDay(day) {
     selectedDay = day;
+    $("snowSelectedDate").textContent = `${Number(day.slice(0,2))}月${Number(day.slice(3,5))}日`;
     const token = ++request;
     tooltipBins = null; tooltipDay = null; tooltipError = false;
     onTooltipChange();

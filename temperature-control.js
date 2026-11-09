@@ -60,13 +60,13 @@ export function initTemperature(map, hooks = {}) {
     playing = false; preparing = false; cancelAnimationFrame(animation);
     playbackCancelResolve?.(false);
     playbackCancelResolve = null;
-    $("playYear").textContent = "▶ 冬季を再生";
+    $("playYear").textContent = "▶ 再生";
     $("playYear").setAttribute("aria-pressed", "false");
   };
   const dayText = (index) => `${manifest.days[index].replace("-", "月")}日`;
   const modeText = (mode) => TEMPERATURE_MODES[mode].label;
   function syncModeLabels() {
-    $("temperatureTitleText").textContent = `日別の${modeText(selectedMode)}`;
+    $("temperatureTitleText").textContent = modeText(selectedMode);
     document.querySelector(".temperature-legend").setAttribute("aria-label", `${modeText(displayedMode)}の色の凡例`);
     document.querySelector(".road-section .road-temperature-legend").setAttribute("aria-label", `道路の${modeText(displayedMode)}の色分け`);
     $("map").setAttribute("aria-label", `日別の${modeText(displayedMode)}、日最深積雪の平年推定値と全国の道路を表示する地図`);
@@ -95,7 +95,7 @@ export function initTemperature(map, hooks = {}) {
   function updateMapLabel() {
     if (!active) return;
     if (displayed < 0) { label.textContent = `${dayText(selected)} · ${modeText(selectedMode)}を読み込み中`; return; }
-    const shown = `${dayText(displayed)} · ${modeText(displayedMode)}（独自算出）`;
+    const shown = `${dayText(displayed)} · ${modeText(displayedMode)}`;
     label.textContent = displayed === selected && displayedMode === selectedMode ? shown
       : `${dayText(displayed)}の${modeText(displayedMode)}を表示中 · ${dayText(selected)}の${modeText(selectedMode)}を準備中`;
     if (!$("temperatureToggle").checked) label.textContent += " · 気温面は非表示";

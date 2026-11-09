@@ -16,9 +16,11 @@ export const RISK_LEVELS=Object.freeze({
   snow3h:{"1<=cm<3":1,"3<=cm<6":3,"6<=cm":6,NoData:-1},
 });
 
-// Four consecutive 3 h periods ending at t, t-3, t-6 and t-9 cover (t-12, t].
-// Missing history never proves dryness; one confirmed wet period is sufficient.
+// Missing precipitation/snowfall is a zero contribution in this display's
+// simplified forecast. Missing temperature/current weather still stays unknown.
 export function riskClass(weather,precipitation,snowfall,temperature,history) {
+  if(snowfall===-1)snowfall=0;
+  if(precipitation===-1)precipitation=0;
   if(snowfall>=6)return 7;
   if(snowfall>=3)return 6;
   if(snowfall>=1)return 5;
@@ -28,9 +30,7 @@ export function riskClass(weather,precipitation,snowfall,temperature,history) {
   if(temperature>2)return 1;
   if(!Array.isArray(history) || history.length!==4)return 0;
   const wet=history.some(sample=>sample?.precipitation>=1 || [3,4,5].includes(sample?.weather));
-  if(wet)return temperature<=0?3:2;
-  const complete=history.every(sample=>Number.isFinite(sample?.weather) && sample.weather>=1 && Number.isFinite(sample?.precipitation) && sample.precipitation>=0);
-  return complete?1:0;
+  return wet?(temperature<=0?3:2):1;
 }
 
 export function riskSlots(manifest,target) {
@@ -41,8 +41,9 @@ export function riskSlots(manifest,target) {
     const slots=manifest?.layers?.[kind]?.slots;
     if(!Array.isArray(slots) || slots.length>48)throw new Error("降水・降雪の対象一覧が不正です");
     const matches=slots.filter(s=>s.validtime===target.validtime && s.basetime===target.basetime && s.status==="available" && s.id===`${kind}_${target.validtime}`);
-    if(matches.length!==1)throw new Error("天気と道路判定の予報発表・対象時刻が一致しません");
-    result[kind]=matches[0];lists[kind]=slots;
+    if(matches.length>1 || kind==="weather3h" && matches.length!==1)throw new Error("天気と道路判定の予報発表・対象時刻が一致しません");
+    if(!matches.length && slots.some(s=>s.validtime===target.validtime && s.status==="available"))throw new Error("天気と道路判定の予報発表・対象時刻が一致しません");
+    result[kind]=matches[0] ?? null;lists[kind]=slots;
   }
   const temperatures=liveSlots(manifest,"temp3h");
   const matches=temperatures.filter(s=>s.status==="available" && s.basetime===target.basetime && s.validtime===target.validtime);

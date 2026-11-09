@@ -1,6 +1,6 @@
 import {LIVE_ROOT,utcTime} from "./live-temperature-data.js";
 import {snowMapKey} from "./live-snow-data.js?v=20261108-addition1";
-import {projectRiskField} from "./forecast-risk-data.js?v=20261026-risk-colors1";
+import {projectRiskField} from "./forecast-risk-data.js?v=20261109-panel2";
 
 const STEP=3*3600000;
 export function forecastSnowSlots(manifest,target,hour) {
@@ -9,22 +9,19 @@ export function forecastSnowSlots(manifest,target,hour) {
   if(end<observed)throw new Error("対象時刻が基準の実況より前です");
   if(end%STEP || end-observed>24*STEP)throw new Error("積雪加算の対象期間が不正です");
   const source=manifest?.layers?.snow3h?.slots;
-  if(!Array.isArray(source) || !source.length || source.length>48)throw new Error("降雪予報の時刻一覧が不正です");
-  const available=source.map(s=>({...s,end:Date.parse(utcTime(s.validtime))})).sort((a,b)=>a.end-b.end);
+  if(!Array.isArray(source) || source.length>48)throw new Error("降雪予報の時刻一覧が不正です");
+  const available=source.map(s=>({...s,end:Date.parse(utcTime(s.validtime))}));
   if(new Set(available.map(s=>s.validtime)).size!==available.length)throw new Error("降雪予報の時刻が重複しています");
-  const selected=available.find(s=>s.validtime===target.validtime);
-  if(!selected || selected.basetime!==target.basetime || selected.status!=="available" || selected.id!==`snow3h_${target.validtime}`)throw new Error("天気と降雪予報の発表・対象時刻が一致しません");
-  const slots=available.filter(s=>s.end>observed && s.end<=end);
-  if(end>observed && (!slots.length || slots.at(-1).end!==end))throw new Error("対象時刻までの降雪予報がありません");
-  for(let i=0;i<slots.length;i++) {
-    const s=slots[i];
-    if(s.status!=="available" || s.basetime!==target.basetime || s.id!==`snow3h_${s.validtime}` || s.end%STEP)throw new Error("同じ発表回の降雪予報がそろいません");
-    if(i && s.end-slots[i-1].end!==STEP)throw new Error("途中の3時間降雪予報が欠けています");
+  const slots=[];
+  for(let time=(Math.floor(observed/STEP)+1)*STEP;time<=end;time+=STEP) {
+    const validtime=new Date(time).toISOString().replace(/[-:TZ.]/g,"").slice(0,14);
+    const found=available.find(s=>s.validtime===validtime);
+    if(found?.status==="available" && (found.basetime!==target.basetime || found.id!==`snow3h_${validtime}`))throw new Error("同じ発表回の降雪予報がそろいません");
+    slots.push(found?.status==="available"?found:{id:`snow3h_${validtime}`,validtime,basetime:target.basetime,end:time,missing:true});
   }
   const start=slots.length?slots[0].end-STEP:observed;
-  if(start-observed>=STEP)throw new Error("実況と降雪予報の間に3時間以上の欠落があります");
   return {slots,base,end:new Date(end).toISOString(),start:new Date(start).toISOString(),hour,
-    overlapHours:Math.max(0,(observed-start)/3600000),gapHours:Math.max(0,(start-observed)/3600000)};
+    overlapHours:Math.max(0,(observed-start)/3600000),gapHours:0,missingSlots:slots.filter(s=>s.missing).length};
 }
 
 export function forecastSnowGrid(stations) {
@@ -39,8 +36,7 @@ export function addForecastSnow(stations,fields) {
   return stations.map((station,i)=>{
     if(station.value===null)return {id:station.id,value:null,added:null,reason:"実況が資料なし"};
     if(!Number.isFinite(station.value) || station.value<0 || station.value>1500)throw new Error("基準の実況積雪深が不正です");
-    if(fields.some(a=>a[i]<0))return {id:station.id,value:null,added:null,reason:"途中の降雪予報が資料なし"};
-    const added=fields.reduce((sum,a)=>sum+a[i],0);
+    const added=fields.reduce((sum,a)=>sum+Math.max(0,a[i]),0);
     return {id:station.id,value:station.value+added,added,reason:""};
   });
 }
@@ -63,6 +59,7 @@ export function createSnowForecastLoader({fetchImpl=fetch,now=Date.now}={}) {
       if(key!==generation){cache.clear();generation=key;}
       const geometries=[];
       for(let i=0;i<plan.slots.length;i+=4)geometries.push(...await Promise.all(plan.slots.slice(i,i+4).map(async slot=>{
+        if(slot.missing)return null;
         const file=`forecast_${slot.id}_value.geojson`,cached=cache.get(file);
         if(cached)return cached;
         const value=await get(file,signal);
@@ -72,7 +69,7 @@ export function createSnowForecastLoader({fetchImpl=fetch,now=Date.now}={}) {
       const after=await get("forecast_manifest.json",signal);
       if(JSON.stringify(after)!==JSON.stringify(manifest)){cache.clear();continue;}
       if(signal?.aborted)throw new DOMException("Aborted","AbortError");
-      const fields=geometries.map(g=>projectRiskField(g,grid,"snow3h"));
+      const fields=geometries.map(g=>g?projectRiskField(g,grid,"snow3h"):new Int16Array(grid.count));
       return {plan,points:addForecastSnow(stations,fields)};
     }
     throw new Error("降雪予報が更新中です。再読込してください");

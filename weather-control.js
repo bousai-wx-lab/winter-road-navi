@@ -4,14 +4,14 @@ import {forecastTickLabel} from "./forecast-timeline.js";
 
 const $=id=>document.getElementById(id);
 export function initWeather(map,hooks={}) {
-  const beforeLayer=hooks.beforeLayer ?? "general-road-casing";
+  const beforeLayer=()=>typeof hooks.beforeLayer === "function" ? hooks.beforeLayer() : hooks.beforeLayer ?? "general-road-casing";
   let active=false,mode="observed",view="weather",slots=[],selected=null,token=0,abort=null,timer=null,current=null;
   const saved={observed:null,forecast:null},sources=[],layers=[];
   const product=()=>weatherProduct(mode,view);
   function metadata() {
-    const {name,label}=product();
+    const {name}=product();
     $("weatherControls").setAttribute("aria-label",`${name}の設定`);
-    $("weatherTitle").textContent=label;$("weatherSlotLabel").textContent=`${name}の対象時刻・期間`;
+    $("weatherTitle").textContent=name;$("weatherSlotLabel").textContent="対象日時";
     $("weatherOpacityLabelText").textContent=`${name}の濃さ `;
     $("weatherLegend").hidden=view!=="weather";$("precipitationLegend").hidden=view!=="precipitation";$("snowfallLegend").hidden=view!=="snowfall";
     $("weatherDescription").textContent=view==="weather"
@@ -23,7 +23,7 @@ export function initWeather(map,hooks={}) {
     for(const id of sources.splice(0)) if(map.getSource(id))map.removeSource(id);
     current=null;delete $("map").dataset.weatherTarget;delete $("map").dataset.weatherReady;delete $("map").dataset.weatherElement;delete $("map").dataset.weatherBase;
   }
-  function status(message,state) {$("weatherStatus").textContent=message;$("weatherStatus").dataset.state=state;hooks.onChange?.();}
+  function status(message,state) {$("weatherStatus").textContent=message;$("weatherStatus").dataset.state=state;$("weatherRefresh").hidden=state!=="error";hooks.onChange?.();}
   function controls() {
     const index=slots.findIndex(s=>s.id===selected);
     $("weatherPrevious").disabled=index<=0;$("weatherNext").disabled=index<0 || index>=slots.length-1;$("weatherSlot").disabled=!slots.length;
@@ -59,11 +59,11 @@ export function initWeather(map,hooks={}) {
       for(const z of [4,6,8,10]) {
         const tile=weatherTile(mode,slot,z,view),id=`weather-${request}-${z}`;sources.push(id);layers.push(id);
         map.addSource(id,{type:"raster",tiles:[tile.url],tileSize:tile.tileSize,minzoom:tile.nativeZoom,maxzoom:tile.nativeZoom,bounds:[122,20,154,48],attribution:'<a href="https://www.jma.go.jp/bosai/'+(mode==="observed"?'suikei':'wdist')+'/" target="_blank" rel="noopener noreferrer">気象庁の'+requestProduct.name+'</a>'});
-        map.addLayer({id,type:"raster",source:id,minzoom:z===4?0:z-1,...(z<10?{maxzoom:z+1}:{}),paint:{"raster-opacity":Number($("weatherOpacity").value)/100,"raster-resampling":"nearest","raster-fade-duration":0}},beforeLayer);
+        map.addLayer({id,type:"raster",source:id,minzoom:z===4?0:z-1,...(z<10?{maxzoom:z+1}:{}),paint:{"raster-opacity":Number($("weatherOpacity").value)/100,"raster-resampling":"nearest","raster-fade-duration":0}},beforeLayer());
       }
       $("map").dataset.weatherMode=mode;$("map").dataset.weatherElement=requestProduct.element;$("map").dataset.weatherTarget=slot.end;$("map").dataset.weatherBase=slot.base;
       hooks.onLayersReady?.();
-      $("mapTemperatureLabel").textContent=`${slot.label} · ${requestProduct.label}`;
+      $("mapTemperatureLabel").textContent=slot.label;
       loaded();
     }catch(error) {
       if(!active || request!==token || error.name==="AbortError")return;

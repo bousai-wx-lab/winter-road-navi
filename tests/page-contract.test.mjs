@@ -48,7 +48,7 @@ test("road controls and mesh calendar exist, old station blur remains absent", (
   for (const control of ['id="dateSlider"', 'id="temperatureToggle"', 'id="playYear"', 'id="previousDay"', 'id="nextDay"']) {
     assert.equal(html.includes(control), true, control);
   }
-  for (const removed of ["temperature-data.js", "代表180地点"]) {
+  for (const removed of ["./temperature-data.js", "代表180地点"]) {
     assert.equal(html.includes(removed) || app.includes(removed), false, removed);
   }
 });
@@ -64,10 +64,10 @@ test("snow shares the same map and calendar with independent visibility, opacity
   for (const id of ["snowToggle", "snowOpacity", "snowPositiveOnly", "snowStatus", "snowPreparationStatus", "snowPoint"]) {
     assert.equal(html.includes(`id="${id}"`), true, id);
   }
-  for (const level of [1, 5, 10, 20, 50, 100]) assert.equal(html.includes(`>${level}cm</span>`), true);
-  assert.equal(html.includes("雪域の境界</span>"), true);
+  assert.equal(html.includes("境界：1・5・10・20・50・100cm"), true);
+  assert.equal(html.includes("＋雪域</span>"), true);
   assert.equal(html.includes('id="snowPositiveOnly" type="button" aria-pressed="false"'), true);
-  assert.equal(html.includes("現象なしは無色"), true);
+  assert.equal(html.includes("積雪なし・欠測は無色"), true);
   assert.equal(html.includes("細い実線"), true);
   assert.equal(html.includes("推定した1km格子境界"), true);
   assert.equal(app.includes("initSnow(map, grid, manifest, refreshTooltip)"), true);

@@ -1,17 +1,28 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
-import {AMEDAS_ROOT,LIVE_SNOW_BANDS,LIVE_SNOW_LABEL_ZOOM,snowHour,snowMapKey,decodeSnowStations,snowStationValue,snowStationLabel} from "./live-snow-data.js?v=20261108-addition1";
+import {AMEDAS_ROOT,LIVE_SNOW_BANDS,LIVE_SNOW_LABEL_ZOOM,snowHour,snowMapKey,decodeSnowStations,snowStationValue,snowStationLabel} from "./live-snow-data.js?v=20261109-marker1";
 import {createSnowForecastLoader} from "./forecast-snow-data.js?v=20261108-addition1";
 import {timeLabel} from "./live-temperature-data.js";
 
 const $=id=>document.getElementById(id),EMPTY={type:"FeatureCollection",features:[]};
 const POINT_SIZES={observed:{radius:[2.5,6,10],halo:[5.7,10.2,14.2],stroke:1.2},forecast:{radius:[2,3.5,6],halo:[4.5,6,8.5],stroke:1}};
 const zoomSize=values=>["interpolate",["linear"],["zoom"],3,values[0],5,values[1],9,values[2]];
+const MISSING_FILL="#eef2f5";
 function missingHatch() {
-  const canvas=document.createElement("canvas");canvas.width=canvas.height=48;
-  const ctx=canvas.getContext("2d");ctx.beginPath();ctx.arc(24,24,18.8,0,Math.PI*2);ctx.clip();
-  ctx.strokeStyle="#445c6e";ctx.lineWidth=3.2;
-  for(let x=-48;x<96;x+=9){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+48,48);ctx.stroke();}
-  return ctx.getImageData(0,0,48,48);
+  const canvas=document.createElement("canvas");
+  canvas.width=canvas.height=48;
+  const ctx=canvas.getContext("2d");
+  ctx.beginPath();
+  ctx.arc(24,24,18.8,0,Math.PI*2);
+  ctx.clip();
+  ctx.strokeStyle="#445c6e";
+  ctx.lineWidth=3.2;
+  ctx.beginPath();
+  for(const offset of [-13,0,13]) {
+    ctx.moveTo(offset,0);
+    ctx.lineTo(48+offset,48);
+  }
+  ctx.stroke();
+  return canvas;
 }
 export function initLiveSnow(map,hooks={}) {
   let active=false,overlay=false,observedSelection=null,token=0,abort=null,timer=null,stations=[],selected=null,latest=null,popup=null,selectedStation=null;
@@ -19,17 +30,21 @@ export function initLiveSnow(map,hooks={}) {
   const forecastValues=new Map(),loadForecast=createSnowForecastLoader();
   const mapLabel=text=>{if(!overlay)$("mapTemperatureLabel").textContent=text;};
   map.addSource("live-snow-points",{type:"geojson",data:EMPTY});
-  map.addImage("live-snow-missing-hatch",missingHatch(),{pixelRatio:2});
+  const hatch=missingHatch();
+  map.addImage("live-snow-missing-hatch",hatch.getContext("2d").getImageData(0,0,hatch.width,hatch.height),{pixelRatio:2});
   const layers=["live-snow-point-halos","live-snow-points","live-snow-missing","live-snow-values"];
   map.addLayer({id:layers[0],type:"circle",source:"live-snow-points",layout:{visibility:"none"},paint:{"circle-radius":zoomSize(POINT_SIZES.observed.halo),"circle-color":"#ffffff"}});
   const colors=["step",["get","value"],LIVE_SNOW_BANDS[0].color,...LIVE_SNOW_BANDS.slice(1).flatMap(band=>[band.min,band.color])];
-  map.addLayer({id:layers[1],type:"circle",source:"live-snow-points",layout:{visibility:"none"},paint:{"circle-radius":zoomSize(POINT_SIZES.observed.radius),"circle-color":["case",["get","available"],colors,"#c1cbd2"],"circle-stroke-color":"#213e53","circle-stroke-width":1.2}});
+  map.addLayer({id:layers[1],type:"circle",source:"live-snow-points",layout:{visibility:"none"},paint:{"circle-radius":zoomSize(POINT_SIZES.observed.radius),"circle-color":["case",["get","available"],colors,MISSING_FILL],"circle-stroke-color":"#213e53","circle-stroke-width":1.2}});
   map.addLayer({id:layers[2],type:"symbol",source:"live-snow-points",filter:["!",["get","available"]],layout:{visibility:"none","icon-image":"live-snow-missing-hatch","icon-size":zoomSize(POINT_SIZES.observed.radius.map(r=>r/10)),"icon-allow-overlap":true,"icon-ignore-placement":true}});
   map.addLayer({id:layers[3],type:"symbol",source:"live-snow-points",minzoom:LIVE_SNOW_LABEL_ZOOM,filter:["get","available"],layout:{visibility:"none","text-field":["to-string",["get","value"]],"text-font":["sans-serif"],"text-size":12,"text-anchor":"top","text-offset":[0,1.25],"text-padding":2},paint:{"text-color":"#143c54","text-halo-color":"#ffffff","text-halo-width":2}});
   const legend=$("liveSnowPointLegend");
   for(const band of [{label:"資料なし",color:null},...LIVE_SNOW_BANDS]) {
     const item=document.createElement("span"),key=document.createElement("i"),label=document.createElement("span");
-    key.className="live-snow-point-key"+(band.color?"":" missing");key.setAttribute("aria-hidden","true");if(band.color)key.style.backgroundColor=band.color;
+    key.className="live-snow-point-key"+(band.color?"":" missing");
+    key.setAttribute("aria-hidden","true");
+    key.style.backgroundColor=band.color ?? MISSING_FILL;
+    if(!band.color)key.append(hatch);
     label.textContent=band.label;item.append(key,label);legend.append(item);
   }
   function pointFor(s) {

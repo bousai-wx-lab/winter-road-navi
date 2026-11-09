@@ -1,7 +1,7 @@
 export const AMEDAS_ROOT="https://www.jma.go.jp/bosai/amedas/";
 export const LIVE_SNOW_LABEL_ZOOM=7;
 export const LIVE_SNOW_BANDS=Object.freeze([
-  {min:0,label:"0cm",color:"#f7f9fa"},
+  {min:0,label:"0cm",color:"#d5dde2"},
   {min:1,label:"1〜4cm",color:"#9fd2ff"},
   {min:5,label:"5〜19cm",color:"#228cff"},
   {min:20,label:"20〜49cm",color:"#0041ff"},

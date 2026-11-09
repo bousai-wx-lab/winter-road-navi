@@ -6,6 +6,7 @@ import {
   JAPAN_VIEW,
   GENERAL_ROAD_FILTER,
   HIGHWAY_FILTER,
+  MAP_OUTLINE_LAYER,
   ROAD_TILE_URL,
   classifyRoad,
   createMapStyle,
@@ -68,5 +69,15 @@ test("style has no third-party glyph, sprite, terrain, or analytics source", () 
   assert.equal(style.glyphs, undefined);
   assert.equal(style.sprite, undefined);
   assert.equal(style.terrain, undefined);
-  assert.deepEqual(Object.keys(style.sources).sort(), ["background", "roads"].sort());
+  assert.deepEqual(Object.keys(style.sources).sort(), ["background", "overview", "roads"]);
+});
+
+test("outlines stay between the basemap and roads, including below the vector tile zoom range", () => {
+  const { layers } = createMapStyle();
+  const position = id => layers.findIndex(layer => layer.id === id);
+  for (const id of [MAP_OUTLINE_LAYER, "coastline", "water-outline", "administrative-outline"]) {
+    assert.ok(position("background-map") < position(id));
+    assert.ok(position(id) < position("general-road-casing"));
+  }
+  assert.equal(layers[position(MAP_OUTLINE_LAYER)].maxzoom, layers[position("coastline")].minzoom);
 });

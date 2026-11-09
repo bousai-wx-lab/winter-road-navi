@@ -1,10 +1,10 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
-import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=20261023-layout1";
-import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20261109-panel1";
+import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=20261110-outline1";
+import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20261110-outline1";
 import { createRoadTemperature } from "./road-temperature.js?v=20261023-zoomcolor1";
-import { initSnow } from "./snow-control.js?v=20261109-panel1";
-import { initLiveTemperature } from "./live-temperature-control.js?v=20261109-panel1";
-import { initWeather } from "./weather-control.js?v=20261109-panel1";
+import { initSnow } from "./snow-control.js?v=20261110-outline1";
+import { initLiveTemperature } from "./live-temperature-control.js?v=20261110-outline1";
+import { initWeather } from "./weather-control.js?v=20261110-outline1";
 import { initLiveSnow } from "./live-snow-control.js?v=20261109-panel1";
 import { initForecastRisk } from "./forecast-risk-control.js?v=20261109-panel2";
 import { RISK_RULES } from "./forecast-risk-data.js?v=20261109-panel2";
@@ -274,7 +274,7 @@ function initializeControllers() {
     onChange:refreshTooltip,
   });
   liveSnow = initLiveSnow(map,{onChange:refreshTooltip});
-  weather = initWeather(map,{beforeLayer:()=>document.querySelector("#snowRoadOrder").value === "snow" ? "general-road-casing" : "live-snow-point-halos",onChange(){if(displayMode==="forecast" && displayView==="risk"){risk.setTarget(weather?.current());liveSnow?.setForecastTarget(weather?.current());}refreshTooltip();forecastTimeline.render();}});
+  weather = initWeather(map,{onChange(){if(displayMode==="forecast" && displayView==="risk"){risk.setTarget(weather?.current());liveSnow?.setForecastTarget(weather?.current());}refreshTooltip();forecastTimeline.render();}});
   liveTemperature = initLiveTemperature(map, {
     onChange(){forecastTimeline.render();},
     onData(shown) {

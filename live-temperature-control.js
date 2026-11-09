@@ -1,6 +1,7 @@
 import {createTemperatureLayer, lookupCell, paletteColor} from "./temperature-layer.js";
 import {LIVE_ROOT,LIVE_KINDS,LIVE_POLL_MS,liveSlots,liveFile,liveSlotKey,chooseLiveSlot,decodeLiveCSV,timeLabel,utcTime,liveFreshness} from "./live-temperature-data.js?v=20261109-panel3";
 import {forecastTickLabel} from "./forecast-timeline.js";
+import {MAP_OUTLINE_LAYER} from "./road-style.js?v=20261110-outline1";
 
 const $=id=>document.getElementById(id);
 const MODE_KINDS={observed:["current","observed"],forecast:["temp3h","daily"]};
@@ -109,7 +110,7 @@ export function initLiveTemperature(map,hooks={}) {
         if(!same)grid=data.grid;
         layerMode=mode;
         layer=createTemperatureLayer(grid,{id:"live-temperature",colorForBin:paletteColor});
-        map.addLayer(layer,"general-road-casing");
+        map.addLayer(layer,MAP_OUTLINE_LAYER);
       }
       data.grid=grid;layer.setBins(data.bins);
       const title=kind==="daily" || kind==="observed"?`${observed?"実況":"予想"}${slot.element==="min"?"最低":"最高"}気温`:observed?"実況気温":"予想気温";

@@ -65,7 +65,7 @@ function fixture({ automatic = false } = {}) {
   };
   const map = {
     layers: new Map(), listeners: new Map(),
-    addLayer(layer, before) { assert.equal(before, "general-road-casing"); this.layers.set(layer.id, layer); },
+    addLayer(layer, before) { assert.equal(before, "coastline-overview"); this.layers.set(layer.id, layer); },
     getLayer(id) { return this.layers.get(id); },
     removeLayer(id) { this.layers.delete(id); },
     on(name, fn) { this.listeners.set(name, fn); },

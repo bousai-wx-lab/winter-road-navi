@@ -1,6 +1,7 @@
 import { createTemperatureLayer, lookupCell } from "./temperature-layer.js";
 import { checkedSnowManifest, decodeSnowDay, expandSnowBins, snowFillBins, SNOW_COLORS, snowBinLabel } from "./snow-display-data.js?v=20260924-snow2";
 import { createSnowContourLayer } from "./snow-contour-layer.js?v=20260924-snow2";
+import { MAP_OUTLINE_LAYER } from "./road-style.js?v=20261110-outline1";
 
 const ROOT = "./data/snow/";
 const $ = (id) => document.getElementById(id);
@@ -186,8 +187,8 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
       });
       contours = createSnowContourLayer();
       contours.setPositiveOnly(positiveOnly.getAttribute("aria-pressed") === "true");
-      map.addLayer(layer, "general-road-casing");
-      map.addLayer(contours, "general-road-casing");
+      map.addLayer(layer, MAP_OUTLINE_LAYER);
+      map.addLayer(contours, MAP_OUTLINE_LAYER);
       const value = Number(opacity.value) / 100;
       layer.setOpacity(value); contours.setOpacity(value);
       toggle.disabled = false;

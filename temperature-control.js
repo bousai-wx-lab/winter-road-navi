@@ -1,5 +1,6 @@
 import { expandGrid, createTemperatureLayer, lookupCell, binLabel, paletteColor } from "./temperature-layer.js";
 import { decodeDisplayDay, unpackRoadClasses, roadClassLabel, validRoadClassContract } from "./temperature-display-data.js";
+import { MAP_OUTLINE_LAYER } from "./road-style.js?v=20261110-outline1";
 
 const $ = (id) => document.getElementById(id);
 const ROOT = "./data/temperature/";
@@ -324,7 +325,7 @@ export function initTemperature(map, hooks = {}) {
       grid = expandGrid(await checkedJSON(manifest.grid));
       hooks.onGrid?.(grid);
       layer = createTemperatureLayer(grid);
-      map.addLayer(layer, "general-road-casing");
+      map.addLayer(layer, MAP_OUTLINE_LAYER);
       layer.setOpacity(Number($("temperatureOpacity").value) / 100);
       hooks.onLayerReady?.(grid, manifest);
       const seasonMonths = [...new Set(manifest.days.map((entry) => Number(entry.slice(0, 2))))];

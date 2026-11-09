@@ -1,6 +1,7 @@
 export const ROAD_TILE_URL = "https://cyberjapandata.gsi.go.jp/xyz/experimental_bvmap/{z}/{x}/{y}.pbf";
 export const BASE_TILE_URL = "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png";
 export const JAPAN_VIEW = Object.freeze({ bounds: [[128, 30], [146, 46]], padding: 18 });
+export const MAP_OUTLINE_LAYER = "coastline-overview";
 
 const numeric = (property, fallback = -1) => ["to-number", ["get", property], fallback];
 
@@ -19,6 +20,7 @@ export const GENERAL_ROAD_FILTER = Object.freeze([
 ]);
 
 const roadWidth = (small, large) => ["interpolate", ["linear"], ["zoom"], 5, small, 15, large];
+const coastPaint = { "line-color": "#304553", "line-width": 1.25, "line-opacity": 0.92 };
 
 export function createMapStyle() {
   return {
@@ -40,9 +42,33 @@ export function createMapStyle() {
         bounds: [122, 20, 154, 47],
         attribution: '<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">地理院地図Vector</a>',
       },
+      overview: {
+        type: "geojson",
+        data: new URL("./assets/coastline-overview.geojson", import.meta.url).href,
+        maxzoom: 4,
+        attribution: '<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">地理院地図Vector</a>',
+      },
     },
     layers: [
-      { id: "background-map", type: "raster", source: "background", minzoom: 2, paint: { "raster-opacity": 0.75, "raster-saturation": -0.55, "raster-contrast": 0.05 } },
+      { id: "background-map", type: "raster", source: "background", minzoom: 2, paint: { "raster-opacity": 0.92, "raster-saturation": -0.55, "raster-contrast": 0.05 } },
+      // Weather and climate surfaces are inserted below the outlines.
+      { id: MAP_OUTLINE_LAYER, type: "line", source: "overview", maxzoom: 4, paint: coastPaint },
+      {
+        id: "coastline", type: "line", source: "roads", "source-layer": "coastline", minzoom: 4,
+        filter: ["match", numeric("ftCode"), [55101, 5101, 5102, 5103], true, false],
+        paint: coastPaint,
+      },
+      {
+        // These tiles use water polygons for the shoreline. Keep inland water outlines subdued.
+        id: "water-outline", type: "line", source: "roads", "source-layer": "waterarea", minzoom: 8, maxzoom: 14,
+        filter: ["==", numeric("ftCode"), 5000],
+        paint: { ...coastPaint, "line-width": 0.85, "line-opacity": 0.48 },
+      },
+      {
+        id: "administrative-outline", type: "line", source: "roads", "source-layer": "boundary", minzoom: 6,
+        filter: ["match", numeric("ftCode"), [51212, 1211], true, false],
+        paint: { "line-color": "#495663", "line-width": 1, "line-opacity": 0.8, "line-dasharray": [3, 2] },
+      },
       {
         id: "general-road-casing",
         type: "line",

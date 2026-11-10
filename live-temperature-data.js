@@ -50,8 +50,8 @@ export function liveSlots(manifest, kind) {
 export function liveFile(kind, slot) {
   if (slot.status === "unavailable") throw new Error("対象データなし");
   if (kind === "current") return "observed_temp_value_30y.csv";
-  if (kind === "observed" && /^\d{8}_(min|max)$/.test(slot.id)) return `observed_${slot.id}_anomaly_30y.csv`;
-  if (kind === "daily" && /^(today|tomorrow)_(min|max)$/.test(slot.id)) return `forecast_${slot.id}_anomaly_30y.csv`;
+  if (kind === "observed" && /^\d{8}_(min|max)$/.test(slot.id)) return `observed_${slot.id}_anomaly_normal.csv`;
+  if (kind === "daily" && /^(today|tomorrow)_(min|max)$/.test(slot.id)) return `forecast_${slot.id}_anomaly_normal.csv`;
   if (kind === "temp3h" && /^temp3h_\d{14}$/.test(slot.id)) return `forecast_${slot.id}_value.csv`;
   throw new Error("データ参照が不正です");
 }
@@ -71,12 +71,50 @@ export function classForTemperature(value) {
   return !Number.isFinite(value) ? 0 : value <= 0 ? 4 : value <= 2 ? 3 : value <= 5 ? 2 : 1;
 }
 
+export const isDailyTemperature = kind => kind === "observed" || kind === "daily";
+
+const isDailyExtreme = slot => ["min", "max"].includes(slot.element) && slot.id?.endsWith(`_${slot.element}`);
+const previousSources = {observed_daily:"実況", observed_realtime:"暫定実況", forecast:"予測"};
+
+export function previousComparison(slot) {
+  if (!isDailyExtreme(slot) || !validDate(slot.target_date) || !Object.hasOwn(previousSources, slot.previous_comparison_source)) return null;
+  const date = new Date(Date.parse(slot.target_date) - 86_400_000).toISOString().slice(0, 10);
+  if (date !== slot.previous_comparison_date) return null;
+  return {date, source:previousSources[slot.previous_comparison_source]};
+}
+
+const COMPARISON_FIELDS = {
+  previous: ["previous_day_c", "previous_diff_c"],
+  normal: ["average_c", "anomaly_c"],
+};
+
+function comparisonNumber(text) {
+  return /^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(text ?? "") ? Number(text) : NaN;
+}
+
+function comparedValue(record, type, temperature, allowed) {
+  if (!allowed || !Number.isFinite(temperature)) return null;
+  const [referenceField, differenceField] = COMPARISON_FIELDS[type];
+  const reference = comparisonNumber(record[referenceField]);
+  const difference = comparisonNumber(record[differenceField]);
+  // The upstream columns are rounded independently to hundredths of a degree.
+  if (!Number.isFinite(reference) || Math.abs(reference) > 60 || !Number.isFinite(difference)
+    || Math.abs(temperature - reference - difference) > 0.016) return null;
+  return {reference, difference};
+}
+
+function differenceBin(value) {
+  return 11 + Math.sign(value) * Math.min(10, Math.floor(Math.abs(value)));
+}
+
 export function decodeLiveCSV(text, kind, slot, expectedCount = 31296) {
   if (typeof text !== "string" || text.length > 5_000_000) throw new Error("気温データが不正です");
   const lines = text.trim().replace(/^\uFEFF/, "").split(/\r?\n/), header = lines.shift().split(",");
   const field = kind === "current" || kind === "observed" ? "observed_c" : "forecast_c";
   const required = ["longitude","latitude",field,"source_date","target_date"];
   if (new Set(header).size !== header.length || required.some(key => !header.includes(key)) || lines.length !== expectedCount) throw new Error("気温の列・格子数が一致しません");
+  const daily = isDailyTemperature(kind);
+  const previous = daily && previousComparison(slot), normal = daily && isDailyExtreme(slot);
   const rows = lines.map(line => {
     const fields = line.split(",");
     if (fields.length !== header.length) throw new Error("気温の行が不正です");
@@ -89,12 +127,21 @@ export function decodeLiveCSV(text, kind, slot, expectedCount = 31296) {
     if (record[field] !== "" && (!Number.isFinite(value) || value < -60 || value > 60)) throw new Error("気温値が不正です");
     const target=kind === "current" || kind === "observed" ? slot.target_time : slot.target_date;
     if (record.target_date !== target || ((kind === "current" || kind === "observed") && record.source_date !== slot.target_date)) throw new Error("気温と選択時刻が一致しません");
-    return {row,col,value};
+    return {
+      row,col,value,
+      previous: comparedValue(record,"previous",value,previous),
+      normal: comparedValue(record,"normal",value,normal),
+    };
   }).sort((a,b)=>a.row-b.row || a.col-b.col);
   const count=rows.length, grid={count,rowScale:20,colScale:16,rows:new Uint16Array(count),cols:new Uint16Array(count),rects:new Float32Array(count*4)};
   const values=new Float64Array(count), bins=new Uint8Array(count), classes=new Uint8Array(count);
+  const comparisons = daily ? Object.fromEntries(Object.keys(COMPARISON_FIELDS).map(type => [type, {
+    values:new Float64Array(count).fill(NaN), references:new Float64Array(count).fill(NaN), bins:new Uint8Array(count), count:0,
+  }])) : {};
+  const comparisonEntries = Object.entries(comparisons);
   const mercatorY=lat=>(1-Math.log(Math.tan(Math.PI/4+lat*Math.PI/360))/Math.PI)/2;
-  rows.forEach(({row,col,value},i)=>{
+  rows.forEach((cell,i)=>{
+    const {row,col,value}=cell;
     if(i && row===rows[i-1].row && col===rows[i-1].col) throw new Error("気温格子が重複しています");
     grid.rows[i]=row;grid.cols[i]=col;
     grid.rects.set([(col/16+180)/360,mercatorY(row/20),((col+1)/16+180)/360,mercatorY((row+1)/20)],i*4);
@@ -102,8 +149,16 @@ export function decodeLiveCSV(text, kind, slot, expectedCount = 31296) {
     // All temperature faces share the normal-mode 1°C palette. Road classes
     // retain their independent raw-value 0/2/5°C thresholds.
     bins[i]=Number.isFinite(value)?Math.min(81,Math.max(1,Math.floor(value)+41)):0;
+    for (const [type, result] of comparisonEntries) {
+      const comparison = cell[type];
+      if (!comparison) continue;
+      result.values[i] = comparison.difference;
+      result.references[i] = comparison.reference;
+      result.bins[i] = differenceBin(comparison.difference);
+      result.count++;
+    }
   });
-  return {grid,values,bins,classes};
+  return {grid,values,bins,classes,comparisons};
 }
 
 export function liveFreshness(manifest, kind, slot, now=Date.now()) {

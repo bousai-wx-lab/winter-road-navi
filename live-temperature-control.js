@@ -1,18 +1,56 @@
 import {createTemperatureLayer, lookupCell, paletteColor} from "./temperature-layer.js";
-import {LIVE_ROOT,LIVE_KINDS,LIVE_POLL_MS,liveSlots,liveFile,liveSlotKey,chooseLiveSlot,decodeLiveCSV,timeLabel,utcTime,liveFreshness} from "./live-temperature-data.js?v=20261109-panel3";
+import {LIVE_ROOT,LIVE_KINDS,LIVE_POLL_MS,liveSlots,liveFile,liveSlotKey,chooseLiveSlot,decodeLiveCSV,timeLabel,utcTime,liveFreshness,isDailyTemperature,previousComparison} from "./live-temperature-data.js?v=20261110-daily-diff1";
 import {forecastTickLabel} from "./forecast-timeline.js";
 import {MAP_OUTLINE_LAYER} from "./road-style.js?v=20261110-outline1";
 
 const $=id=>document.getElementById(id);
 const MODE_KINDS={observed:["current","observed"],forecast:["temp3h","daily"]};
+const COMPARISON_LABELS={value:"気温",previous:"前日差",normal:"平年差"};
+const COMPARISON_BUTTONS={value:"liveValue",previous:"livePreviousDifference",normal:"liveNormalDifference"};
+const degrees = value => value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+
+function differenceColor(bin) {
+  const difference = bin - 11;
+  const center = [249, 249, 246], end = difference < 0 ? [24, 83, 164] : [179, 36, 55];
+  const weight = Math.sqrt(Math.min(10, Math.abs(difference)) / 10);
+  return "#" + center.map((value, i) => Math.round(value + weight * (end[i] - value)).toString(16).padStart(2, "0")).join("");
+}
+
 export function initLiveTemperature(map,hooks={}) {
   let active=false,request=0,abort=null,timer=null,loading=false;
   let manifest=null,slots=[],selectedId=null,selectedTarget=null,followingLatest=true,shown=null,layer=null,grid=null,pinned=null,layerMode=null;
+  let comparison="value",layerGrid=null,layerDifference=false;
   const legend=$("liveTemperatureGradient").getContext("2d");
   for(let bin=1;bin<=81;bin++){legend.fillStyle=paletteColor(bin);legend.fillRect((bin-1)*4,0,4,18);}
+  const differenceLegend=$("liveDifferenceGradient").getContext("2d");
+  for(let bin=1;bin<=21;bin++){differenceLegend.fillStyle=differenceColor(bin);differenceLegend.fillRect((bin-1)*15,0,15,18);}
   const select=$("liveSlot"),kindSelect=$("liveKind"),status=$("liveStatus"),point=$("livePoint");
   let mode="observed",kind=kindSelect.value;
   const selections={observed:null,forecast:{kind:"temp3h",selectedId:null,selectedTarget:null,followingLatest:false}};
+  const view=()=>active && isDailyTemperature(kind) ? comparison : "value";
+  const title=()=>shown ? shown.title + (view()==="value" ? "" : `の${COMPARISON_LABELS[view()]}`) : LIVE_KINDS[kind].label;
+
+  function comparisonControls() {
+    const current=view(), difference=current!=="value";
+    $("liveComparisonControls").hidden=!active || !isDailyTemperature(kind);
+    for (const [type,id] of Object.entries(COMPARISON_BUTTONS)) {
+      $(id).setAttribute("aria-pressed",String(current===type));
+    }
+    $("liveObservedLegend").hidden=difference;
+    $("liveDifferenceLegend").hidden=!difference;
+    $("temperatureToggleLabel").textContent=difference ? "差を表示" : "気温を表示";
+    const note=$("liveComparisonNote");
+    note.hidden=!difference || !shown;
+    if (!difference || !shown) {note.textContent="";return;}
+    const daily=shown.slot.element==="min" ? "日最低" : "日最高";
+    const previous=previousComparison(shown.slot);
+    const basis=current==="normal" ? `同じ月日の${daily}の平年値（1991〜2020年）との比較`
+      : previous ? `${previous.date.replaceAll("-","/")}の${daily}（${previous.source}）との比較`
+      : "前日の比較資料なし";
+    const provisional=shown.slot.source==="realtime" ? "当日は表示時刻までの暫定値です。" : "";
+    const missing=shown.data.comparisons[current].count ? "" : "表示できる差はありません。";
+    note.textContent=`${basis}。${provisional}${missing}道路の色は選択日の気温です。`;
+  }
   function setMode(next) {
     if(!Object.hasOwn(MODE_KINDS,next)) throw new Error("気温モードが不正です");
     if(next!==mode) {
@@ -25,7 +63,7 @@ export function initLiveTemperature(map,hooks={}) {
     const label=mode==="observed"?"実況":"予測";
     $("liveControls").setAttribute("aria-label",`${label}気温の設定`);
     $("liveKindLabel").textContent="気温の種類";
-    $("liveColorNote").textContent="気温の面は全モード共通の1℃ごとの配色。道路は0・2・5℃で着色します。欠測の面は無色・道路は灰色です。";
+    $("liveColorNote").textContent="気温表示の面は全モード共通の1℃ごとの配色。差の表示は低い側が青、高い側が赤です。道路は選択日の気温で0・2・5℃を境に着色します。";
     $("liveUpdateNote").textContent="天気分布予報プラスと同じ数値を使用。10分ごと・タブ復帰時に更新を確認します。"+(mode==="observed"?"実況の最新枠を選択中は最新時刻へ進み、過去の対象を選んだ場合はその対象を保ちます。":"選択した予想の対象日時を保ちます。実況値は実況値モードで確認できます。");
     controls();
   }
@@ -35,29 +73,53 @@ export function initLiveTemperature(map,hooks={}) {
     $("livePrevious").disabled=index<=0;
     $("liveNext").disabled=index<0 || index>=slots.length-1;
     select.disabled=!slots.length;
+    comparisonControls();
     hooks.onChange?.();
   }
   function valueAt(lng,lat) {
-    if(!shown) return {label:loading?"気温を準備中":"気温を表示できません"};
-    const index=lookupCell(grid,lng,lat),value=index<0?NaN:shown.data.values[index];
-    return {label:Number.isFinite(value)?`${value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}℃`:"気温なし",value,roadClass:index<0?0:shown.data.classes[index]};
+    const current=view();
+    if(!shown) return {label:loading?`${COMPARISON_LABELS[current]}を準備中`:`${COMPARISON_LABELS[current]}を表示できません`};
+    const index=lookupCell(grid,lng,lat),temperature=index<0?NaN:shown.data.values[index];
+    const roadClass=index<0?0:shown.data.classes[index];
+    if(current==="value") return {label:Number.isFinite(temperature)?`${degrees(temperature)}℃`:"気温なし",value:temperature,temperature,roadClass};
+    const compared=shown.data.comparisons[current],value=compared?.values[index],reference=compared?.references[index];
+    const label=Number.isFinite(value) ? `${value>0?"+":""}${degrees(value)}℃（${degrees(temperature)}℃ − ${degrees(reference)}℃）` : "比較資料なし";
+    return {label,value,temperature,roadClass};
   }
   function refreshPoint() {
     if(!pinned) return;
     const value=valueAt(pinned.lng,pinned.lat);
     point.textContent=`選択地点：${value.label}`;
     point.dataset.longitude=String(pinned.lng);point.dataset.latitude=String(pinned.lat);
-    point.dataset.temperature=Number.isFinite(value.value)?String(value.value):"";
+    point.dataset.temperature=Number.isFinite(value.temperature)?String(value.temperature):"";
     point.dataset.roadClass=String(value.roadClass ?? 0);
   }
   function paint() {
     if(!active || !shown) return;
     layer.setVisible($("temperatureToggle").checked);
     layer.setOpacity(Number($("temperatureOpacity").value)/100);
-    $("mapTemperatureLabel").textContent=`${shown.label} · ${shown.title}${$("temperatureToggle").checked?"":" · 気温面は非表示"}`;
+    const surface=view()==="value" ? "気温の面" : "差の色";
+    $("mapTemperatureLabel").textContent=`${shown.label} · ${title()}${$("temperatureToggle").checked?"":` · ${surface}は非表示`}`;
     $("liveNotice").textContent=liveFreshness(manifest,kind,shown.slot);
     $("liveNotice").hidden=!$("liveNotice").textContent;
     refreshPoint();
+  }
+  function renderShown() {
+    if (!shown) return;
+    const current=view(), difference=current!=="value";
+    if (!layer || layerGrid!==grid || layerMode!==mode || layerDifference!==difference) {
+      if(layer && map.getLayer(layer.id)) map.removeLayer(layer.id);
+      layer=createTemperatureLayer(grid,{id:"live-temperature",colorForBin:difference?differenceColor:paletteColor});
+      map.addLayer(layer,MAP_OUTLINE_LAYER);
+      layerGrid=grid;layerMode=mode;layerDifference=difference;
+    }
+    const compared=shown.data.comparisons[current];
+    layer.setBins(difference?compared.bins:shown.data.bins);
+    comparisonControls();
+    paint();
+    $("map").dataset.liveComparison=current;
+    const count=difference?compared.count:grid.count;
+    setStatus(count?`${shown.label} · ${title()}を表示中（${count.toLocaleString()}格子）`:`${title()}の比較資料がありません。`,"ready");
   }
   async function get(file,json,signal) {
     if(!/^[a-z0-9_]+\.(json|csv)$/.test(file)) throw new Error("データ参照が不正です");
@@ -72,6 +134,7 @@ export function initLiveTemperature(map,hooks={}) {
     const token=++request; abort?.abort();abort=new AbortController();const signal=abort.signal;
     loading=true;shown=null;layer?.setVisible(false);hooks.onUnavailable?.("loading");
     delete $("map").dataset.liveTarget;delete $("map").dataset.liveUpdated;delete $("map").dataset.liveCells;
+    delete $("map").dataset.liveComparison;comparisonControls();
     $("mapTemperatureLabel").textContent=`${mode==="observed"?"実況":"予測"}気温を準備中`;
     setStatus("対象時刻と気温を読み込んでいます","loading");refreshPoint();
     try {
@@ -105,21 +168,14 @@ export function initLiveTemperature(map,hooks={}) {
       }
       if(!data) throw new Error("更新途中です");
       const same=grid?.count===data.grid.count && data.grid.rows.every((row,i)=>row===grid.rows[i] && data.grid.cols[i]===grid.cols[i]);
-      if(!same || layerMode!==mode) {
-        if(layer && map.getLayer(layer.id)) map.removeLayer(layer.id);
-        if(!same)grid=data.grid;
-        layerMode=mode;
-        layer=createTemperatureLayer(grid,{id:"live-temperature",colorForBin:paletteColor});
-        map.addLayer(layer,MAP_OUTLINE_LAYER);
-      }
-      data.grid=grid;layer.setBins(data.bins);
-      const title=kind==="daily" || kind==="observed"?`${observed?"実況":"予想"}${slot.element==="min"?"最低":"最高"}気温`:observed?"実況気温":"予想気温";
-      shown={data,slot,label,title};loading=false;
+      if(!same)grid=data.grid;
+      data.grid=grid;
+      const dataTitle=isDailyTemperature(kind)?`${observed?"実況":"予想"}${slot.element==="min"?"最低":"最高"}気温`:observed?"実況気温":"予想気温";
+      shown={data,slot,label,title:dataTitle};loading=false;
       const day=slot.target_date.slice(5,10);
-      hooks.onData?.({...shown,day});paint();
       $("map").dataset.liveKind=kind;$("map").dataset.liveTarget=target;$("map").dataset.liveCells=String(grid.count);
       $("map").dataset.liveUpdated=manifest.generated_at;
-      setStatus(`${label} · ${title}を表示中（${grid.count.toLocaleString()}格子）`,"ready");
+      renderShown();hooks.onData?.({...shown,day});
     } catch(error) {
       if(!active || token!==request || error.name==="AbortError") return;
       loading=false;layer?.setVisible(false);hooks.onUnavailable?.("error");
@@ -128,6 +184,14 @@ export function initLiveTemperature(map,hooks={}) {
     }
   }
   function choose(id) {const slot=slots.find(s=>s.id===id);if(!active || !slot)return;selectedId=id;selectedTarget=liveSlotKey(slot,kind);followingLatest=(kind==="current" || kind==="observed") && id===slots.at(-1)?.id;select.value=id;controls();void load();}
+  for (const [type,id] of Object.entries(COMPARISON_BUTTONS)) {
+    $(id).addEventListener("click",()=>{
+      if (!active || !isDailyTemperature(kind) || comparison===type) return;
+      comparison=type;controls();
+      try {renderShown();}
+      catch {layer?.setVisible(false);setStatus("地図の色を切り替えられません。再読込できます。","error");}
+    });
+  }
   kindSelect.addEventListener("change",()=>{if(!MODE_KINDS[mode].includes(kindSelect.value))return;kind=kindSelect.value;selectedId=null;selectedTarget=null;slots=[];followingLatest=true;controls();void load();});
   select.addEventListener("change",()=>choose(select.value));
   $("livePrevious").addEventListener("click",()=>choose(slots[Math.max(0,slots.findIndex(s=>s.id===selectedId)-1)]?.id));
@@ -148,11 +212,11 @@ export function initLiveTemperature(map,hooks={}) {
       active=value;++request;abort?.abort();clearInterval(timer);loading=false;shown=null;
       layer?.setVisible(false);controls();
       if(value) {void load(true);timer=setInterval(()=>{if(!document.hidden && !loading)void load(true);},LIVE_POLL_MS);}
-      else {delete $("map").dataset.liveTarget;delete $("map").dataset.liveUpdated;}
+      else {delete $("map").dataset.liveTarget;delete $("map").dataset.liveUpdated;delete $("map").dataset.liveComparison;}
     },
     timing:()=>shown?{issued:shown.slot.basetime?utcTime(shown.slot.basetime):null,observed:shown.slot.target_time || shown.slot.target_date}:null,
     tooltipAt:valueAt,
-    title:()=>shown?.title || LIVE_KINDS[kind].label,
+    title,
     label:()=>shown?.label || "対象時刻を準備中",
   };
 }

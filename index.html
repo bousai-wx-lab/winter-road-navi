@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、白縁の丸で示す実況積雪深や、実況に予想降雪を加算した簡易積雪目安にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261109-panel1">
-    <script type="module" src="./app.js?v=20261110-outline1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261110-daily-diff1">
+    <script type="module" src="./app.js?v=20261110-daily-diff1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -58,7 +58,7 @@
           <p id="temperatureStatus" class="temperature-status" role="status">気温を読み込み中</p><button id="retryTemperature" type="button" hidden>気温を再読込</button>
           <div class="normal-temperature-layer">
             <div class="section-heading"><h3 id="temperature-title"><b id="temperatureTitleText">平均最低気温</b></h3><select id="temperatureMode" aria-label="平年値の気温の種類" disabled><option value="tmin" selected>最低気温</option><option value="tmax">最高気温</option></select></div>
-            <div id="normalAppearance"><div class="temperature-options"><label class="check-label"><input id="temperatureToggle" type="checkbox" checked>気温を表示</label><div class="opacity-control"><label for="temperatureOpacity">濃さ <output id="opacityValue">65%</output></label><input id="temperatureOpacity" type="range" min="0" max="100" value="65"></div></div></div>
+            <div id="normalAppearance"><div class="temperature-options"><label class="check-label"><input id="temperatureToggle" type="checkbox" checked><span id="temperatureToggleLabel">気温を表示</span></label><div class="opacity-control"><label for="temperatureOpacity">濃さ <output id="opacityValue">65%</output></label><input id="temperatureOpacity" type="range" min="0" max="100" value="65"></div></div></div>
           <div class="temperature-legend" aria-label="最低気温の色の凡例">
             <canvas class="legend-gradient" width="324" height="18" aria-label="寒い紫・青から、0度付近の薄緑、暖かい黄・赤へ"></canvas><div class="legend-ticks"><span>−40</span><span>−20</span><span>0</span><span>20</span><span>40℃</span></div>
 
@@ -69,11 +69,21 @@
         </section>
         <section id="liveControls" class="temperature-controls" aria-label="実況気温の設定" hidden>
           <div class="field-row"><label id="liveKindLabel" for="liveKind">気温の種類</label><select id="liveKind"><option value="current">現在の気温</option><option value="observed">日最低・日最高</option></select></div>
+          <div id="liveComparisonControls" class="temperature-comparison" role="group" aria-label="日最低・日最高の表示" hidden>
+            <button id="liveValue" type="button" aria-pressed="true">気温</button>
+            <button id="livePreviousDifference" type="button" aria-pressed="false">前日差</button>
+            <button id="liveNormalDifference" type="button" aria-pressed="false">平年差</button>
+          </div>
           <div class="forecast-time-selection"><label class="field-label" for="liveSlot">対象日時</label><select id="liveSlot" disabled></select>
           <div class="live-time-buttons"><button id="livePrevious" type="button" disabled>‹ 前へ</button><button id="liveNext" type="button" disabled>次へ ›</button></div></div><button id="liveRefresh" class="temperature-refresh" type="button" hidden>再試行</button>
           <p id="liveStatus" class="temperature-status" role="status"></p><p id="liveNotice" class="live-notice" role="status" hidden></p>
           <div id="liveAppearance"></div>
           <div id="liveObservedLegend" class="temperature-legend" aria-label="気温面の色分け：平年値と同じ1℃階級"><canvas id="liveTemperatureGradient" class="live-legend-gradient" width="324" height="18" aria-label="寒い紫・青から、0度付近の薄緑、暖かい黄・赤へ"></canvas><div class="legend-ticks"><span>−40</span><span>−20</span><span>0</span><span>20</span><span>40℃</span></div></div>
+          <div id="liveDifferenceLegend" class="temperature-legend" aria-label="気温差の色分け" hidden>
+            <canvas id="liveDifferenceGradient" class="live-legend-gradient" width="315" height="18" aria-label="低い側は青、差が小さい付近は白、高い側は赤"></canvas>
+            <div class="legend-ticks"><span>−10以下</span><span>−5</span><span>0</span><span>+5</span><span>+10℃以上</span></div>
+            <p id="liveComparisonNote" class="section-hint" hidden></p>
+          </div>
 
 
           <p id="livePoint" class="temperature-point"></p><button id="clearLivePoint" type="button" hidden>地点選択を解除</button>

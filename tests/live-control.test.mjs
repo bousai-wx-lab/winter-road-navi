@@ -23,9 +23,10 @@ test("live controller separates observations and forecasts, preserves selections
   let generation=0,fail=false,hold=null,poll,pollMs,calls=0;
   const manifest=()=>({generated_at:`2026-09-26T17:${generation?"21":"11"}:00+09:00`,latest_time:`2026-09-26T17:${generation?"20":"10"}:00+09:00`,station_count:915,grid_count:31296});
   const csv=()=>"longitude,latitude,observed_c,source_date,target_date\n"+Array.from({length:31296},(_,i)=>`${((2080+i%300+.5)/16).toFixed(5)},${((600+Math.floor(i/300)+.5)/20).toFixed(5)},${generation?"2.01":"0"},2026-09-26,${manifest().latest_time}`).join("\n");
-  const forecastSlot=(id,element)=>({id,element,target_date:"2099-01-01",validtime:"20990101030000",basetime:"20990101000000",status:"available",label:element});
+  const forecastSlot=(id,element)=>({id,element,target_date:"2099-01-01",validtime:"20990101030000",basetime:"20990101000000",status:"available",label:element,
+    previous_comparison_date:"2098-12-31",previous_comparison_source:"observed_daily"});
   const forecast={generated_at:"2026-09-26T17:00:00+09:00",layers:{temp3h:{slots:[forecastSlot("temp3h_20990101030000")]},daily:{slots:[forecastSlot("tomorrow_min","min"),forecastSlot("tomorrow_max","max")]}}};
-  const forecastCSV="longitude,latitude,forecast_c,source_date,target_date\n"+Array.from({length:31296},(_,i)=>`${((2080+i%300+.5)/16).toFixed(5)},${((600+Math.floor(i/300)+.5)/20).toFixed(5)},-1.2,2099-01-01,2099-01-01`).join("\n");
+  const forecastCSV="longitude,latitude,forecast_c,source_date,target_date,average_c,anomaly_c,previous_day_c,previous_diff_c\n"+Array.from({length:31296},(_,i)=>`${((2080+i%300+.5)/16).toFixed(5)},${((600+Math.floor(i/300)+.5)/20).toFixed(5)},-1.2,2099-01-01,2099-01-01,1.8,-3,-3,1.8`).join("\n");
   globalThis.document=document;globalThis.Option=class{constructor(label,value){this.label=label;this.value=value;}};
   globalThis.setInterval=(fn,ms)=>{poll=fn;pollMs=ms;return 1;};globalThis.clearInterval=()=>{};
   globalThis.fetch=async url=>{
@@ -39,6 +40,7 @@ test("live controller separates observations and forecasts, preserves selections
     assert.equal(shown[0].data.classes[0],4);assert.equal(pollMs,LIVE_POLL_MS);
     assert.equal(shown[0].data.bins[0],41);
     assert.equal(get("liveObservedLegend").hidden,false);
+    assert.equal(get("liveComparisonControls").hidden,true);
     const observedLayer=map.getLayer("live-temperature");
     generation=1;poll();await until(()=>shown.length===2);
     assert.equal(shown[1].data.values[0],2.01);assert.equal(shown[1].data.classes[0],2);
@@ -50,11 +52,27 @@ test("live controller separates observations and forecasts, preserves selections
     assert.equal(shown.at(-1).data.bins[0],39);assert.equal(shown.at(-1).data.classes[0],4);
     assert.notEqual(map.getLayer("live-temperature"),observedLayer);
     assert.equal(get("liveObservedLegend").hidden,false);assert.equal(get("map").dataset.liveKind,"temp3h");
+    assert.equal(get("liveComparisonControls").hidden,true);
     assert.equal(control.timeline().slots[0].shortLabel,"1日12時");
     assert.equal(control.timeline().selected,"temp3h_20990101030000");
     get("liveKind").value="daily";get("liveKind").emit("change");await until(()=>shown.length===4);
     control.choose("tomorrow_max");assert.equal(get("liveSlot").value,"tomorrow_max");await until(()=>shown.length===5);
     assert.equal(control.timeline().selected,"tomorrow_max");assert.equal(control.timeline().slots[1].shortLabel,"1日最高");
+    assert.equal(get("liveComparisonControls").hidden,false);
+    const callsBeforeToggle=calls;
+    get("livePreviousDifference").emit("click");
+    assert.equal(get("map").dataset.liveComparison,"previous");
+    assert.equal(get("liveDifferenceLegend").hidden,false);
+    assert.match(get("liveComparisonNote").textContent,/2098\/12\/31の日最高（実況）/);
+    assert.equal(control.tooltipAt(130.03125,30.025).value,1.8);
+    assert.equal(control.tooltipAt(130.03125,30.025).roadClass,4);
+    get("liveNormalDifference").emit("click");
+    assert.equal(control.tooltipAt(130.03125,30.025).value,-3);
+    assert.match(get("liveComparisonNote").textContent,/日最高の平年値（1991〜2020年）/);
+    assert.equal(calls,callsBeforeToggle);
+    assert.equal(shown.length,5);
+    get("liveValue").emit("click");
+    assert.equal(control.tooltipAt(130.03125,30.025).value,-1.2);
     control.setMode("observed");control.setActive(true);await until(()=>shown.length===6);
     assert.equal(get("liveKind").value,"current");assert.equal(shown.at(-1).data.values[0],2.01);
     assert.equal(shown.at(-1).data.bins[0],43);assert.equal(shown.at(-1).data.classes[0],2);

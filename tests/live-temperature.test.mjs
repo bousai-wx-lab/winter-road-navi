@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {classForTemperature,decodeLiveCSV,liveSlots,liveFile,liveFreshness,utcTime,liveSlotKey,chooseLiveSlot} from "../live-temperature-data.js";
+import {classForTemperature,decodeLiveCSV,liveSlots,liveFile,liveFreshness,utcTime,liveSlotKey,chooseLiveSlot,previousComparison} from "../live-temperature-data.js";
 import {lookupCell} from "../temperature-layer.js";
 import {mercatorPoint,splitSegment} from "../road-geometry.js";
 
@@ -30,12 +30,40 @@ test("CSV rejects wrong date, duplicate cells, empty coordinates, malformed valu
     assert.throws(()=>decodeLiveCSV(text,"temp3h",slot,2));
   }
 });
-test("current and daily observed values preserve the observation time and ignore display/anomaly columns",()=>{
+test("current observations preserve the observation time and ignore display/anomaly columns",()=>{
   const current={target_date:"2026-09-26",target_time:"2026-09-26T12:10:00+09:00"};
   const text=header+"\n139.40625,35.67500,999,,1.23,2026-09-26,2026-09-26T12:10:00+09:00";
   const result=decodeLiveCSV(text,"current",current,1);
   assert.equal(result.classes[0],3);assert.ok(Math.abs(result.values[0]-1.23)<1e-6);
   assert.throws(()=>decodeLiveCSV(text.replaceAll("12:10","12:00"),"current",current,1));
+});
+
+test("daily differences use the same extreme, validated previous calendar date, and official-normal feed",()=>{
+  const max={id:"20260301_max",element:"max",target_date:"2026-03-01",target_time:"2026-03-01",status:"available",
+    previous_comparison_date:"2026-02-28",previous_comparison_source:"observed_daily"};
+  const head=header+",average_c,anomaly_c,previous_day_c,previous_diff_c";
+  const rows=[
+    ["2","4","-2","0","+2"],
+    ["-1","0","-1","",""],
+    ["4"," ","0","3","+8"], // Neither absent nor inconsistent references become zero differences.
+    ["6","6","0","7","-1"],
+  ];
+  const text=head+"\n"+rows.map(([value,...refs],i)=>
+    `${((2230+i+.5)/16).toFixed(5)},35.67500,999,,${value},2026-03-01,2026-03-01,${refs.join(",")}`).join("\n");
+  const decoded=decodeLiveCSV(text,"observed",max,rows.length);
+  assert.deepEqual(previousComparison(max),{date:"2026-02-28",source:"実況"});
+  assert.equal(liveFile("observed",max),"observed_20260301_max_anomaly_normal.csv");
+  assert.equal(liveFile("daily",{...max,id:"tomorrow_max"}),"forecast_tomorrow_max_anomaly_normal.csv");
+  assert.deepEqual([...decoded.comparisons.previous.values],[2,NaN,NaN,-1]);
+  assert.deepEqual([...decoded.comparisons.normal.values],[-2,-1,NaN,0]);
+  assert.deepEqual([...decoded.comparisons.previous.bins],[13,0,0,10]);
+  assert.deepEqual([...decoded.comparisons.normal.bins],[9,10,0,11]);
+  assert.deepEqual([...decoded.classes],[3,4,2,1]);
+  for (const invalid of [{...max,previous_comparison_date:"2026-02-27"},{...max,element:"min"}]) {
+    assert.equal(decodeLiveCSV(text,"observed",invalid,rows.length).comparisons.previous.count,0);
+  }
+  assert.equal(previousComparison({...max,target_date:"2024-03-01",previous_comparison_date:"2024-02-29"}).date,"2024-02-29");
+  assert.deepEqual(decodeLiveCSV(text,"current",max,rows.length).comparisons,{});
 });
 test("forecast slots retain unavailable today and reject traversal or misaligned UTC/JST dates",()=>{
   const unavailable={id:"today_min",target_date:"2026-09-26",status:"unavailable"};

@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、白縁の丸で示す実況積雪深や、実況に予想降雪を加算した簡易積雪目安にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261110-drive1">
-    <script type="module" src="./app.js?v=20261110-drive1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261110-drive2">
+    <script type="module" src="./app.js?v=20261110-drive2" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -203,12 +203,15 @@
         <section id="driveProfile" class="drive-profile" aria-label="走行ルートの標高断面図と気象" hidden>
           <div class="drive-profile-heading"><strong id="driveSummary"></strong><button id="driveProfileToggle" type="button" aria-expanded="true" aria-controls="driveProfileBody">断面図を折りたたむ</button></div>
           <div id="driveProfileBody">
-            <p id="driveTripTiming"></p><p id="driveNotices" role="status"></p>
-            <div class="drive-source-legend"><span>上の帯：</span><span class="drive-forecast-key">予測</span><span class="drive-normal-key">平年値</span><span>線：気象リスク ／ 標高は地表の目安（橋・トンネル内の路面高ではありません）</span></div>
-            <div id="driveChart" class="drive-chart"></div>
-            <label id="drivePositionLabel" for="drivePosition">区間を選択</label><input id="drivePosition" type="range" min="0" max="1" value="0" step="1" aria-label="断面図の距離の位置">
-            <div id="driveReadout" class="drive-readout" aria-live="polite"></div>
-            <div id="driveCards" class="drive-cards"></div>
+            <div class="drive-trip-meta"><p id="driveTripTiming"></p><details class="drive-profile-help"><summary id="driveProfileHelpLabel">表示の説明</summary><div>
+              <p id="driveNotices" role="status"></p>
+              <div class="drive-source-legend"><span>帯・列見出し：</span><span class="drive-forecast-key">予測</span><span class="drive-normal-key">平年値</span></div>
+              <p>線の色は気象リスク。標高は地表の目安で、橋・トンネル内の路面高ではありません。</p>
+              <p>平年の気温は「低＝日最低、高＝日最高」。例：2〜&lt;3は2℃以上3℃未満。積雪の「約」は推定、「あり 0」は現象あり0cmです。</p>
+            </div></details></div>
+            <div class="drive-strip"><div class="drive-strip-content"><div id="driveChart" class="drive-chart"></div><div id="driveCards"></div></div></div>
+            <input id="drivePosition" type="range" min="0" max="1" value="0" step="1" aria-label="断面図の距離の位置">
+            <div class="drive-selection"><label id="drivePositionLabel" for="drivePosition">区間を選択</label><div id="driveReadout" class="drive-readout" aria-live="polite"></div></div>
           </div>
         </section>
 

@@ -31,10 +31,10 @@
       "sha256": "8cbef046b7f4a19897d3d698488cf19053e3fb48b9154ba7503c7564f96dbea7"
     },
     {
-      "bytes": 27380,
+      "bytes": 27398,
       "mime_type": "text/javascript",
       "path": "app.js",
-      "sha256": "59ba285da788e22cf8da19d2e67986b1687663c02b6611afdda6f136e053a5f5"
+      "sha256": "88394271f50dc0dd28e060a3c478a9e72bc3f74979345efdae5d5b348581e552"
     },
     {
       "bytes": 266670,
@@ -6121,10 +6121,10 @@
       "sha256": "1c8809c931b681e2912861bffcc2194a9262924ec082c54f92aa2d1f354ded9f"
     },
     {
-      "bytes": 16041,
+      "bytes": 18747,
       "mime_type": "text/javascript",
       "path": "drive-control.js",
-      "sha256": "b941faa5f26bed28ec4346b2e0cdefd43a59cbc90f4752a6a48d0620d61601e4"
+      "sha256": "1217c6c76a7b0c29379205ed5ac4d5a4fe4ef9bbc0a3e73a73baf5c4b859ea96"
     },
     {
       "bytes": 9929,
@@ -6169,10 +6169,10 @@
       "sha256": "2d391e0a3a79b72c578970efc8d862dddd809bd3de2c88ccfe7bbde34f0789bf"
     },
     {
-      "bytes": 35280,
+      "bytes": 35754,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "62b72feeb2f0c1d75d3172ecd93e8a6dafc67f26a76fe6cc00cd887b8683d9f4"
+      "sha256": "e3458a7ce6361517109c430497e588b9f12546e9f448c3c8e3072d6175d8a4c0"
     },
     {
       "bytes": 16240,
@@ -6307,10 +6307,10 @@
       "sha256": "f91d96afd3b0ec9d69c5aa41ad3fe6414f8abc26b77feacce13b010ca9762929"
     },
     {
-      "bytes": 32259,
+      "bytes": 34028,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "d095a996986a7a8b27c6a50b9b8de37d1e00d8b6770a1ca88456eca07f2cbad4"
+      "sha256": "634c2e50f803fd471786acae199aa59218c7d6c7493fd9ea3ff4213ef57ad656"
     },
     {
       "bytes": 22828,
@@ -6481,7 +6481,7 @@
       "sha256": "938219194a6978ac72eb0dfe0f1361106aaf59be4ab44d4c81c4c64e79fe9224"
     }
   ],
-  "generated_at_utc": "2026-11-10T06:24:08+00:00",
+  "generated_at_utc": "2026-11-10T10:34:32+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、白縁の丸で示す実況積雪深や、実況に予想降雪を加算した簡易積雪目安にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261110-drive3">
-    <script type="module" src="./app.js?v=20261110-drive3" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261110-drive4">
+    <script type="module" src="./app.js?v=20261110-drive4" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -59,6 +59,12 @@
           <p class="section-hint">出発からの距離（km）と分数。休憩後の到着時刻に反映。</p>
           <div class="drive-actions"><button id="driveAnalyze" type="button">解析スタート</button><button id="driveReset" type="button">リセット</button></div>
           <p id="driveStatus" role="status" aria-live="polite">始点 A と終点 B を地図で選んでください</p>
+          <div class="drive-background-control">
+            <label class="check-label"><input id="driveBackgroundToggle" type="checkbox">予測・平年値の地図を重ねる</label>
+            <p class="section-hint">表示項目・レイヤーの重ね順・濃さは、予測値モード／平年値モードで調整してください。各モードの設定をそのまま使います。</p>
+            <p class="section-hint">下の距離バーで選ぶ通過時刻に連動。予測期間外は、その月日の平年値に切り替わります。</p>
+            <p id="driveBackgroundStatus" class="section-hint" role="status" aria-live="polite">解析後に重ねて表示できます。</p>
+          </div>
           <p class="drive-service-note">解析時に選択座標・出発日時を無料の経路サービスへ送信します。この画面では保存しません。最大1000km・走行48時間。渋滞・通行止めは反映しません。</p>
           <details class="drive-details"><summary>色の条件・計算方法</summary>
             <div class="drive-legend-head"><span>色</span><strong>平年値</strong><strong>予測</strong></div><div id="driveLegend"></div>
@@ -137,7 +143,7 @@
         </div>
         <section class="panel-section snow-section" aria-labelledby="snow-section-title">
           <div class="section-heading"><h3 id="snow-section-title">選択日の積雪平年値</h3><output id="snowSelectedDate" aria-live="polite">9月15日</output></div>
-          <div class="snow-options"><label class="check-label"><input id="snowToggle" type="checkbox" disabled>積雪を表示</label><div class="opacity-control"><label for="snowOpacity">濃さ <output id="snowOpacityValue">100%</output></label><input id="snowOpacity" type="range" min="0" max="100" value="100"></div></div>
+          <div class="snow-options"><label class="check-label"><input id="snowToggle" type="checkbox" checked disabled>積雪を表示</label><div class="opacity-control"><label for="snowOpacity">濃さ <output id="snowOpacityValue">50%</output></label><input id="snowOpacity" type="range" min="0" max="100" value="50"></div></div>
           <div class="snow-depth-scale" aria-label="積雪深：白から黒の濃淡"></div><p class="snow-depth-scale-label"><span id="snowScaleStart">積雪あり0cm</span><span>350cm以上</span></p>
           <div class="snow-filter-row"><button id="snowPositiveOnly" type="button" aria-pressed="false">1cm以上のみ</button><span class="section-hint">日最深積雪の独自推定</span></div>
           <p class="snow-contour-legend"><i aria-hidden="true"></i><span id="snowContourCaption">境界：1・5・10・20・50・100cm</span><span id="snowZeroContourLegend">＋雪域</span></p>

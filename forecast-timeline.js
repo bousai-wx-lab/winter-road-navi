@@ -1,5 +1,15 @@
 // This control uses the active forecast controller's native slots and selection.
 // It does not own another clock or generate intermediate forecast times.
+import {utcTime} from "./live-temperature-data.js";
+
+// A boundary belongs to the preceding native three-hour period, just as in
+// the route calculation. Never fill a missing period with a nearby forecast.
+export function forecastSlotAtTime(slots,time) {
+  if(!Number.isFinite(time))return null;
+  return slots.map(slot=>({slot,end:Date.parse(slot.end || utcTime(slot.validtime))}))
+    .sort((a,b)=>a.end-b.end).find(({end})=>time>=end-3*3600000 && time<=end)?.slot ?? null;
+}
+
 export function forecastTickLabel(time) {
   const parts = new Intl.DateTimeFormat("ja-JP", {timeZone:"Asia/Tokyo",day:"numeric",hour:"2-digit",hourCycle:"h23"}).formatToParts(new Date(time));
   return `${parts.find(p=>p.type==="day").value}日${parts.find(p=>p.type==="hour").value}時`;

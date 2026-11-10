@@ -1,11 +1,12 @@
 import {WEATHER_ROOT,weatherProduct,weatherSlots,weatherTile,weatherNotice} from "./weather-data.js?v=20261010-amounts1";
 import {timeLabel} from "./live-temperature-data.js";
-import {forecastTickLabel} from "./forecast-timeline.js";
+import {forecastTickLabel,forecastSlotAtTime} from "./forecast-timeline.js?v=20261110-drive4";
 import {MAP_OUTLINE_LAYER} from "./road-style.js?v=20261110-outline1";
 
 const $=id=>document.getElementById(id);
 export function initWeather(map,hooks={}) {
   let active=false,mode="observed",view="weather",slots=[],selected=null,token=0,abort=null,timer=null,current=null;
+  let followTime=null;
   const saved={observed:null,forecast:null},sources=[],layers=[];
   const product=()=>weatherProduct(mode,view);
   function metadata() {
@@ -50,10 +51,13 @@ export function initWeather(map,hooks={}) {
       if(!active || request!==token)return;
       const following=mode==="observed" && (!selected || selected===slots.at(-1)?.id);
       slots=next;
-      const slot=(!refresh || !following) && slots.find(s=>s.id===selected)
-        || (mode==="observed"?slots.at(-1):slots.find(s=>Date.parse(s.end)>Date.now()) || slots.at(-1));
-      selected=slot.id;current=slot;saved[mode]=selected;
-      $("weatherSlot").replaceChildren(...slots.map(s=>new Option(s.label,s.id)));$("weatherSlot").value=selected;controls();
+      const slot=followTime!==null && mode==="forecast" ? forecastSlotAtTime(slots,followTime)
+        : (!refresh || !following) && slots.find(s=>s.id===selected)
+          || (mode==="observed"?slots.at(-1):slots.find(s=>Date.parse(s.end)>Date.now()) || slots.at(-1));
+      if(!slot){status("通過時刻に対応する予測画像がありません","unavailable");$("mapTemperatureLabel").textContent="この通過時刻の予測画像は資料なし";return;}
+      current=slot;
+      if(followTime===null){selected=slot.id;saved[mode]=selected;}
+      $("weatherSlot").replaceChildren(...slots.map(s=>new Option(s.label,s.id)));$("weatherSlot").value=slot.id;controls();
       $("weatherUpdated").textContent=`${requestProduct.label} · ${requestProduct.resolution}${requestProduct.unit?` · ${requestProduct.unit}`:""}${mode==="forecast"?` · 発表：${timeLabel(slot.base)}`:" · 毎時の推計"}`;
       $("weatherNotice").textContent=weatherNotice(mode,slot);$("weatherNotice").hidden=!$("weatherNotice").textContent;
       for(const z of [4,6,8,10]) {
@@ -85,5 +89,9 @@ export function initWeather(map,hooks={}) {
     if(value)metadata();
     if(value){void load(true);timer=setInterval(()=>{if(!document.hidden)void load(true);},600000);}
     controls();
+  },setFollowTime(time){
+    if(time!==null && !Number.isFinite(time))throw new Error("通過時刻が不正です");
+    const changed=followTime!==time;followTime=time;
+    if(changed && time!==null && active && mode==="forecast" && (!current || forecastSlotAtTime(slots,time)?.id!==current.id))void load();
   },choose,current:()=>current,title:()=>product().name,timeline:()=>({selected,slots:mode==="forecast"?slots.map(s=>({id:s.id,label:s.label,shortLabel:forecastTickLabel(s.end)})):[]}),label:()=>current?.label || `${product().name}を準備中`};
 }

@@ -83,6 +83,14 @@ test("live controller separates observations and forecasts, preserves selections
     assert.equal(shown.at(-1).data.bins[0],39);assert.equal(shown.at(-1).data.classes[0],4);
     assert.notEqual(map.getLayer("live-temperature"),observedLayer);
     assert.equal(get("liveObservedLegend").hidden,false);
+    const retained=control.timeline().selected;
+    control.setFollowTime(Date.parse("2099-01-01T05:00:00Z"));
+    assert.equal(control.timeline().selected,retained); // same daily maximum; no reload
+    control.setFollowTime(Date.parse("2099-01-02T05:00:00Z"));
+    await until(()=>get("liveStatus").dataset.state==="unavailable");
+    assert.equal(get("map").dataset.liveTarget,undefined);
+    assert.equal(control.timeline().selected,retained);
+    control.setFollowTime(null);
     control.setMode("observed");control.setActive(true);await until(()=>shown.length===8);
     fail=true;get("liveRefresh").emit("click");await until(()=>get("liveStatus").dataset.state==="error");
     assert.equal(get("map").dataset.liveTarget,undefined);assert.equal(unavailable.at(-1),"error");

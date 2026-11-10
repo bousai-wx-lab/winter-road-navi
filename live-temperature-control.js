@@ -1,6 +1,6 @@
 import {createTemperatureLayer, lookupCell, paletteColor} from "./temperature-layer.js";
 import {LIVE_ROOT,LIVE_KINDS,LIVE_POLL_MS,liveSlots,liveFile,liveSlotKey,chooseLiveSlot,decodeLiveCSV,timeLabel,utcTime,liveFreshness,isDailyTemperature,previousComparison} from "./live-temperature-data.js?v=20261110-daily-diff1";
-import {forecastTickLabel} from "./forecast-timeline.js";
+import {forecastTickLabel,forecastSlotAtTime} from "./forecast-timeline.js?v=20261110-drive4";
 import {MAP_OUTLINE_LAYER} from "./road-style.js?v=20261110-outline1";
 
 const $=id=>document.getElementById(id);
@@ -20,6 +20,7 @@ export function initLiveTemperature(map,hooks={}) {
   let active=false,request=0,abort=null,timer=null,loading=false;
   let manifest=null,slots=[],selectedId=null,selectedTarget=null,followingLatest=true,shown=null,layer=null,grid=null,pinned=null,layerMode=null;
   let comparison="value",layerGrid=null,layerDifference=false;
+  let followTime=null;
   const legend=$("liveTemperatureGradient").getContext("2d");
   for(let bin=1;bin<=81;bin++){legend.fillStyle=paletteColor(bin);legend.fillRect((bin-1)*4,0,4,18);}
   const differenceLegend=$("liveDifferenceGradient").getContext("2d");
@@ -29,6 +30,12 @@ export function initLiveTemperature(map,hooks={}) {
   const selections={observed:null,forecast:{kind:"temp3h",selectedId:null,selectedTarget:null,followingLatest:false}};
   const view=()=>active && isDailyTemperature(kind) ? comparison : "value";
   const title=()=>shown ? shown.title + (view()==="value" ? "" : `の${COMPARISON_LABELS[view()]}`) : LIVE_KINDS[kind].label;
+  function followSlot(values) {
+    if(kind!=="daily")return forecastSlotAtTime(values,followTime);
+    const date=new Date(followTime+9*3600000).toISOString().slice(0,10);
+    const element=selectedTarget?.split(":").at(-1) || values.find(s=>s.id===selectedId)?.element || "min";
+    return values.find(s=>s.target_date===date && s.element===element) ?? null;
+  }
 
   function comparisonControls() {
     const current=view(), difference=current!=="value";
@@ -144,8 +151,8 @@ export function initLiveTemperature(map,hooks={}) {
       for(let attempt=0;attempt<3;attempt++) {
         nextManifest=await get(LIVE_KINDS[kind].manifest,true,signal);
         nextSlots=liveSlots(nextManifest,kind);
-        slot=chooseLiveSlot(nextSlots,{kind,id:selectedId,target:selectedTarget,followLatest:refresh && followingLatest && selectedTarget!==null});
-        if(slot.status==="unavailable") break;
+        slot=followTime!==null && mode==="forecast" ? followSlot(nextSlots) : chooseLiveSlot(nextSlots,{kind,id:selectedId,target:selectedTarget,followLatest:refresh && followingLatest && selectedTarget!==null});
+        if(!slot || slot.status==="unavailable") break;
         try {data=decodeLiveCSV(await get(liveFile(kind,slot),false,signal),kind,slot);}
         catch(error) {if(attempt===2) throw error;continue;}
         const after=await get(LIVE_KINDS[kind].manifest,true,signal);
@@ -153,7 +160,9 @@ export function initLiveTemperature(map,hooks={}) {
         data=null;
       }
       if(!active || token!==request) return;
-      manifest=nextManifest;slots=nextSlots;selectedId=slot.id;selectedTarget=liveSlotKey(slot,kind);followingLatest=(kind==="current" || kind==="observed") && slot.id===slots.at(-1).id;
+      manifest=nextManifest;slots=nextSlots;
+      if(!slot){loading=false;hooks.onUnavailable?.("unavailable");setStatus("通過時刻に対応する予測気温がありません","unavailable");$("mapTemperatureLabel").textContent="この通過時刻の予測気温は資料なし";return;}
+      if(followTime===null){selectedId=slot.id;selectedTarget=liveSlotKey(slot,kind);followingLatest=(kind==="current" || kind==="observed") && slot.id===slots.at(-1).id;}
       select.replaceChildren(...slots.map(s=>new Option(`${s.target_date} · ${s.label}${s.status==="unavailable"?"（データなし）":""}`,s.id)));
       select.value=slot.id;controls();
       const observed=kind==="current" || kind==="observed";
@@ -199,11 +208,16 @@ export function initLiveTemperature(map,hooks={}) {
   $("liveRefresh").addEventListener("click",()=>void load(true));
   $("temperatureToggle").addEventListener("change",paint);$("temperatureOpacity").addEventListener("input",paint);
   $("clearLivePoint").addEventListener("click",()=>{pinned=null;point.textContent="地図をクリックすると、その格子の気温と道路の色区分を確認できます。";$("clearLivePoint").hidden=true;});
-  map.on("click",event=>{if(!active)return;pinned=event.lngLat;$("clearLivePoint").hidden=false;refreshPoint();});
+  map.on("click",event=>{if(!active || followTime!==null)return;pinned=event.lngLat;$("clearLivePoint").hidden=false;refreshPoint();});
   document.addEventListener("visibilitychange",()=>{if(active && !document.hidden && !loading) void load(true);});
   setMode(mode);
   return {
     setMode,
+    setFollowTime(time){
+      if(time!==null && !Number.isFinite(time))throw new Error("通過時刻が不正です");
+      const changed=followTime!==time;followTime=time;
+      if(changed && time!==null && active && mode==="forecast" && (!shown || followSlot(slots)?.id!==shown.slot.id))void load();
+    },
     choose,
     timeline:()=>({selected:selectedId,slots:mode==="forecast"?slots.map(s=>({id:s.id,
       label:kind==="daily"?`${s.target_date} · 予想${s.element==="min"?"最低":"最高"}気温${s.status==="unavailable"?"（データなし）":""}`:timeLabel(utcTime(s.validtime)),

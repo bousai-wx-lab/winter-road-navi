@@ -164,7 +164,7 @@ export function initLiveSnow(map,hooks={}) {
     date.textContent=overlay?`基準実況 ${timeLabel(station.hour)} · 対象 ${timeLabel(forecastResult?.plan.end || target?.end)} · 気象庁の観測・降雪予報から簡易加算`:`${timeLabel(station.hour)} · 気象庁`;
     content.append(title,value,date);popup?.remove();popup=new maplibregl.Popup({maxWidth:"250px"}).setLngLat([station.lng,station.lat]).setDOMContent(content).addTo(map);
   }
-  map.on("click",event=>{if(!active || !$("liveSnowPoints").checked)return;const id=map.queryRenderedFeatures(event.point,{layers:["live-snow-point-halos"]})[0]?.properties.id;const station=stations.find(s=>s.id===id);if(station)showStation(station);});
+  map.on("click",event=>{if(!active || $("map").dataset.displayMode==="drive" || !$("liveSnowPoints").checked)return;const id=map.queryRenderedFeatures(event.point,{layers:["live-snow-point-halos"]})[0]?.properties.id;const station=stations.find(s=>s.id===id);if(station)showStation(station);});
   $("liveSnowStation").addEventListener("change",()=>{const station=stations.find(s=>s.id===$("liveSnowStation").value);if(station){map.easeTo({center:[station.lng,station.lat],zoom:Math.max(map.getZoom(),8),duration:0});showStation(station);}else{selectedStation=null;popup?.remove();}});
   $("liveSnowPoints").addEventListener("change",paint);$("liveSnowRefresh").addEventListener("click",()=>void load(true));
   $("liveSnowSlot").addEventListener("change",()=>{selected=$("liveSnowSlot").value;void load();});

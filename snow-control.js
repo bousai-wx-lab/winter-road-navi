@@ -192,7 +192,7 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
       const value = Number(opacity.value) / 100;
       layer.setOpacity(value); contours.setOpacity(value);
       toggle.disabled = false;
-      showStatus("積雪表示はOFFです。ONにすると選択日の雪域と等値線を表示します");
+      showStatus(toggle.checked?"選択日の積雪を準備しています":"積雪表示はOFFです。ONにすると選択日の雪域と等値線を表示します");
       if (selectedDay && (toggle.checked || tooltipEnabled)) void setDay(selectedDay);
       if (toggle.checked) void prepareSeason();
     } catch {
@@ -229,7 +229,7 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
     if (manifest && selectedDay) void setDay(selectedDay);
     else startPromise = start();
   });
-  map.on("click", (event) => { selectedPoint = event.lngLat; refreshPoint(); });
+  map.on("click", (event) => { if(!modeActive || $("map").dataset.displayMode==="drive")return;selectedPoint = event.lngLat; refreshPoint(); });
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && toggle.checked && manifest && cache.size < manifest.days.length) {
       const active = prefetchPromise;

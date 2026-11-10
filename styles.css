@@ -693,6 +693,9 @@ main {
 #driveStatus { margin:10px 0; padding-left:8px; border-left:3px solid #176b83; }
 #driveStatus[data-state="error"],#driveNotices:not(:empty) { color:#a43c20; }
 .drive-service-note { font-size:10px; color:#5a727f; }
+.drive-background-control { border-top:1px solid #ccdbe3; padding-top:8px; margin-top:8px; }
+.drive-background-control .section-hint { margin:4px 0; font-size:11px; }
+#driveBackgroundStatus { color:#174457; }
 .drive-details { border-top:1px solid #ccdbe3; padding-top:8px; margin-top:10px; font-size:11px; }
 .drive-details summary { cursor:pointer; font-weight:700; }
 .drive-legend-head,.drive-legend-row { display:grid; grid-template-columns:20px 1fr 1fr; gap:5px; align-items:center; margin:6px 0; font-size:10px; }

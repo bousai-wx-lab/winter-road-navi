@@ -1,15 +1,17 @@
+import { ROAD_RISK_COLORS } from "./road-risk-data.js?v=20261110-risk-colors1";
 import {utcTime,liveSlots} from "./live-temperature-data.js";
 
 export const RISK_RULES=Object.freeze([
-  {color:"#75838c",label:"判定資料不足"},
-  {color:"#000000",label:"指定条件に該当なし"},
-  {color:"#ffe032",label:"対象時刻2℃以下＋前12時間に降水",short:"2℃以下・前12h降水"},
-  {color:"#ff8c24",label:"対象時刻0℃以下＋前12時間に降水",short:"0℃以下・前12h降水"},
-  {color:"#f35ea7",label:"雪の予報・降雪量1cm未満",short:"雪・降雪1cm未満"},
-  {color:"#e53232",label:"3時間降雪量1cm以上3cm未満",short:"3時間降雪1〜2cm"},
-  {color:"#8d38c9",label:"3時間降雪量3cm以上6cm未満",short:"3時間降雪3〜5cm"},
-  {color:"#000000",label:"3時間降雪量6cm以上",short:"3時間降雪6cm以上"},
-]);
+  {label:"判定資料不足"},
+  {label:"指定条件に該当なし"},
+  {label:"対象時刻5℃以下＋前12時間に降水",short:"5℃以下・前12h降水"},
+  {label:"対象時刻2℃以下＋前12時間に降水",short:"2℃以下・前12h降水"},
+  {label:"対象時刻0℃以下＋前12時間に降水",short:"0℃以下・前12h降水"},
+  {label:"雪の予報・降雪量1cm未満",short:"雪・降雪1cm未満"},
+  {label:"3時間降雪量1cm以上3cm未満",short:"3時間降雪1〜2cm"},
+  {label:"3時間降雪量3cm以上6cm未満",short:"3時間降雪3〜5cm"},
+  {label:"3時間降雪量6cm以上",short:"3時間降雪6cm以上"},
+].map((rule, i) => ({...rule, color: ROAD_RISK_COLORS[i]})));
 export const RISK_LEVELS=Object.freeze({
   weather3h:{Clear:1,Cloudy:2,Rain:3,"Rain/snow":4,Snow:5,NoData:-1},
   precip3h:{"1<=mm<5":1,"5<=mm<10":5,"10<=mm<15":10,"15<=mm<20":15,"20<=mm":20,NoData:-1},
@@ -21,16 +23,16 @@ export const RISK_LEVELS=Object.freeze({
 export function riskClass(weather,precipitation,snowfall,temperature,history) {
   if(snowfall===-1)snowfall=0;
   if(precipitation===-1)precipitation=0;
-  if(snowfall>=6)return 7;
-  if(snowfall>=3)return 6;
-  if(snowfall>=1)return 5;
-  if(weather===5 && snowfall===0)return 4;
+  if(snowfall>=6)return 8;
+  if(snowfall>=3)return 7;
+  if(snowfall>=1)return 6;
+  if(weather===5 && snowfall===0)return 5;
   if([weather,precipitation,snowfall].some(v=>!Number.isFinite(v)) || weather<1 || precipitation<0 || snowfall<0)return 0;
   if(!Number.isFinite(temperature))return 0;
-  if(temperature>2)return 1;
+  if(temperature>5)return 1;
   if(!Array.isArray(history) || history.length!==4)return 0;
   const wet=history.some(sample=>sample?.precipitation>=1 || [3,4,5].includes(sample?.weather));
-  return wet?(temperature<=0?3:2):1;
+  return wet?(temperature<=0?4:temperature<=2?3:2):1;
 }
 
 export function riskSlots(manifest,target) {
@@ -129,7 +131,7 @@ export function projectRiskField(collection,grid,kind) {
 export function buildRiskData(grid,weather,precipitation,snowfall,temperature,history) {
   const count=grid.count;
   if([weather,precipitation,snowfall,temperature].some(a=>a.length!==count) || history.length!==4 || history.some(s=>[s.weather,s.precipitation].some(a=>a && a.length!==count)))throw new Error("リスクの格子数が一致しません");
-  const classes=new Uint8Array(count),complete=new Uint8Array(count),counts=Array(8).fill(0);
+  const classes=new Uint8Array(count),complete=new Uint8Array(count),counts=Array(RISK_RULES.length).fill(0);
   for(let i=0;i<count;i++) {
     const periods=history.map(s=>({weather:s.weather?.[i] ?? NaN,precipitation:s.precipitation?.[i] ?? NaN}));
     complete[i]=periods.every(s=>s.weather>=1 && s.precipitation>=0)?1:0;

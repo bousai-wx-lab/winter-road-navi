@@ -109,7 +109,7 @@ export function initTemperature(map, hooks = {}) {
       return;
     }
     const index = lookupCell(grid, selectedPoint.lng, selectedPoint.lat);
-    point.textContent = `選択地点（${manifest.days[displayed].replace("-", "/")}・${modeText(displayedMode)}）：${index < 0 ? "未収録の格子です" : bins[index] === 0 ? "欠測（推定に必要な観測が不足）" : binLabel(bins[index])}。道路着色：${roadClassLabel(index < 0 ? 0 : roadClasses[index])}。独自内挿の参考値です。`;
+    point.textContent = `選択地点（${manifest.days[displayed].replace("-", "/")}・${modeText(displayedMode)}）：${index < 0 ? "未収録の格子です" : bins[index] === 0 ? "欠測（推定に必要な観測が不足）" : binLabel(bins[index])}。気温区分：${roadClassLabel(index < 0 ? 0 : roadClasses[index]).replace(/（.*?）/g, "")}。独自内挿の参考値です。`;
   }
   function syncDate() {
     const [m, d] = manifest.days[selected].split("-").map(Number);

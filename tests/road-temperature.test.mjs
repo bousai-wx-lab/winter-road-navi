@@ -66,12 +66,12 @@ function makeMap(gl = fakeGL(), roadFeatures = features) {
 }
 const settle = () => new Promise((resolve) => setTimeout(resolve, 90));
 
-test("risk palette supports all six road colours without changing the default temperature limits",async()=>{
+test("risk palette supports all seven road colours without changing the default temperature limits",async()=>{
   const map=makeMap(),roads=createRoadTemperature(map,grid(),()=>{},{colors:RISK_RULES.map(r=>r.color)});
   try {
-    roads.setClasses(new Uint8Array([5,6,7]),"10-23");await settle();map.render();
-    assert.deepEqual(map.gl.textures.at(-1),[0,5,6,7]);
-    assert.throws(()=>roads.setClasses(new Uint8Array([8,0,1]),"10-23"));
+    roads.setClasses(new Uint8Array([6,7,8]),"10-23");await settle();map.render();
+    assert.deepEqual(map.gl.textures.at(-1),[0,6,7,8]);
+    assert.throws(()=>roads.setClasses(new Uint8Array([9,0,1]),"10-23"));
     assert.ok(map.gl.draws.length>0);
   }finally{roads.destroy();}
 });

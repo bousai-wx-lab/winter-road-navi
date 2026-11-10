@@ -6,29 +6,29 @@ import {setImmediate as nextTurn} from "node:timers/promises";
 
 const dry=()=>Array.from({length:4},()=>({weather:1,precipitation:0}));
 const wet=(index=0)=>dry().map((s,i)=>i===index?{weather:3,precipitation:1}:s);
-test("current temperature uses inclusive 0/2°C, including precipitation six hours earlier",()=>{
-  for(const [temperature,expected] of [[2,2],[2.01,1],[0,3],[-1,3],[.01,2]]) {
+test("current temperature uses inclusive 0/2/5°C, including precipitation six hours earlier",()=>{
+  for(const [temperature,expected] of [[5.01,1],[5,2],[2.01,2],[2,3],[0,4],[-1,4],[.01,3]]) {
     assert.equal(riskClass(3,1,0,temperature,wet()),expected);
     assert.equal(riskClass(1,0,0,temperature,wet(2)),expected);
   }
   assert.equal(riskClass(1,0,0,-5,dry()),1);
   assert.equal(riskClass(1,0,0,5,[null,null,null,null]),1);
-  assert.deepEqual(RISK_RULES.slice(2).map(r=>r.color),["#ffe032","#ff8c24","#f35ea7","#e53232","#8d38c9","#000000"]);
+  assert.deepEqual(RISK_RULES.slice(2).map(r=>r.color),["#b7d943","#ffe032","#ff8c24","#f35ea7","#e53232","#8d38c9","#000000"]);
 });
 
 test("snow retains priority; missing amount/history contributes zero while confirmed rain remains sufficient",()=>{
   for(const temperature of [-2,NaN,12]) {
-    for(const [snow,expected] of [[0,4],[1,5],[2,5],[3,6],[5,6],[6,7]])assert.equal(riskClass(5,1,snow,temperature,[null,null,null,null]),expected);
+    for(const [snow,expected] of [[0,5],[1,6],[2,6],[3,7],[5,7],[6,8]])assert.equal(riskClass(5,1,snow,temperature,[null,null,null,null]),expected);
   }
   assert.equal(riskClass(1,0,0,1,[null,...dry().slice(1)]),1);
-  assert.equal(riskClass(3,1,0,1,[wet()[0],null,null,null]),2);
-  assert.equal(riskClass(1,0,0,0,[null,null,wet()[0],null]),3);
-  assert.equal(riskClass(1,0,0,1,[{weather:3,precipitation:-1},...dry().slice(1)]),2,"rain below 1 mm also establishes wet conditions");
+  assert.equal(riskClass(3,1,0,1,[wet()[0],null,null,null]),3);
+  assert.equal(riskClass(1,0,0,0,[null,null,wet()[0],null]),4);
+  assert.equal(riskClass(1,0,0,1,[{weather:3,precipitation:-1},...dry().slice(1)]),3,"rain below 1 mm also establishes wet conditions");
   assert.equal(riskClass(1,0,0,1,[{weather:-1,precipitation:0},...dry().slice(1)]),1);
   assert.equal(riskClass(1,0,0,NaN,dry()),0);
-  assert.equal(riskClass(5,1,-1,1,wet()),4);
+  assert.equal(riskClass(5,1,-1,1,wet()),5);
   assert.equal(riskClass(-1,0,0,1,wet()),0);
-  assert.equal(riskClass(1,-1,0,1,wet()),2);
+  assert.equal(riskClass(1,-1,0,1,wet()),3);
 });
 
 const square=(x0,y0,x1,y1)=>[[x0,y0],[x1,y0],[x1,y1],[x0,y1],[x0,y0]];
@@ -88,7 +88,7 @@ test("joined cells retain current temperature, history coverage, and their own s
   const weather=new Int16Array([3,5,5,1]),precipitation=new Int16Array([1,0,1,0]);
   const history=Array.from({length:4},()=>({weather,precipitation}));history[3]={weather:null,precipitation:null};
   const data=buildRiskData(grid,weather,precipitation,new Int16Array([0,0,6,0]),new Float32Array([1,8,-4,NaN]),history);
-  assert.deepEqual([...data.classes],[2,4,7,0]);
+  assert.deepEqual([...data.classes],[3,5,8,0]);
   assert.deepEqual([...data.temperature].slice(0,3),[1,8,-4]);
   assert.deepEqual([...data.complete],[0,0,0,0]);
   assert.equal(data.counts.reduce((a,b)=>a+b),4);
@@ -139,8 +139,8 @@ test("changing targets while a shared history request is pending cannot strand l
 
 test("missing forecast amounts do not grey dry roads or erase known snow",()=>{
   assert.equal(riskClass(1,-1,-1,-2,[null,null,null,null]),1);
-  assert.equal(riskClass(1,-1,3,-2,[null,null,null,null]),6);
-  assert.equal(riskClass(1,-1,-1,-2,[null,wet()[0],null,null]),3);
+  assert.equal(riskClass(1,-1,3,-2,[null,null,null,null]),7);
+  assert.equal(riskClass(1,-1,-1,-2,[null,wet()[0],null,null]),4);
   assert.equal(riskClass(1,-1,-1,NaN,dry()),0);
   const m=manifest();m.layers.precip3h.slots=[];m.layers.snow3h.slots=[];
   const slots=riskSlots(m,target);assert.equal(slots.precip3h,null);assert.equal(slots.snow3h,null);

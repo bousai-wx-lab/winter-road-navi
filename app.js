@@ -1,3 +1,4 @@
+import { initDrive } from "./drive-control.js";
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=20261110-coast-only1";
 import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20261110-risk-colors1";
@@ -27,7 +28,7 @@ const interactiveLayers = ["highway", "general-road"];
 let roadTemperature = null;
 let normalTemperature = null, liveTemperature = null, displayMode = "normal";
 let weather = null, liveSnow = null, risk = null, roadPalette = "temperature", displayView = "temperature";
-let forecastTimeline = null;
+let forecastTimeline = null, drive = null;
 const selectedViews = {observed:"temperature",forecast:"risk"};
 const isDistributionView = view => ["weather","precipitation","snowfall"].includes(view);
 let snow = null, normalRisk = null, normalRoadData = null;
@@ -58,6 +59,7 @@ function refreshTiming() {
   document.querySelector("#observationTime").textContent = observed ? /^\d{4}-\d{2}-\d{2}$/.test(observed) ? observed.replaceAll("-", "/") : timeLabel(observed) : "";
 }
 function refreshTooltip() {
+  if(displayMode === "drive") { tooltip.hidden = true; document.querySelector("#dataTiming").hidden = true; return; }
   refreshTiming();
   if (!tooltipToggle.checked || !hovered) { tooltip.hidden = true; return; }
   const index = temperatureGrid ? lookupCell(temperatureGrid, hovered.lng, hovered.lat) : -1;
@@ -133,7 +135,7 @@ map.on("movestart", event => { if (event.originalEvent) usingDefaultView = false
 function showJapan(duration = 0) {
   map.fitBounds(JAPAN_VIEW.bounds, { padding: JAPAN_VIEW.padding, duration });
 }
-map.on("resize", () => { if (usingDefaultView) showJapan(); });
+map.on("resize", () => { if (usingDefaultView && displayMode !== "drive") showJapan(); });
 
 map.addControl(new maplibregl.NavigationControl({ showCompass: false, visualizePitch: false }), "top-right");
 map.addControl(new maplibregl.ScaleControl({ maxWidth: 110, unit: "metric" }), "bottom-right");
@@ -205,6 +207,25 @@ function useGrid(grid,palette="temperature") {
   } catch { roadTemperature = null; setRoadTemperatureState("error"); }
 }
 function applyDisplay() {
+  const driving = displayMode === "drive";
+  document.querySelector(".control-panel").dataset.mode = displayMode;
+  document.querySelector(".tool-layout").dataset.mode = displayMode;
+  document.querySelector("#driveMode").setAttribute("aria-pressed", String(driving));
+  drive?.setActive(driving);
+  if(driving) {
+    normalRisk?.clear(); normalRoadData = null; roadTemperature?.clear();
+    normalTemperature.setActive(false); liveTemperature.setActive(false); snow?.setActive(false);
+    weather.setActive(false); risk.setActive(false); liveSnow.setActive(false); forecastTimeline?.setVisible(false);
+    for(const id of ["normalMode","liveMode","forecastMode"])document.getElementById(id).setAttribute("aria-pressed","false");
+    document.querySelector("#panelHeading").textContent="ドライブのそなえ";
+    document.querySelector("#mapTemperatureLabel").textContent="ドライブ · A 始点 → B 終点";
+    document.querySelector("#map").dataset.displayMode="drive";
+    document.querySelector("#map-heading").textContent="ドライブの経路と通過時刻の気象";
+    document.querySelector("#map").setAttribute("aria-label","ドライブの始点と終点を選ぶ地図");
+    document.querySelector("#dataMeaning").textContent="通過予定時刻の予測、期間外は平年値を使う気象の目安です。所要時間は渋滞・積雪による遅れを含みません。";
+    details.hidden=true; refreshTooltip(); return;
+  }
+
   const mode = displayMode, live = mode !== "normal", label = mode === "observed" ? "実況" : "予測";
   const riskView=mode==="forecast" && displayView==="risk";
   const temperature = !live || displayView === "temperature", distribution = live && (isDistributionView(displayView) || riskView);
@@ -262,9 +283,9 @@ function applyDisplay() {
 }
 function switchDisplayMode(mode) {
   if(!normalTemperature || !liveTemperature || mode === displayMode)return;
-  if(displayMode !== "normal")selectedViews[displayMode]=displayView;
+  if(["observed","forecast"].includes(displayMode))selectedViews[displayMode]=displayView;
   displayMode=mode;
-  if(mode !== "normal") {
+  if(["observed","forecast"].includes(mode)) {
     displayView=selectedViews[mode];
     const options=mode === "observed" ? [["temperature","気温"],["weather","天気"],["snow","積雪深"]] : [["risk","天気・積雪・道路"],["temperature","気温"],["weather","天気"],["precipitation","3時間降水量"],["snowfall","3時間降雪量"]];
     document.querySelector("#liveView").replaceChildren(...options.map(([value,label])=>new Option(label,value)));
@@ -279,7 +300,10 @@ document.querySelector("#liveView").addEventListener("change",event=>{
 document.querySelector("#normalMode").addEventListener("click", () => switchDisplayMode("normal"));
 document.querySelector("#liveMode").addEventListener("click", () => switchDisplayMode("observed"));
 document.querySelector("#forecastMode").addEventListener("click", () => switchDisplayMode("forecast"));
+document.querySelector("#driveMode").addEventListener("click", () => switchDisplayMode("drive"));
 function initializeControllers() {
+  drive=initDrive(map);
+  document.querySelector("#driveMode").disabled=false;
   setStatus("道路を表示中。細い一般道路は地図を拡大すると現れます", "ready");
   forecastTimeline = initForecastTimeline(map,()=>displayMode === "forecast" ? displayView==="risk" || isDistributionView(displayView) ? weather : liveTemperature : null);
   risk=initForecastRisk({
@@ -372,6 +396,7 @@ map.on("error", (event) => {
 });
 
 map.on("mousemove", (event) => {
+  if(displayMode === "drive") { map.getCanvas().style.cursor=drive?.isPicking()?"crosshair":"pointer"; return; }
   const features = map.queryRenderedFeatures(event.point, { layers: interactiveLayers });
   map.getCanvas().style.cursor = features.length ? "pointer" : "";
   hovered = { lng: event.lngLat.lng, lat: event.lngLat.lat, x: event.point.x, y: event.point.y };
@@ -381,6 +406,7 @@ map.on("mousemove", (event) => {
 map.on("mouseleave", () => { hovered = null; refreshTooltip(); });
 
 map.on("click", (event) => {
+  if(displayMode === "drive") return;
   if (tooltipToggle.checked) {
     hovered = { lng: event.lngLat.lng, lat: event.lngLat.lat, x: event.point.x, y: event.point.y };
     refreshTooltip();

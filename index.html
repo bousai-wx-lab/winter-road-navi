@@ -4,13 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp https://www.jma.go.jp; connect-src 'self' https://cyberjapandata.gsi.go.jp https://nature-wx-lab.github.io https://www.jma.go.jp; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp https://www.jma.go.jp; connect-src 'self' https://cyberjapandata.gsi.go.jp https://nature-wx-lab.github.io https://www.jma.go.jp https://valhalla1.openstreetmap.de; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
     <title>冬道そなえナビ | Bousai Wx Lab</title>
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、白縁の丸で示す実況積雪深や、実況に予想降雪を加算した簡易積雪目安にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261110-comparison-hover1">
-    <script type="module" src="./app.js?v=20261110-risk-colors1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261110-drive1">
+    <script type="module" src="./app.js?v=20261110-drive1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -44,9 +44,32 @@
       <aside class="control-panel" aria-label="気温・積雪・道路表示の設定">
         <div class="control-heading"><h2 id="panelHeading">地図の表示</h2><button id="panelToggle" type="button" aria-expanded="true" aria-controls="panelBody">設定を閉じる</button></div>
         <div class="display-mode-buttons" role="group" aria-label="表示モード">
-          <button id="normalMode" type="button" aria-pressed="true" disabled>平年値</button><button id="liveMode" type="button" aria-pressed="false" disabled>実況値</button><button id="forecastMode" type="button" aria-pressed="false" disabled>予測値</button>
+          <button id="normalMode" type="button" aria-pressed="true" disabled>平年値</button><button id="liveMode" type="button" aria-pressed="false" disabled>実況値</button><button id="forecastMode" type="button" aria-pressed="false" disabled>予測値</button><button id="driveMode" type="button" aria-pressed="false" disabled>ドライブ</button>
         </div>
         <div id="panelBody">
+        <section id="driveControls" class="drive-controls" aria-label="ドライブのルート解析" hidden>
+          <p class="section-hint">地図で A・B を選び、通過時刻ごとの気象を確認</p>
+          <div class="drive-endpoint"><button id="drivePickStart" type="button" aria-pressed="true">A 始点を選ぶ</button><input id="driveStart" aria-label="始点の緯度, 経度" placeholder="緯度, 経度（地図でも選択可）" autocomplete="off"></div>
+          <div class="drive-endpoint"><button id="drivePickEnd" type="button" aria-pressed="false">B 終点を選ぶ</button><input id="driveEnd" aria-label="終点の緯度, 経度" placeholder="緯度, 経度（地図でも選択可）" autocomplete="off"></div>
+          <p id="drivePickHint" class="section-hint">地図をクリックして始点 A を選択</p>
+          <label class="drive-field" for="driveDeparture">出発日時（日本時間・空欄なら今すぐ）<input id="driveDeparture" type="datetime-local"></label>
+          <label class="drive-field" for="drivePriority">経路の条件<select id="drivePriority"><option value="fastest">時間優先</option><option value="highway">高速優先</option><option value="local">一般道優先</option><option value="shortest">距離優先</option></select></label>
+          <div class="drive-rest-heading"><strong>休憩</strong><button id="driveAddBreak" type="button">＋ 休憩を追加</button></div>
+          <div id="driveBreaks"></div>
+          <p class="section-hint">出発からの距離（km）と分数。休憩後の到着時刻に反映。</p>
+          <div class="drive-actions"><button id="driveAnalyze" type="button">解析スタート</button><button id="driveReset" type="button">リセット</button></div>
+          <p id="driveStatus" role="status" aria-live="polite">始点 A と終点 B を地図で選んでください</p>
+          <p class="drive-service-note">解析時に選択座標・出発日時を無料の経路サービスへ送信します。この画面では保存しません。最大1000km・走行48時間。渋滞・通行止めは反映しません。</p>
+          <details class="drive-details"><summary>色の条件・計算方法</summary>
+            <div class="drive-legend-head"><span>色</span><strong>平年値</strong><strong>予測</strong></div><div id="driveLegend"></div>
+            <p>青緑は指定条件に該当なし、灰色は資料不足。重なる条件は雪を優先してより悪い色を使います。路面の安全・通行可否ではありません。</p>
+            <p>約500mごとに照合し、間の線は両端の悪い方の色。狭い区間の変化は捉えきれない場合があります。各区間の通過時刻に予測期間を照合。期間外だけ平年値へ切替。予測区間の通信失敗を平年値で埋めません。気温・天気は該当する3時間枠を使います。</p>
+            <p>平年区間は日最低・日最高の1℃帯を表示し、日最低で判定。平年積雪は9/15〜6/15のみ。それ以外は積雪資料不足として灰色になります。平年値には天気を表示しません。</p>
+            <p>予測積雪深は100km以内・最大4観測点の実況に予想降雪を加え、距離の2乗の逆数で内挿。融雪・沈降・標高差は未考慮。道路上の積雪ではありません。</p>
+            <p>高速・一般道は優先条件で、必ずその種別だけになるとは限りません。距離優先も厳密な最短を保証しません。休憩地点は立ち寄れる施設を検索したものではありません。</p>
+            <p>経路・標高：<a href="https://valhalla.openstreetmap.de/" target="_blank" rel="noopener noreferrer">FOSSGIS / Valhalla</a>、道路：<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>。<a href="https://www.openstreetmap.org/" target="_blank" rel="noopener noreferrer">道路データの修正</a>。無料サービスの混雑・停止時は解析できません。</p>
+          </details>
+        </section>
         <div id="dataTiming" class="data-timing" aria-live="polite" hidden><div id="issueTimeRow" hidden><span>気象庁発表</span><strong id="issueTime"></strong></div><div id="observationTimeRow" hidden><span id="observationTimeLabel">実況</span><strong id="observationTime"></strong></div></div>
         <div id="liveViewControls" class="live-view-controls" hidden><label for="liveView">表示</label><select id="liveView"><option value="temperature">気温</option><option value="weather">天気</option><option value="snow">積雪深</option></select></div>
         <section id="normalControls" class="temperature-controls" aria-label="選択日の平年値">
@@ -177,6 +200,17 @@
           </aside>
         </section>
 
+        <section id="driveProfile" class="drive-profile" aria-label="走行ルートの標高断面図と気象" hidden>
+          <div class="drive-profile-heading"><strong id="driveSummary"></strong><button id="driveProfileToggle" type="button" aria-expanded="true" aria-controls="driveProfileBody">断面図を折りたたむ</button></div>
+          <div id="driveProfileBody">
+            <p id="driveTripTiming"></p><p id="driveNotices" role="status"></p>
+            <div class="drive-source-legend"><span>上の帯：</span><span class="drive-forecast-key">予測</span><span class="drive-normal-key">平年値</span><span>線：気象リスク ／ 標高は地表の目安（橋・トンネル内の路面高ではありません）</span></div>
+            <div id="driveChart" class="drive-chart"></div>
+            <label id="drivePositionLabel" for="drivePosition">区間を選択</label><input id="drivePosition" type="range" min="0" max="1" value="0" step="1" aria-label="断面図の距離の位置">
+            <div id="driveReadout" class="drive-readout" aria-live="polite"></div>
+            <div id="driveCards" class="drive-cards"></div>
+          </div>
+        </section>
 
       </div>
     </main>
@@ -223,7 +257,7 @@
           <p>天気：実況は気象庁の<a href="https://www.jma.go.jp/jma/kishou/know/suikei_kishou/kaisetsu.html" target="_blank" rel="noopener noreferrer">推計気象分布</a>（約1km・毎時）、予測は<a href="https://www.jma.go.jp/jma/kishou/know/kurashi/bunpu.html" target="_blank" rel="noopener noreferrer">天気分布予報</a>（約5km・3時間の代表的な天気）の公式画像です。実況天気も観測点の値そのものではありません。</p>
           <p>予測の3時間降水量・3時間降雪量：気象庁の天気分布予報の公式画像を約5kmの元格子・元の色で表示します。降水量は1〜4・5〜9・10〜14・15〜19・20mm以上、降雪量は1〜2・3〜5・6cm以上の階級です。対象時刻は3時間の終端です。降雪量は新たに降る雪の量で、積雪深や道路上の雪ではありません。無色は降水・降雪なし、海域、資料なしを含みます。</p>
           <p>実況積雪深：<a href="https://www.jma.go.jp/bosai/amedas/" target="_blank" rel="noopener noreferrer">気象庁アメダス等</a>の正時の観測値を白縁の丸で表示します。資料なしは斜線、0cmは薄いグレー、1cm以上は積雪深に応じて色分けします。数値は地図を拡大したときに表示します。観測点間の補間や推定面・等値線は使用しません。0cmは雪なしと1cm未満の積雪を区別しない共通表示です。予測値モードの丸は、最新実況に選択時刻までの各3時間予報の代表値1・3・6cmを足した簡易目安です。最初の枠は重なる時間も全量加算し、融雪・沈降は未考慮です。公式の積雪深予報や道路上の積雪・通行可否ではありません。</p>
-          <p class="privacy-note">このツールは現在地を取得せず、住所入力・Cookie・ブラウザ保存・アクセス解析を使用しません。地点選択は画面内だけで処理します。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。実況値・予測値モードでは、気温データを天気分布予報プラスの配信元（GitHub Pages）、天気画像・観測データを気象庁へ要求します。</p>
+          <p class="privacy-note">このツールは現在地を取得せず、住所入力・Cookie・ブラウザ保存・アクセス解析を使用しません。通常の地図の地点選択は画面内で処理します。ドライブの「解析スタート」では、選択した始点・終点と出発日時をFOSSGISのValhallaサービスへ送信します。経路・日時をこのツールで永続保存しません。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。実況値・予測値モードでは、気温データを天気分布予報プラスの配信元（GitHub Pages）、天気画像・観測データを気象庁へ要求します。</p>
         </div>
         <p class="footer-copyright">© 2026 Bousai Wx Lab.</p>
       </div>

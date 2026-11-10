@@ -264,7 +264,7 @@ test("mesh visibility and opacity leave the selected road classes unchanged", as
     f.get("temperatureOpacity").emit("input");
     assert.equal(f.roadEvents.length, previousEvents);
     f.map.click();
-    assert.match(f.get("temperaturePoint").textContent, /道路着色：0℃以下/);
+    assert.match(f.get("temperaturePoint").textContent, /気温区分：0℃以下。/);
     const pending = f.select(20);
     assert.equal(f.get("map").dataset.temperatureDay, "09-15");
     assert.match(f.get("mapTemperatureLabel").textContent, /9月15日の平均最低気温を表示中/);

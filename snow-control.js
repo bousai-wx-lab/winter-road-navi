@@ -129,9 +129,9 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
     }
   }
 
-  async function prepareSeason() {
+  async function prepareSeason(forRoads = false) {
     await startPromise;
-    if (!toggle.checked) return true;
+    if (!toggle.checked && !forRoads) return true;
     if (!manifest) return false;
     if (cache.size === manifest.days.length) {
       preparation.textContent = `${cache.size}日分の積雪データを準備済み`;
@@ -157,7 +157,7 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
     }
     progress();
     prefetchPromise = Promise.all(Array.from({ length: 3 }, async () => {
-      while (modeActive && toggle.checked && !document.hidden) {
+      while (modeActive && (toggle.checked || forRoads) && !document.hidden) {
         const day = nextDay();
         if (!day) return;
         try { await loadDay(day); } catch { /* A selected day can retry independently. */ }
@@ -166,9 +166,9 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
     })).then(() => {
       const ready = cache.size === manifest.days.length;
       preparation.textContent = ready ? `${cache.size}日分の積雪データを準備済み`
-        : document.hidden || !toggle.checked ? `積雪の裏準備を一時停止：${cache.size}/${manifest.days.length}日`
+        : !modeActive || document.hidden || (!toggle.checked && !forRoads) ? `積雪の裏準備を一時停止：${cache.size}/${manifest.days.length}日`
           : `一部の積雪データを準備できませんでした：${cache.size}/${manifest.days.length}日`;
-      preparation.dataset.state = ready ? "ready" : document.hidden || !toggle.checked ? "loading" : "error";
+      preparation.dataset.state = ready ? "ready" : !modeActive || document.hidden || (!toggle.checked && !forRoads) ? "loading" : "error";
       return ready;
     }).finally(() => { prefetchPromise = null; });
     return prefetchPromise;
@@ -245,7 +245,13 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
       else if (selectedDay) void setDay(selectedDay);
     },
     setDay,
-    preparePlayback: async () => toggle.checked ? prepareSeason() : true,
+    preparePlayback: async () => prepareSeason(true),
+    async roadBins(day) {
+      await startPromise;
+      if (!manifest) { startPromise = start(); await startPromise; }
+      if (!manifest) throw new Error("積雪データの一覧を確認できません");
+      return expandSnowBins(await loadDay(day), grid.count);
+    },
     setTooltipEnabled(enabled) {
       tooltipEnabled = Boolean(enabled);
       if (!tooltipEnabled) { tooltipBins = null; tooltipDay = null; return; }

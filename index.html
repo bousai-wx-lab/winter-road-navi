@@ -10,7 +10,7 @@
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
     <link rel="stylesheet" href="./styles.css?v=20261110-comparison-hover1">
-    <script type="module" src="./app.js?v=20261110-coast-only1" referrerpolicy="no-referrer"></script>
+    <script type="module" src="./app.js?v=20261110-risk-colors1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -123,11 +123,16 @@
         <section class="panel-section road-section" aria-labelledby="road-section-title">
           <div class="section-heading"><h3 id="road-section-title">道路</h3><label id="snowRoadOrderControl" hidden><span class="visually-hidden">道路と積雪の重ね順</span><select id="snowRoadOrder"><option value="roads">道路を手前</option><option value="snow">積雪を手前</option></select></label></div>
           <div class="road-toggles"><label class="layer-toggle"><input id="highwayToggle" type="checkbox" checked><span class="legend-line highway-line" aria-hidden="true"></span><span>高速道路</span></label><label class="layer-toggle"><input id="generalToggle" type="checkbox" checked><span class="legend-line general-line" aria-hidden="true"></span><span>一般道路</span></label></div>
-          <div class="road-temperature-legend" aria-label="道路の気温区分"><span><i class="road-red" aria-hidden="true"></i>0℃以下</span><span><i class="road-orange" aria-hidden="true"></i>0℃超〜2℃</span><span><i class="road-yellow" aria-hidden="true"></i>2℃超〜5℃</span><span><i class="road-missing" aria-hidden="true"></i>気温なし</span></div>
+          <div class="road-temperature-legend" hidden aria-label="道路の気温区分"><span><i class="road-red" aria-hidden="true"></i>0℃以下</span><span><i class="road-orange" aria-hidden="true"></i>0℃超〜2℃</span><span><i class="road-yellow" aria-hidden="true"></i>2℃超〜5℃</span><span><i class="road-missing" aria-hidden="true"></i>気温なし</span></div>
+          <div id="normalRoadControls" class="road-conditions">
+            <div id="normalRoadLegend" class="risk-legend" aria-label="平年の気温・積雪による道路の7色の凡例"></div>
+            <p class="section-hint">雪の条件を優先し、重なる条件はより悪い色。灰色は資料不足、該当なしは道路区分色。</p>
+            <button id="normalRoadRetry" type="button" hidden>道路判定を再読込</button>
+          </div>
           <div id="riskControls" class="road-conditions" aria-label="道路の気象条件の凡例" hidden>
             <div class="section-heading"><span class="section-hint">気象条件による色分け</span><button id="riskRefresh" class="quiet-button" type="button" hidden>再試行</button></div>
-            <div id="riskLegend" class="risk-legend" aria-label="道路だけに適用する6色の凡例"></div>
-            <p class="section-hint">灰色は資料不足。該当なしは道路区分色。</p>
+            <div id="riskLegend" class="risk-legend" aria-label="道路だけに適用する7色の凡例"></div>
+            <p class="section-hint">雪の条件を優先し、重なる条件はより悪い色。灰色は資料不足、該当なしは道路区分色。</p>
             <p id="riskStatus" class="temperature-status" role="status"></p>
           </div>
 <p id="roadTemperatureStatus" class="temperature-status" role="status"></p>
@@ -184,7 +189,7 @@
           <div data-help="weather" hidden><h4>天気・降水・降雪</h4><p id="weatherUpdated"></p><p id="weatherDescription"></p></div>
           <div data-help="risk" hidden><h4>道路の気象条件</h4><p id="riskUpdated"></p><p>対象時刻の気温と前12時間の降水、3時間の天気・降雪から色分けします。降水後の低温は黄・オレンジ、雪は降雪量に応じてピンク・赤・紫・黒を優先。欠けた降水・降雪予報は、計算上0として扱います。</p></div>
           <div data-help="snow" hidden><h4>積雪深</h4><p id="liveSnowDisplayHelp" class="section-hint">拡大すると数値を表示。丸を押すと地点の詳細。</p><p id="liveSnowUpdated"></p><p id="liveSnowForecastNotice" hidden></p><p>気象庁アメダス等の観測。0cmは雪なしと1cm未満の積雪を区別しません。斜線は実況の資料なし、または計算不能です。観測地点以外の積雪深は推定しません。</p><p>予測では最新実況に3時間降雪予報を累積。1〜2cmは1cm、3〜5cmは3cm、6cm以上は6cmを加算し、最初の枠は実況と重なっても全量加算します。融雪・沈降は計算しません。欠けた降雪予報は0cm加算。基準の実況がない地点は資料なしです。通信・形式・発表回の確認に失敗した場合は計算を止めます。</p><p>実況は過去24時間の正時を選択できます。10分ごと・タブ復帰時に配信を確認します。</p></div>
-          <p class="road-temperature-note"></p><p>高速道路は太線、一般道路は細線。拡大すると細街路も表示します。気温で着色する場合、0℃以下・0℃超〜2℃・2℃超〜5℃で区分し、5℃超は道路区分色です。</p>
+          <p class="road-temperature-note">線の色は1km格子の気温・積雪平年値による独自区分です。積雪面の表示と独立し、より悪い条件を優先します。現在の路面状態ではありません。</p><p>高速道路は太線、一般道路は細線。拡大すると細街路も表示します。気温で着色する場合、0℃以下・0℃超〜2℃・2℃超〜5℃で区分し、5℃超は道路区分色です。</p>
         </details>
 
         <section class="scope-note" aria-label="データの意味と注意">

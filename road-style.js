@@ -1,5 +1,6 @@
 export const ROAD_TILE_URL = "https://cyberjapandata.gsi.go.jp/xyz/experimental_bvmap/{z}/{x}/{y}.pbf";
 export const BASE_TILE_URL = "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png";
+export const SEA_TILE_URL = "https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/{z}/{x}/{y}.pbf";
 export const JAPAN_VIEW = Object.freeze({ bounds: [[128, 30], [146, 46]], padding: 18 });
 export const MAP_OUTLINE_LAYER = "coastline-overview";
 
@@ -21,6 +22,11 @@ export const GENERAL_ROAD_FILTER = Object.freeze([
 
 const roadWidth = (small, large) => ["interpolate", ["linear"], ["zoom"], 5, small, 15, large];
 const coastPaint = { "line-color": "#304553", "line-width": 1.25, "line-opacity": 0.92 };
+// Code 1211 also covers Hokkaido's subprefectures. Hokkaido has no land border with another prefecture.
+const hokkaidoExtent = {
+  type: "Polygon",
+  coordinates: [[[139, 41.25], [150, 41.25], [150, 47], [139, 47], [139, 41.25]]],
+};
 
 export function createMapStyle() {
   return {
@@ -42,6 +48,14 @@ export function createMapStyle() {
         bounds: [122, 20, 154, 47],
         attribution: '<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">地理院地図Vector</a>',
       },
+      sea: {
+        type: "vector",
+        tiles: [SEA_TILE_URL],
+        minzoom: 8,
+        maxzoom: 13,
+        bounds: [122, 20, 154, 47],
+        attribution: '<a href="https://github.com/gsi-cyberjapan/optimal_bvmap" target="_blank" rel="noopener noreferrer">国土地理院最適化ベクトルタイル</a>',
+      },
       overview: {
         type: "geojson",
         data: new URL("./assets/coastline-overview.json", import.meta.url).href,
@@ -59,15 +73,15 @@ export function createMapStyle() {
         paint: coastPaint,
       },
       {
-        // These tiles use water polygons for the shoreline. Keep inland water outlines subdued.
-        id: "water-outline", type: "line", source: "roads", "source-layer": "waterarea", minzoom: 8, maxzoom: 14,
-        filter: ["==", numeric("ftCode"), 5000],
-        paint: { ...coastPaint, "line-width": 0.85, "line-opacity": 0.48 },
+        // At these scales the optimized tiles distinguish marine and inland water polygons.
+        id: "sea-outline", type: "line", source: "sea", "source-layer": "WA", minzoom: 8, maxzoom: 14,
+        filter: ["match", numeric("vt_code"), [5100, 5101, 5102, 5103], true, false],
+        paint: coastPaint,
       },
       {
-        id: "administrative-outline", type: "line", source: "roads", "source-layer": "boundary", minzoom: 6,
-        filter: ["match", numeric("ftCode"), [51212, 1211], true, false],
-        paint: { "line-color": "#495663", "line-width": 1, "line-opacity": 0.8, "line-dasharray": [3, 2] },
+        id: "administrative-outline", type: "line", source: "roads", "source-layer": "boundary", minzoom: 8,
+        filter: ["all", ["==", numeric("ftCode"), 1211], ["!", ["within", hokkaidoExtent]]],
+        paint: { "line-color": "#536774", "line-width": 1, "line-opacity": 0.63, "line-dasharray": [3, 2] },
       },
       {
         id: "general-road-casing",

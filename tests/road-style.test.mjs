@@ -8,12 +8,13 @@ import {
   HIGHWAY_FILTER,
   MAP_OUTLINE_LAYER,
   ROAD_TILE_URL,
+  SEA_TILE_URL,
   classifyRoad,
   createMapStyle,
 } from "../road-style.js";
 
 test("the style uses only the approved GSI tile host", () => {
-  for (const url of [BASE_TILE_URL, ROAD_TILE_URL]) {
+  for (const url of [BASE_TILE_URL, ROAD_TILE_URL, SEA_TILE_URL]) {
     assert.equal(new URL(url.replace("{z}", "5").replace("{x}", "28").replace("{y}", "12")).hostname, "cyberjapandata.gsi.go.jp");
     assert.equal(url.startsWith("https://"), true);
   }
@@ -69,13 +70,13 @@ test("style has no third-party glyph, sprite, terrain, or analytics source", () 
   assert.equal(style.glyphs, undefined);
   assert.equal(style.sprite, undefined);
   assert.equal(style.terrain, undefined);
-  assert.deepEqual(Object.keys(style.sources).sort(), ["background", "overview", "roads"]);
+  assert.deepEqual(Object.keys(style.sources).sort(), ["background", "overview", "roads", "sea"]);
 });
 
 test("outlines stay between the basemap and roads, including below the vector tile zoom range", () => {
   const { layers } = createMapStyle();
   const position = id => layers.findIndex(layer => layer.id === id);
-  for (const id of [MAP_OUTLINE_LAYER, "coastline", "water-outline", "administrative-outline"]) {
+  for (const id of [MAP_OUTLINE_LAYER, "coastline", "sea-outline", "administrative-outline"]) {
     assert.ok(position("background-map") < position(id));
     assert.ok(position(id) < position("general-road-casing"));
   }

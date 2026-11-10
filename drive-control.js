@@ -8,7 +8,7 @@ import { RISK_RULES } from "./forecast-risk-data.js";
 const $=id=>document.getElementById(id), SVG="http://www.w3.org/2000/svg";
 function svg(tag,attributes,text){const el=document.createElementNS(SVG,tag);for(const [key,value] of Object.entries(attributes))el.setAttribute(key,String(value));if(text!==undefined)el.textContent=text;return el;}
 function node(tag,text,className){const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(className)el.className=className;return el;}
-const sourceLabel=source=>source==="forecast"?"予測":source==="normal"?"平年値":"資料不足";
+const sourceLabel=source=>source==="forecast"?"予測値":source==="normal"?"平年値":"資料不足";
 function profileAxis(samples){const columns=Math.min(9,new Set(samples.map(s=>s.km)).size);return {columns,left:66+934/columns/2,width:934*(columns-1)/columns};}
 const compactTemperature=text=>text.replace(/(-?\d+(?:\.\d+)?)℃以上\s*(-?\d+(?:\.\d+)?)℃未満/g,"$1〜<$2").replaceAll("℃","").replace("最低 ","低 ").replace("／最高 ","\n高 ");
 const compactSnow=text=>text.replace("推定 約","約").replaceAll("cm","").replace("現象あり・", "あり ").replace("現象なし","なし");
@@ -83,31 +83,30 @@ export function initDrive(map) {
     $("driveNotices").textContent=[...result.notices,!route.elevation?"標高を取得できませんでした。経路の気象は下に表示します。":"",priority==="local"&&route.hasHighway?"一般道優先ですが、一部に高速道路を含む経路です。":"",route.hasToll?"有料道路を含みます。":""].filter(Boolean).join(" ");
     $("driveProfileHelpLabel").textContent=$("driveNotices").textContent?"説明・注意あり":"表示の説明";
     $("driveProfile").hidden=!active;$("driveProfileBody").hidden=collapsed;$("driveProfileToggle").textContent=collapsed?"断面図を開く":"断面図を折りたたむ";$("driveProfileToggle").setAttribute("aria-expanded",String(!collapsed));
-    const chart=svg("svg",{viewBox:"0 0 1000 100",preserveAspectRatio:"none",role:"img","aria-label":"横軸は走行距離km、縦軸は標高m。下の気象表と同じ距離位置。路線の色は区間の気象リスク。"});
+    const chart=svg("svg",{viewBox:"0 0 1000 90",preserveAspectRatio:"none",role:"img","aria-label":"横軸は走行距離km、縦軸は標高m。下の気象表と同じ距離位置。路線の色は区間の気象リスク。"});
     const valid=samples.filter(s=>Number.isFinite(s.elevation)),bottom=Math.min(0,...valid.map(s=>Math.floor(s.elevation/100)*100)),top=Math.max(bottom+100,...valid.map(s=>Math.ceil(s.elevation/100)*100));
-    const axis=profileAxis(samples),x=km=>axis.left+axis.width*km/route.distance,y=z=>92-66*(z-bottom)/(top-bottom);
+    const axis=profileAxis(samples),x=km=>axis.left+axis.width*km/route.distance,y=z=>82-66*(z-bottom)/(top-bottom);
     for(let i=0;i<=2;i++){const z=bottom+(top-bottom)*i/2;chart.append(svg("line",{x1:axis.left,y1:y(z),x2:x(route.distance),y2:y(z),class:"drive-grid"}),svg("text",{x:60,y:y(z)+4,"text-anchor":"end"},String(Math.round(z))));}
     chart.append(svg("text",{x:8,y:14},"標高m"));
     const haloGroup=svg("g",{}),routeGroup=svg("g",{});chart.append(haloGroup,routeGroup);
     for(let i=0;i<samples.length-1;i++){const a=samples[i],b=samples[i+1],rank=a.rank===0||b.rank===0?0:Math.max(a.rank,b.rank);
-      chart.append(svg("line",{x1:x(a.km),y1:9,x2:x(b.km),y2:9,stroke:a.source==="normal"?"#917340":a.source==="forecast"?"#176b83":"#75838c","stroke-width":4}));
       if(Number.isFinite(a.elevation)&&Number.isFinite(b.elevation)){
         const line={x1:x(a.km),y1:y(a.elevation),x2:x(b.km),y2:y(b.elevation),"stroke-linecap":"round"};
         haloGroup.append(svg("line",{...line,stroke:"#607a8b","stroke-width":6}));routeGroup.append(svg("line",{...line,stroke:ROUTE_COLORS[rank],"stroke-width":4}));
       }
     }
     if(!valid.length)chart.append(svg("text",{x:500,y:60,"text-anchor":"middle"},"標高データなし"));
-    chart.append(svg("line",{x1:axis.left,x2:axis.left,y1:18,y2:95,class:"drive-position-line"}));
+    chart.append(svg("line",{x1:axis.left,x2:axis.left,y1:8,y2:85,class:"drive-position-line"}));
     chart.addEventListener("click",event=>{const box=chart.getBoundingClientRect(),km=Math.max(0,Math.min(route.distance,((event.clientX-box.left)/box.width*1000-axis.left)/axis.width*route.distance));let nearest=0;for(let i=1;i<samples.length;i++)if(Math.abs(samples[i].km-km)<Math.abs(samples[nearest].km-km))nearest=i;readout(nearest,true);});
     $("driveChart").replaceChildren(chart);$("drivePosition").max=String(samples.length-1);
     // Columns share the profile's distance axis; every sample remains available via the slider.
     const columns=Array.from({length:axis.columns},(_,j)=>{const km=route.distance*j/(axis.columns-1);return samples.reduce((best,s,i)=>Math.abs(s.km-km)<Math.abs(samples[best].km-km)?i:best,0);});
     const table=node("table",undefined,"drive-weather-table"),head=document.createElement("thead"),body=document.createElement("tbody"),header=document.createElement("tr");
     table.setAttribute("aria-label","経路の距離と通過時刻ごとの気象");const corner=node("th","距離\n通過時刻");corner.scope="col";header.append(corner);
-    for(const i of columns){const s=samples[i],cell=document.createElement("th"),button=node("button");cell.scope="col";cell.dataset.source=s.source;button.type="button";button.dataset.km=String(s.km);button.title=`${sourceLabel(s.source)} · ${timeLabel(s.time)}`;button.append(node("strong",`${s.km.toFixed(1)}km`),node("span",timeLabel(s.time).slice(5)));button.addEventListener("click",()=>readout(i,true));cell.append(button);header.append(cell);}
+    for(const i of columns){const s=samples[i],cell=document.createElement("th"),button=node("button");cell.scope="col";button.type="button";button.dataset.km=String(s.km);button.title=`${sourceLabel(s.source)} · ${timeLabel(s.time)}`;button.append(node("strong",`${s.km.toFixed(1)}km`),node("span",timeLabel(s.time).slice(5)));button.addEventListener("click",()=>readout(i,true));cell.append(button);header.append(cell);}
     head.append(header);
-    for(const [label,key] of [["天気","weather"],["気温 ℃","temperature"],["積雪 cm","snow"]]){const row=document.createElement("tr"),heading=node("th",label);heading.scope="row";row.append(heading);
-      for(const i of columns){const s=samples[i],cell=document.createElement("td");cell.title=key==="weather"?sourceLabel(s.source)+(s.weather?` · ${s.weather}`:""):s[key];cell.textContent=key==="weather"?s.source==="normal"?"平年値":`${weatherIcon[s.weather]||""} ${s.weather||"資料なし"}`.trim():key==="temperature"?compactTemperature(s.temperature):compactSnow(s.snow);row.append(cell);}body.append(row);
+    for(const [label,key] of [["データ","source"],["天気","weather"],["気温 ℃","temperature"],["積雪 cm","snow"]]){const row=document.createElement("tr"),heading=node("th",label);row.dataset.field=key;heading.scope="row";row.append(heading);
+      for(const i of columns){const s=samples[i],cell=document.createElement("td");cell.title=key==="source"?sourceLabel(s.source):key==="weather"?s.source==="normal"?"平年値では天気を表示しません":sourceLabel(s.source)+(s.weather?` · ${s.weather}`:""):s[key];cell.textContent=key==="source"?sourceLabel(s.source):key==="weather"?s.source==="normal"?"—":`${weatherIcon[s.weather]||""} ${s.weather||"資料なし"}`.trim():key==="temperature"?compactTemperature(s.temperature):compactSnow(s.snow);row.append(cell);}body.append(row);
     }
     table.append(head,body);$("driveCards").replaceChildren(table);readout(0);map.resize();
   }

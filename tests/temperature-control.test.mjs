@@ -134,7 +134,7 @@ function fixture({ automatic = false } = {}) {
     get, map, frames, responses, calls, failures, roadEvents,
     maxResponses, maxCalls, maxFailures, maximumManifest, manifestFailures,
     async boot() {
-      initTemperature(map, {
+      this.control=initTemperature(map, {
         onGrid: (grid) => roadEvents.push({ state: "grid", count: grid.count }),
         onDay: (classes, day, bins, mode) => roadEvents.push({ state: "day", day, mode, bin: bins[0], value: classes[0], count: classes.length }),
         onUnavailable: (state, mode) => roadEvents.push({ state, mode }),
@@ -428,4 +428,20 @@ test("all 275 season days are prepared in the background and kept after playback
     assert.equal(f.calls.get(sourceIndex(274)), finalCalls);
     assert.equal(f.frames.size, 0);
   } finally { await f.close(); }
+});
+
+
+test("drive follows calendar day without changing the manual normal day, and restores it",async()=>{
+  const f=fixture();
+  try {
+    await f.boot();f.automatic();
+    f.control.setActive(false);f.control.setFollowDay("01-01");f.control.setActive(true);
+    await waitFor(()=>f.get("map").dataset.temperatureDay==="01-01","drive day");
+    assert.equal(f.get("dateSlider").value,"0");
+    f.control.setFollowDay("07-01");
+    await waitFor(()=>f.get("map").dataset.temperatureDay==="07-01","summer calendar day");
+    f.control.setActive(false);f.control.setFollowDay(null);f.control.setActive(true);
+    await waitFor(()=>f.get("map").dataset.temperatureDay==="09-15","manual day restored");
+    f.control.setActive(false);
+  } finally {await f.close();}
 });

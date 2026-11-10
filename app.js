@@ -1,16 +1,16 @@
-import { initDrive } from "./drive-control.js?v=20261110-drive3";
+import { initDrive } from "./drive-control.js?v=20261110-drive4";
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=20261110-coast-only1";
-import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20261110-risk-colors1";
+import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20261110-drive4";
 import { createRoadTemperature } from "./road-temperature.js?v=20261023-zoomcolor1";
-import { initSnow } from "./snow-control.js?v=20261110-risk-colors1";
-import { initLiveTemperature } from "./live-temperature-control.js?v=20261110-daily-diff1";
-import { initWeather } from "./weather-control.js?v=20261110-outline1";
-import { initLiveSnow } from "./live-snow-control.js?v=20261109-panel1";
+import { initSnow } from "./snow-control.js?v=20261110-drive4";
+import { initLiveTemperature } from "./live-temperature-control.js?v=20261110-drive4";
+import { initWeather } from "./weather-control.js?v=20261110-drive4";
+import { initLiveSnow } from "./live-snow-control.js?v=20261110-drive4";
 import { initForecastRisk } from "./forecast-risk-control.js?v=20261110-risk-colors1";
 import { ROAD_RISK_COLORS, NORMAL_ROAD_RULES, createNormalRoadRisk } from "./road-risk-data.js?v=20261110-risk-colors1";
 import { RISK_RULES } from "./forecast-risk-data.js?v=20261110-risk-colors1";
-import { initForecastTimeline } from "./forecast-timeline.js?v=20261005-timeline1";
+import { initForecastTimeline } from "./forecast-timeline.js?v=20261110-drive4";
 import { timeLabel } from "./live-temperature-data.js";
 import { lookupCell, binLabel } from "./temperature-layer.js";
 import { startMap, showMapState } from "./map-recovery.js?v=20261024-recovery1";
@@ -29,6 +29,79 @@ let roadTemperature = null;
 let normalTemperature = null, liveTemperature = null, displayMode = "normal";
 let weather = null, liveSnow = null, risk = null, roadPalette = "temperature", displayView = "temperature";
 let forecastTimeline = null, drive = null;
+let driveSample = null, driveBackground = null, driveBackgroundTimer = null;
+const temperatureAppearance = Object.fromEntries(["normal","observed","forecast"].map(mode => [mode,{checked:true,opacity:"65"}]));
+function saveTemperatureAppearance(mode) {
+  if(mode === "drive")return;
+  temperatureAppearance[mode] = {checked:document.querySelector("#temperatureToggle").checked,opacity:document.querySelector("#temperatureOpacity").value};
+}
+function restoreTemperatureAppearance(mode) {
+  const {checked,opacity}=temperatureAppearance[mode];
+  document.querySelector("#temperatureToggle").checked=checked;
+  document.querySelector("#temperatureOpacity").value=opacity;
+  document.querySelector("#opacityValue").textContent=`${opacity}%`;
+}
+function showing(mode,view) {
+  const current=displayMode === "drive" ? driveBackground : {mode:displayMode,view:displayView};
+  return current?.mode === mode && (!view || current.view === view);
+}
+function refreshDriveBackgroundStatus() {
+  if(displayMode!=="drive")return;
+  const output=document.querySelector("#driveBackgroundStatus");
+  if(!document.querySelector("#driveBackgroundToggle").checked)output.textContent="地図の重ね表示はOFFです。";
+  else if(!driveSample)output.textContent="解析後に重ねて表示できます。";
+  else if(!driveBackground)output.textContent="この通過時刻は資料を確認できず、背景を表示できません。";
+  else {
+    const time=timeLabel(new Date(driveSample.time).toISOString());
+    const normal=driveBackground.mode==="normal", temperature=driveBackground.view==="temperature";
+    const source=normal ? "平年値" : "予測値";
+    const state=document.querySelector(normal ? "#temperatureStatus" : temperature ? "#liveStatus" : "#weatherStatus");
+    const target=normal ? `${new Date(driveSample.time+9*3600000).toISOString().slice(5,10).replace("-","月")}日` : temperature ? liveTemperature?.label() : weather?.label();
+    output.textContent=`通過 ${time} → 背景：${source} · ${target || "準備中"}${state?.dataset.state==="error" || state?.dataset.state==="unavailable" ? " · 資料を表示できません" : state?.dataset.state==="loading" ? " · 読込中" : ""}`;
+  }
+}
+function stopDriveBackground() {
+  driveBackground=null;
+  delete mapElement.dataset.driveBackgroundMode;delete mapElement.dataset.driveBackgroundTime;
+  normalTemperature?.setActive(false);normalTemperature?.setFollowDay(null);
+  liveTemperature?.setActive(false);liveTemperature?.setFollowTime(null);
+  weather?.setActive(false);weather?.setFollowTime(null);
+  snow?.setActive(false);risk?.setActive(false);liveSnow?.setActive(false);
+  normalRisk?.clear();normalRoadData=null;roadTemperature?.clear();
+}
+function syncDriveBackground() {
+  clearTimeout(driveBackgroundTimer);
+  if(displayMode!=="drive")return;
+  const mode=driveSample?.source, enabled=document.querySelector("#driveBackgroundToggle").checked;
+  if(!enabled || !["forecast","normal"].includes(mode)) {
+    if(driveBackground)stopDriveBackground();
+    document.querySelector("#mapTemperatureLabel").textContent="ドライブ · A 始点 → B 終点";
+    refreshDriveBackgroundStatus();return;
+  }
+  const view=mode==="normal" ? "temperature" : selectedViews.forecast;
+  const changed=driveBackground?.mode!==mode || driveBackground?.view!==view;
+  if(changed) {
+    stopDriveBackground();driveBackground={mode,view};restoreTemperatureAppearance(mode);
+  }
+  mapElement.dataset.driveBackgroundMode=mode;
+  mapElement.dataset.driveBackgroundTime=new Date(driveSample.time).toISOString();
+  if(mode==="normal") {
+    normalTemperature.setFollowDay(new Date(driveSample.time+9*3600000).toISOString().slice(5,10));
+    if(changed){snow?.setActive(true);normalTemperature.setActive(true);}
+  }else if(view==="temperature") {
+    if(changed)liveTemperature.setMode("forecast");
+    liveTemperature.setFollowTime(driveSample.time);
+    if(changed)liveTemperature.setActive(true);
+  }else {
+    weather.setFollowTime(driveSample.time);
+    if(changed) {
+      const riskView=view==="risk";
+      risk.setActive(riskView);liveSnow.setActive(riskView,riskView);
+      weather.setActive(true,"forecast",riskView ? "weather" : view);
+    }
+  }
+  drive?.bringToFront();refreshDriveBackgroundStatus();
+}
 const selectedViews = {observed:"temperature",forecast:"risk"};
 const isDistributionView = view => ["weather","precipitation","snowfall"].includes(view);
 let snow = null, normalRisk = null, normalRoadData = null;
@@ -59,7 +132,7 @@ function refreshTiming() {
   document.querySelector("#observationTime").textContent = observed ? /^\d{4}-\d{2}-\d{2}$/.test(observed) ? observed.replaceAll("-", "/") : timeLabel(observed) : "";
 }
 function refreshTooltip() {
-  if(displayMode === "drive") { tooltip.hidden = true; document.querySelector("#dataTiming").hidden = true; return; }
+  if(displayMode === "drive") { tooltip.hidden = true; document.querySelector("#dataTiming").hidden = true; refreshDriveBackgroundStatus(); return; }
   refreshTiming();
   if (!tooltipToggle.checked || !hovered) { tooltip.hidden = true; return; }
   const index = temperatureGrid ? lookupCell(temperatureGrid, hovered.lng, hovered.lat) : -1;
@@ -204,6 +277,7 @@ function useGrid(grid,palette="temperature") {
     roadTemperature.setHighwayVisible(document.querySelector("#highwayToggle").checked);
     roadTemperature.setGeneralVisible(document.querySelector("#generalToggle").checked);
     liveSnow?.setAboveRoads(document.querySelector("#snowRoadOrder").value === "snow");
+    drive?.bringToFront();
   } catch { roadTemperature = null; setRoadTemperatureState("error"); }
 }
 function applyDisplay() {
@@ -211,7 +285,8 @@ function applyDisplay() {
   document.querySelector(".control-panel").dataset.mode = displayMode;
   document.querySelector(".tool-layout").dataset.mode = displayMode;
   document.querySelector("#driveMode").setAttribute("aria-pressed", String(driving));
-  drive?.setActive(driving);
+  clearTimeout(driveBackgroundTimer);
+  if(driveBackground)stopDriveBackground();
   if(driving) {
     normalRisk?.clear(); normalRoadData = null; roadTemperature?.clear();
     normalTemperature.setActive(false); liveTemperature.setActive(false); snow?.setActive(false);
@@ -223,9 +298,11 @@ function applyDisplay() {
     document.querySelector("#map-heading").textContent="ドライブの経路と通過時刻の気象";
     document.querySelector("#map").setAttribute("aria-label","ドライブの始点と終点を選ぶ地図");
     document.querySelector("#dataMeaning").textContent="通過予定時刻の予測、期間外は平年値を使う気象の目安です。所要時間は渋滞・積雪による遅れを含みません。";
-    details.hidden=true; refreshTooltip(); return;
+    drive?.setActive(true);
+    details.hidden=true; syncDriveBackground(); refreshTooltip(); return;
   }
 
+  drive?.setActive(false);
   const mode = displayMode, live = mode !== "normal", label = mode === "observed" ? "実況" : "予測";
   const riskView=mode==="forecast" && displayView==="risk";
   const temperature = !live || displayView === "temperature", distribution = live && (isDistributionView(displayView) || riskView);
@@ -284,7 +361,9 @@ function applyDisplay() {
 function switchDisplayMode(mode) {
   if(!normalTemperature || !liveTemperature || mode === displayMode)return;
   if(["observed","forecast"].includes(displayMode))selectedViews[displayMode]=displayView;
+  saveTemperatureAppearance(displayMode);
   displayMode=mode;
+  if(mode!=="drive")restoreTemperatureAppearance(mode);
   if(["observed","forecast"].includes(mode)) {
     displayView=selectedViews[mode];
     const options=mode === "observed" ? [["temperature","気温"],["weather","天気"],["snow","積雪深"]] : [["risk","天気・積雪・道路"],["temperature","気温"],["weather","天気"],["precipitation","3時間降水量"],["snowfall","3時間降雪量"]];
@@ -302,38 +381,44 @@ document.querySelector("#liveMode").addEventListener("click", () => switchDispla
 document.querySelector("#forecastMode").addEventListener("click", () => switchDisplayMode("forecast"));
 document.querySelector("#driveMode").addEventListener("click", () => switchDisplayMode("drive"));
 function initializeControllers() {
-  drive=initDrive(map);
+  drive=initDrive(map,{onSelection(sample){
+    driveSample=sample;clearTimeout(driveBackgroundTimer);
+    if(!sample)syncDriveBackground();
+    else driveBackgroundTimer=setTimeout(syncDriveBackground,80);
+  }});
+  document.querySelector("#driveBackgroundToggle").addEventListener("change",syncDriveBackground);
   document.querySelector("#driveMode").disabled=false;
   setStatus("道路を表示中。細い一般道路は地図を拡大すると現れます", "ready");
   forecastTimeline = initForecastTimeline(map,()=>displayMode === "forecast" ? displayView==="risk" || isDistributionView(displayView) ? weather : liveTemperature : null);
   risk=initForecastRisk({
-    onData(data,target){if(displayMode!=="forecast" || displayView!=="risk")return;useGrid(data.grid,"risk");roadTemperature?.setClasses(data.classes,new Date(Date.parse(target.end)+9*3600000).toISOString().slice(5,10));refreshTooltip();},
-    onUnavailable(state){if(displayMode!=="forecast" || displayView!=="risk")return;roadTemperature?.clear();setRoadTemperatureState(state);},
+    onData(data,target){if(!showing("forecast","risk"))return;useGrid(data.grid,"risk");roadTemperature?.setClasses(data.classes,new Date(Date.parse(target.end)+9*3600000).toISOString().slice(5,10));refreshTooltip();},
+    onUnavailable(state){if(!showing("forecast","risk"))return;roadTemperature?.clear();setRoadTemperatureState(state);},
     onChange:refreshTooltip,
   });
   liveSnow = initLiveSnow(map,{onChange:refreshTooltip});
-  weather = initWeather(map,{onChange(){if(displayMode==="forecast" && displayView==="risk"){risk.setTarget(weather?.current());liveSnow?.setForecastTarget(weather?.current());}refreshTooltip();forecastTimeline.render();}});
+  weather = initWeather(map,{onChange(){if(showing("forecast","risk")){risk.setTarget(weather?.current());liveSnow?.setForecastTarget(weather?.current());}refreshTooltip();forecastTimeline.render();},onLayersReady(){drive?.bringToFront();}});
   liveTemperature = initLiveTemperature(map, {
     onChange(){refreshTooltip();forecastTimeline.render();},
     onData(shown) {
-      if (displayMode === "normal" || displayView !== "temperature") return;
+      if (!showing("forecast","temperature") && !showing("observed","temperature")) return;
       useGrid(shown.data.grid); tooltipDay = shown.day; tooltipTemperatureState = "ready";
       try { roadTemperature?.setClasses(shown.data.classes, shown.day); }
       catch { roadTemperature?.clear(); setRoadTemperatureState("error"); }
       refreshTooltip();
     },
     onUnavailable(state) {
-      if (displayMode === "normal" || displayView !== "temperature") return;
+      if (!showing("forecast","temperature") && !showing("observed","temperature")) return;
       roadTemperature?.clear(); setRoadTemperatureState(state); refreshTooltip();
     },
   });
   normalTemperature = initTemperature(map, {
-    onGrid(grid) { if (displayMode === "normal") useGrid(grid,"normal-risk"); },
+    onChange:refreshTooltip,
+    onGrid(grid) { if (showing("normal")) useGrid(grid,"normal-risk"); },
     onLayerReady(grid, manifest) {
       snow = initSnow(map, grid, manifest, refreshTooltip);
       normalRisk = createNormalRoadRisk(day => snow.roadBins(day), {
         onData(data) {
-          if (displayMode !== "normal") return;
+          if (!showing("normal")) return;
           normalRoadData = data;
           roadTemperature?.setClasses(data.classes, data.day);
           mapElement.dataset.normalRiskDay = data.day;
@@ -341,7 +426,7 @@ function initializeControllers() {
           refreshTooltip();
         },
         onUnavailable(state) {
-          if (displayMode !== "normal") return;
+          if (!showing("normal")) return;
           normalRoadData = null; roadTemperature?.clear();
           delete mapElement.dataset.normalRiskDay; delete mapElement.dataset.normalRiskCounts;
           document.querySelector("#normalRoadRetry").hidden = state !== "error";
@@ -352,18 +437,18 @@ function initializeControllers() {
           refreshTooltip();
         },
       });
-      snow.setActive(displayMode === "normal");
+      snow.setActive(showing("normal"));
       snow.setTooltipEnabled(tooltipToggle.checked);
     },
     onDay(classes, day, bins, mode) {
-      if (displayMode !== "normal") return;
+      if (!showing("normal")) return;
       temperatureBins = bins; tooltipDay = day; tooltipMode = mode;
       tooltipTemperatureState = "ready";
       void normalRisk?.setDay(classes, day);
       void snow?.setDay(day); refreshTooltip();
     },
     onUnavailable(state, mode) {
-      if (displayMode !== "normal") return;
+      if (!showing("normal")) return;
       normalRisk?.clear(); normalRoadData = null;
       delete mapElement.dataset.normalRiskDay; delete mapElement.dataset.normalRiskCounts;
       document.querySelector("#normalRoadRetry").hidden = true;

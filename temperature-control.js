@@ -55,7 +55,8 @@ export function initTemperature(map, hooks = {}) {
   let playing = false, preparing = false, animation = 0, selectedPoint = null, playbackGeneration = 0;
   let playbackCancelResolve = null;
   let loadState = "loading", active = true;
-  const showStatus = (text, state = "ready") => { status.textContent = text; status.dataset.state = state; };
+  let followDay = null, displayedDay = null;
+  const showStatus = (text, state = "ready") => { status.textContent = text; status.dataset.state = state; hooks.onChange?.(); };
   const stop = () => {
     playbackGeneration++;
     playing = false; preparing = false; cancelAnimationFrame(animation);
@@ -90,11 +91,12 @@ export function initTemperature(map, hooks = {}) {
       expandGrid(await checkedJSON(value.grid, config.root));
     }
     const filesByDay = new Map(value.files.map((file) => [file.day, file]));
-    context.manifest = { ...value, days: seasonDays, files: seasonDays.map((day) => filesByDay.get(day)) };
+    context.manifest = { ...value, days: seasonDays, files: seasonDays.map((day) => filesByDay.get(day)), calendarFiles: filesByDay };
     return context.manifest;
   }
   function updateMapLabel() {
     if (!active) return;
+    if(followDay!==null){label.textContent=`${followDay.replace("-","月")}日 · ${modeText(selectedMode)}${displayedDay===followDay?"":"を準備中"}${$("temperatureToggle").checked?"":" · 気温面は非表示"}`;return;}
     if (displayed < 0) { label.textContent = `${dayText(selected)} · ${modeText(selectedMode)}を読み込み中`; return; }
     const shown = `${dayText(displayed)} · ${modeText(displayedMode)}`;
     label.textContent = displayed === selected && displayedMode === selectedMode ? shown
@@ -102,6 +104,7 @@ export function initTemperature(map, hooks = {}) {
     if (!$("temperatureToggle").checked) label.textContent += " · 気温面は非表示";
   }
   function refreshPoint() {
+    if(followDay!==null)return;
     if (!selectedPoint) return;
     if (loadState === "error") { point.textContent = "選択地点：通信またはデータ確認に失敗しました"; return; }
     if (displayed !== selected || displayedMode !== selectedMode || !bins) {
@@ -140,18 +143,36 @@ export function initTemperature(map, hooks = {}) {
     pending.set(index, task);
     return task;
   }
-  function show(index, data) {
+  function show(index, data, targetDay = manifest.days[index]) {
     loadState = "ready";
-    bins = data.bins; roadClasses = unpackRoadClasses(data); displayed = index;
+    bins = data.bins; roadClasses = unpackRoadClasses(data); displayed = index; displayedDay = targetDay;
     displayedMode = selectedMode;
-    layer.setBins(bins); layer.setVisible(active && $("temperatureToggle").checked);
+    layer.setBins(bins); layer.setOpacity(Number($("temperatureOpacity").value)/100); layer.setVisible(active && $("temperatureToggle").checked);
     if (active) syncModeLabels();
-    hooks.onDay?.(roadClasses, manifest.days[index], bins, displayedMode);
+    hooks.onDay?.(roadClasses, targetDay, bins, displayedMode);
     updateMapLabel();
-    if (active) $("map").dataset.temperatureDay = manifest.days[index];
+    if (active) $("map").dataset.temperatureDay = targetDay;
     if (active) $("map").dataset.temperatureMode = displayedMode;
     $("map").dataset.temperatureCells = String(grid.count);
     refreshPoint();
+  }
+  async function showFollowDay() {
+    if(!active || !followDay || !layer)return;
+    stop();const token=++request,targetDay=followDay,context=source;
+    layer.setVisible(false);bins=null;roadClasses=null;displayedDay=null;loadState="loading";
+    delete $("map").dataset.temperatureDay;hooks.onUnavailable?.("loading",selectedMode);updateMapLabel();
+    showStatus(`${targetDay.replace("-","月")}日の${modeText(selectedMode)}を準備中`,"loading");
+    try {
+      const nextManifest=await loadManifest(context),index=nextManifest.days.indexOf(targetDay);
+      const record=nextManifest.calendarFiles.get(targetDay);
+      if(!record)throw new Error("平年値の日付が未収録です");
+      const data=index>=0 ? await loadDay(index,context) : decodeDisplayDay(await checkedJSON(record,TEMPERATURE_MODES[context.mode].root),grid.count);
+      if(token!==request || !active || followDay!==targetDay)return;
+      manifest=nextManifest;show(index,data,targetDay);showStatus("通過日の平年値を表示中");
+    }catch {
+      if(token!==request || !active)return;
+      loadState="error";hooks.onUnavailable?.("error",selectedMode);showStatus("通過日の平年値を表示できません","error");label.textContent="通過日の平年値は資料なし";
+    }
   }
   async function select(index, manual = true, delay = 0) {
     if (manual) stop();
@@ -211,7 +232,7 @@ export function initTemperature(map, hooks = {}) {
     };
     updateProgress();
     context.prefetchPromise = Promise.all(Array.from({ length: 3 }, async () => {
-      while (active && !document.hidden && context === source) {
+      while (active && followDay===null && !document.hidden && context === source) {
         const index = nextIndex();
         if (index < 0) return;
         try { await loadDay(index, context); } catch { /* Keep other dates usable; a later selection can retry. */ }
@@ -245,7 +266,7 @@ export function initTemperature(map, hooks = {}) {
       if (token !== request) return;
       manifest = nextManifest; modeLoading = false;
       controls.forEach((control) => { control.disabled = false; });
-      await select(selected, false);
+      if(followDay!==null)await showFollowDay();else await select(selected, false);
       if (selectedMode !== mode) return;
       // Let paused requests from the same mode finish before resuming prefetch.
       const active = source.prefetchPromise;
@@ -333,7 +354,7 @@ export function initTemperature(map, hooks = {}) {
       date.max = String(manifest.days.length - 1);
       controls.forEach((control) => { control.disabled = false; });
       modeSelect.value = selectedMode; syncModeLabels();
-      await select(selected, false);
+      if(followDay!==null)await showFollowDay();else await select(selected, false);
       modeSelect.disabled = false;
       $("map").dataset.temperatureReadyMs = String(Math.round(performance.now() - started));
       void prepareSeason();
@@ -374,7 +395,7 @@ export function initTemperature(map, hooks = {}) {
     point.textContent = "地図をクリックすると、その格子の気温帯を確認できます。";
   });
   map.on("click", (event) => {
-    if (!grid || !layer) return;
+    if (!active || followDay!==null || !grid || !layer) return;
     selectedPoint = event.lngLat; $("clearTemperaturePoint").hidden = false; refreshPoint();
   });
   document.addEventListener("visibilitychange", () => {
@@ -389,12 +410,18 @@ export function initTemperature(map, hooks = {}) {
   });
   start();
   return {
+    setFollowDay(day) {
+      if(day!==null && !/^\d{2}-\d{2}$/.test(day))throw new Error("通過日の指定が不正です");
+      const changed=followDay!==day;followDay=day;
+      if(changed && day!==null && active)void showFollowDay();
+    },
     setActive(value) {
       active = value; stop(); layer?.setVisible(value && Boolean(bins) && $("temperatureToggle").checked);
-      if (!value) return;
+      if (!value) {++request;delete $("map").dataset.temperatureDay;return;}
       if (grid) hooks.onGrid?.(grid);
       if (manifest && layer) {
         syncModeLabels();
+        if(followDay!==null){void showFollowDay();return;}
         if (displayed === selected && displayedMode === selectedMode && cache.has(selected)) show(selected, cache.get(selected));
         else void select(selected, false);
         if (!source.prefetchPromise) void prepareSeason();

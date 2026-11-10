@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {setImmediate as nextTurn} from "node:timers/promises";
-import {initForecastTimeline,forecastTickLabel} from "../forecast-timeline.js";
+import {initForecastTimeline,forecastTickLabel,forecastSlotAtTime} from "../forecast-timeline.js";
 import {initWeather} from "../weather-control.js";
 
 class Element {
@@ -85,6 +85,15 @@ test("map forecast timeline and existing weather controls share native slots thr
     assert.equal(get("map").dataset.weatherTarget,undefined);
     fail=false;get("forecastTimePrevious").emit("click");await until(()=>get("map").dataset.weatherReady==="true");
     assert.equal(get("forecastTimeRange").value,"0");
+    // Following a drive point must not change the user's forecast selection.
+    controller.setFollowTime(Date.parse("2099-01-01T08:00:00Z"));
+    await until(()=>get("map").dataset.weatherTarget==="2099-01-01T09:00:00Z");
+    assert.equal(controller.timeline().selected,records[0].validtime);
+    controller.setFollowTime(Date.parse("2099-01-01T12:00:00Z"));
+    await until(()=>get("weatherStatus").dataset.state==="unavailable");
+    assert.equal(map.sources.size,0);
+    controller.setActive(false);controller.setFollowTime(null);controller.setActive(true,"forecast");
+    await until(()=>get("map").dataset.weatherTarget==="2099-01-01T06:00:00Z");
     timeline.setVisible(false);controller.setActive(false);assert.equal(get("forecastTimeline").hidden,true);assert.equal(map.resizes,2);
     controller.choose(records[1].validtime);await nextTurn();assert.equal(get("map").dataset.weatherTarget,undefined);
   }finally{controller.setActive(false);Object.assign(globalThis,saved);}
@@ -101,4 +110,13 @@ test("empty and single-slot forecasts are readable with disabled navigation",()=
     assert.equal(get("forecastTimeRange").disabled,true);assert.equal(get("forecastTimePrevious").disabled,true);assert.equal(get("forecastTimeNext").disabled,true);
     assert.match(get("forecastTimeLabel").textContent,/データなし/);assert.equal(get("forecastTimeTicks").children[0].style.left,"50%");
   }finally{Object.assign(globalThis,saved);}
+});
+
+
+test("drive times use native periods, exact boundaries and leave gaps unavailable",()=>{
+  const slots=[{id:"a",end:"2099-01-01T03:00:00Z"},{id:"b",end:"2099-01-01T06:00:00Z"},{id:"d",end:"2099-01-01T12:00:00Z"}];
+  const at=time=>forecastSlotAtTime(slots,Date.parse(`2099-01-01T${time}Z`))?.id;
+  assert.equal(at("03:00:00"),"a");assert.equal(at("03:00:01"),"b");
+  assert.equal(at("07:00:00"),undefined);assert.equal(at("12:00:01"),undefined);
+  assert.equal(forecastSlotAtTime(slots,NaN),null);
 });

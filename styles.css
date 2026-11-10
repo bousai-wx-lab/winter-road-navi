@@ -653,26 +653,40 @@ main {
 .display-mode-buttons button { padding-left: 4px; padding-right: 4px; }
 .control-panel[data-mode="drive"] #panelBody > :not(#driveControls) { display: none !important; }
 .tool-layout[data-mode="drive"] .map-column { grid-template-rows: auto minmax(220px,1fr) auto; }
-.drive-profile { grid-row: 3; min-width: 0; background:#fff; border-top: 2px solid #176b83; padding: 8px 14px; color:#173c52; font-size:12px; max-height:55svh; overflow:auto; }
+.drive-profile { grid-row: 3; min-width: 0; background:#fff; border-top: 2px solid #176b83; padding: 4px 10px; color:#173c52; font-size:12px; max-height:min(330px,42svh); overflow:auto; }
 .drive-profile-heading { display:flex; gap:12px; justify-content:space-between; align-items:center; }
 .drive-profile button { font:inherit; padding:5px 9px; border:1px solid #b7cbd5; border-radius:5px; color:#174457; background:#fff; cursor:pointer; }
 .drive-profile button:hover { background:#eaf5f8; }
 .drive-profile button:focus-visible { outline:2px solid #168399; }
-.drive-profile p { margin:4px 0; }
-.drive-profile input[type="range"] { width:100%; accent-color:#176b83; margin:0; }
-.drive-chart svg { display:block; width:100%; height:130px; cursor:crosshair; }
+.drive-profile p { margin:2px 0; }
+.drive-profile input[type="range"] { display:block; width:100%; height:16px; accent-color:#176b83; margin:1px 0; }
+.drive-strip { overflow-x:auto; overscroll-behavior-x:contain; }
+.drive-strip-content { min-width:900px; }
+.drive-chart svg { display:block; width:100%; height:90px; cursor:crosshair; }
 .drive-chart text { font:12px sans-serif; fill:#426172; }
 .drive-grid { stroke:#dce5ea; stroke-width:1; }
 .drive-position-line { stroke:#176b83; stroke-width:1.5; stroke-dasharray:4 3; }
 .drive-source-legend { display:flex; flex-wrap:wrap; gap:5px 10px; font-size:10px; color:#617681; }
 .drive-forecast-key { border-bottom:4px solid #176b83; }
 .drive-normal-key { border-bottom:4px solid #917340; }
-.drive-readout { display:grid; gap:3px; padding:6px 8px; background:#eef5f8; border-left:3px solid #176b83; margin:4px 0; }
-.drive-readout[data-source="normal"] { border-color:#917340; }
+.drive-trip-meta { display:flex; align-items:baseline; justify-content:space-between; gap:8px; font-size:11px; }
+.drive-profile-help { flex:none; }
+.drive-profile-help summary { cursor:pointer; color:#526d7b; }
+.drive-profile-help > div { position:absolute; z-index:5; right:12px; max-width:min(450px,85vw); padding:8px; background:#fff; border:1px solid #bdcfd9; box-shadow:0 3px 12px #173c5230; }
+.drive-selection { display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 10px; font-size:11px; background:#eef5f8; padding:3px 6px; }
+#drivePositionLabel { font-weight:700; white-space:nowrap; }
+.drive-readout { display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 8px; min-width:0; }
 .drive-readout small { color:#58717e; }
-.drive-cards { display:grid; grid-template-columns:repeat(5,minmax(140px,1fr)); gap:6px; overflow-x:auto; padding:2px 0; }
-.drive-card { display:grid; gap:3px; text-align:left; font-size:11px !important; }
-.drive-card span { overflow-wrap:anywhere; }
+.drive-weather-table { width:100%; table-layout:fixed; border-collapse:collapse; font-size:11px; line-height:1.2; text-align:center; font-variant-numeric:tabular-nums; }
+.drive-weather-table th,.drive-weather-table td { padding:2px 3px; border-bottom:1px solid #e3eaf0; border-right:1px solid #e3eaf0; white-space:pre-line; vertical-align:middle; }
+.drive-weather-table tr > :first-child { width:6.6%; position:sticky; left:0; background:#f2f6f8; color:#496574; font-size:10px; z-index:1; }
+.drive-weather-table thead th:not(:first-child) { padding:0; border-top:3px solid #75838c; }
+.drive-weather-table thead th[data-source="forecast"] { border-top-color:#176b83; }
+.drive-weather-table thead th[data-source="normal"] { border-top-color:#917340; }
+.drive-weather-table button { display:grid; gap:1px; width:100%; border:0; border-radius:0; padding:3px 0; line-height:1.2; }
+.drive-weather-table button span { font-size:10px; font-weight:400; }
+.drive-weather-table button[aria-pressed="true"],.drive-weather-table button[aria-pressed="true"]:hover { background:#155c72; color:#fff; }
+.drive-weather-table tbody tr:nth-child(2) { background:#f5f8fa; }
 .drive-field { display:grid; gap:4px; margin:10px 0; font-weight:600; }
 .drive-controls input { min-width:0; max-width:100%; width:100%; border:1px solid #bdcfd9; border-radius:5px; padding:7px; font:inherit; color:#153d58; background:#fff; }
 .drive-endpoint { display:grid; grid-template-columns:115px minmax(0,1fr); gap:6px; margin:6px 0; }
@@ -693,15 +707,19 @@ main {
   .tool-layout[data-mode="drive"] .control-panel { max-height:48%; }
   .tool-layout[data-mode="drive"] .map-column { display:flex; flex-direction:column; }
   .tool-layout[data-mode="drive"] .map-shell { flex:1; min-height:140px; }
-  .drive-profile { flex:none; max-height:43%; padding:6px 8px; }
+  .drive-profile { flex:none; max-height:min(300px,40%); padding:4px 6px; }
   .drive-profile-heading { gap:8px; font-size:11px; }
-  .drive-profile-heading button { flex:none; min-height:36px; }
-  .drive-chart svg { height:145px; min-width:520px; }
-  .drive-chart { overflow-x:auto; }
+  .drive-profile-heading button { flex:none; min-height:30px; padding:3px 6px; }
+  .drive-chart svg { height:80px; }
+  .drive-trip-meta { font-size:10px; }
+  .drive-trip-meta > p { white-space:nowrap; }
+  .drive-selection { flex-wrap:nowrap; overflow-x:auto; white-space:nowrap; }
+  .drive-selection > * { flex:none; }
   .drive-readout { font-size:11px; }
-  .drive-cards { grid-template-columns:repeat(5,145px); }
+  .drive-readout { flex-wrap:nowrap; }
+  .drive-weather-table button { min-height:36px; }
 }
 
 .drive-point-note summary { font-size:10px; color:#58717e; cursor:pointer; }
 .drive-point-note small { display:block; margin-top:3px; }
-.drive-profile-heading { position:sticky; top:0; z-index:2; background:#fff; border-bottom:1px solid #dce5ea; padding-bottom:5px; }
+.drive-profile-heading { position:sticky; top:0; z-index:3; background:#fff; border-bottom:1px solid #dce5ea; padding-bottom:3px; }

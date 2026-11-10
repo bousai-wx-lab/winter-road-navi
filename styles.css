@@ -662,13 +662,10 @@ main {
 .drive-profile input[type="range"] { display:block; width:100%; height:16px; accent-color:#176b83; margin:1px 0; }
 .drive-strip { overflow-x:auto; overscroll-behavior-x:contain; }
 .drive-strip-content { min-width:900px; }
-.drive-chart svg { display:block; width:100%; height:90px; cursor:crosshair; }
+.drive-chart svg { display:block; width:100%; height:80px; cursor:crosshair; }
 .drive-chart text { font:12px sans-serif; fill:#426172; }
 .drive-grid { stroke:#dce5ea; stroke-width:1; }
 .drive-position-line { stroke:#176b83; stroke-width:1.5; stroke-dasharray:4 3; }
-.drive-source-legend { display:flex; flex-wrap:wrap; gap:5px 10px; font-size:10px; color:#617681; }
-.drive-forecast-key { border-bottom:4px solid #176b83; }
-.drive-normal-key { border-bottom:4px solid #917340; }
 .drive-trip-meta { display:flex; align-items:baseline; justify-content:space-between; gap:8px; font-size:11px; }
 .drive-profile-help { flex:none; }
 .drive-profile-help summary { cursor:pointer; color:#526d7b; }
@@ -680,13 +677,12 @@ main {
 .drive-weather-table { width:100%; table-layout:fixed; border-collapse:collapse; font-size:11px; line-height:1.2; text-align:center; font-variant-numeric:tabular-nums; }
 .drive-weather-table th,.drive-weather-table td { padding:2px 3px; border-bottom:1px solid #e3eaf0; border-right:1px solid #e3eaf0; white-space:pre-line; vertical-align:middle; }
 .drive-weather-table tr > :first-child { width:6.6%; position:sticky; left:0; background:#f2f6f8; color:#496574; font-size:10px; z-index:1; }
-.drive-weather-table thead th:not(:first-child) { padding:0; border-top:3px solid #75838c; }
-.drive-weather-table thead th[data-source="forecast"] { border-top-color:#176b83; }
-.drive-weather-table thead th[data-source="normal"] { border-top-color:#917340; }
+.drive-weather-table thead th:not(:first-child) { padding:0; }
 .drive-weather-table button { display:grid; gap:1px; width:100%; border:0; border-radius:0; padding:3px 0; line-height:1.2; }
 .drive-weather-table button span { font-size:10px; font-weight:400; }
 .drive-weather-table button[aria-pressed="true"],.drive-weather-table button[aria-pressed="true"]:hover { background:#155c72; color:#fff; }
-.drive-weather-table tbody tr:nth-child(2) { background:#f5f8fa; }
+.drive-weather-table tr[data-field="source"] { background:#f2f6f8; font-size:10px; font-weight:600; }
+.drive-weather-table tr[data-field="temperature"] { background:#f5f8fa; }
 .drive-field { display:grid; gap:4px; margin:10px 0; font-weight:600; }
 .drive-controls input { min-width:0; max-width:100%; width:100%; border:1px solid #bdcfd9; border-radius:5px; padding:7px; font:inherit; color:#153d58; background:#fff; }
 .drive-endpoint { display:grid; grid-template-columns:115px minmax(0,1fr); gap:6px; margin:6px 0; }
@@ -710,7 +706,7 @@ main {
   .drive-profile { flex:none; max-height:min(300px,40%); padding:4px 6px; }
   .drive-profile-heading { gap:8px; font-size:11px; }
   .drive-profile-heading button { flex:none; min-height:30px; padding:3px 6px; }
-  .drive-chart svg { height:80px; }
+  .drive-chart svg { height:70px; }
   .drive-trip-meta { font-size:10px; }
   .drive-trip-meta > p { white-space:nowrap; }
   .drive-selection { flex-wrap:nowrap; overflow-x:auto; white-space:nowrap; }

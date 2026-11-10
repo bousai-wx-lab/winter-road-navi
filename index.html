@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、白縁の丸で示す実況積雪深や、実況に予想降雪を加算した簡易積雪目安にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261110-daily-diff1">
-    <script type="module" src="./app.js?v=20261110-daily-diff1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261110-comparison-hover1">
+    <script type="module" src="./app.js?v=20261110-coast-only1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -208,7 +208,7 @@
           </nav>
         </div>
         <div class="footer-copy">
-          <p>道路・海岸線・行政界・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a></p>
+          <p>道路・海岸線・都府県境・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a>。中間の拡大段階の海岸線は<a href="https://github.com/gsi-cyberjapan/optimal_bvmap" target="_blank" rel="noopener noreferrer">国土地理院最適化ベクトルタイル</a>の海水域を使用。</p>
           <p>国土地理院のデータをBousai Wx Labが独自に区分・着色して表示しています。データは試験提供で、最新状況と異なる場合があります。</p>
           <p>平年の気温：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年日別平年値</a>・国土数値情報標高データを基に独自算出・独自内挿。最高気温は地点の日別変化と月別1km推定値を組み合わせています。公式の日別1kmメッシュではありません。</p>
           <p>積雪：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年の日最深積雪平年値</a>と月別1km推定値から独自推定。地上観測の「現象なし」と「現象あり0cm」を分け、アメダスの曖昧な0cmは不在の根拠にしていません。全国の雪域境界も独自推定であり、公式の日別1kmメッシュではありません。細い実線は現象の有無、および1・5・10・20・50・100cmの各閾値をまたぐ格子境界です。</p>

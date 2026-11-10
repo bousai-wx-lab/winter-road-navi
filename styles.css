@@ -647,3 +647,61 @@ main {
 .mesh-tooltip span:empty { display: none; }
 
 #snowRoadOrder { min-height: 28px; font-size: 11px; }
+
+/* Driving route uses the map's lower row for a collapsible profile. */
+.display-mode-buttons { grid-template-columns: repeat(4, minmax(0,1fr)); }
+.display-mode-buttons button { padding-left: 4px; padding-right: 4px; }
+.control-panel[data-mode="drive"] #panelBody > :not(#driveControls) { display: none !important; }
+.tool-layout[data-mode="drive"] .map-column { grid-template-rows: auto minmax(220px,1fr) auto; }
+.drive-profile { grid-row: 3; min-width: 0; background:#fff; border-top: 2px solid #176b83; padding: 8px 14px; color:#173c52; font-size:12px; max-height:55svh; overflow:auto; }
+.drive-profile-heading { display:flex; gap:12px; justify-content:space-between; align-items:center; }
+.drive-profile button { font:inherit; padding:5px 9px; border:1px solid #b7cbd5; border-radius:5px; color:#174457; background:#fff; cursor:pointer; }
+.drive-profile button:hover { background:#eaf5f8; }
+.drive-profile button:focus-visible { outline:2px solid #168399; }
+.drive-profile p { margin:4px 0; }
+.drive-profile input[type="range"] { width:100%; accent-color:#176b83; margin:0; }
+.drive-chart svg { display:block; width:100%; height:130px; cursor:crosshair; }
+.drive-chart text { font:12px sans-serif; fill:#426172; }
+.drive-grid { stroke:#dce5ea; stroke-width:1; }
+.drive-position-line { stroke:#176b83; stroke-width:1.5; stroke-dasharray:4 3; }
+.drive-source-legend { display:flex; flex-wrap:wrap; gap:5px 10px; font-size:10px; color:#617681; }
+.drive-forecast-key { border-bottom:4px solid #176b83; }
+.drive-normal-key { border-bottom:4px solid #917340; }
+.drive-readout { display:grid; gap:3px; padding:6px 8px; background:#eef5f8; border-left:3px solid #176b83; margin:4px 0; }
+.drive-readout[data-source="normal"] { border-color:#917340; }
+.drive-readout small { color:#58717e; }
+.drive-cards { display:grid; grid-template-columns:repeat(5,minmax(140px,1fr)); gap:6px; overflow-x:auto; padding:2px 0; }
+.drive-card { display:grid; gap:3px; text-align:left; font-size:11px !important; }
+.drive-card span { overflow-wrap:anywhere; }
+.drive-field { display:grid; gap:4px; margin:10px 0; font-weight:600; }
+.drive-controls input { min-width:0; max-width:100%; width:100%; border:1px solid #bdcfd9; border-radius:5px; padding:7px; font:inherit; color:#153d58; background:#fff; }
+.drive-endpoint { display:grid; grid-template-columns:115px minmax(0,1fr); gap:6px; margin:6px 0; }
+.drive-endpoint button[aria-pressed="true"],.drive-endpoint button[aria-pressed="true"]:hover,#driveAnalyze,#driveAnalyze:hover { background:#155c72; color:#fff; }
+.drive-rest-heading { display:flex; justify-content:space-between; align-items:center; }
+.drive-break { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; gap:5px; margin:6px 0; }
+.drive-actions { display:grid; grid-template-columns:2fr 1fr; gap:8px; margin-top:12px; }
+#driveStatus { margin:10px 0; padding-left:8px; border-left:3px solid #176b83; }
+#driveStatus[data-state="error"],#driveNotices:not(:empty) { color:#a43c20; }
+.drive-service-note { font-size:10px; color:#5a727f; }
+.drive-details { border-top:1px solid #ccdbe3; padding-top:8px; margin-top:10px; font-size:11px; }
+.drive-details summary { cursor:pointer; font-weight:700; }
+.drive-legend-head,.drive-legend-row { display:grid; grid-template-columns:20px 1fr 1fr; gap:5px; align-items:center; margin:6px 0; font-size:10px; }
+.drive-legend-row i { height:5px; border:1px solid #8ca1ad; }
+.drive-marker { display:flex; align-items:center; justify-content:center; width:26px; height:26px; background:#155c72; color:white; border:2px solid white; border-radius:50%; font:700 14px sans-serif; box-shadow:0 1px 5px #152d4460; }
+.drive-marker-end { background:#a34a2c; }
+@media (max-width:760px) {
+  .tool-layout[data-mode="drive"] .control-panel { max-height:48%; }
+  .tool-layout[data-mode="drive"] .map-column { display:flex; flex-direction:column; }
+  .tool-layout[data-mode="drive"] .map-shell { flex:1; min-height:140px; }
+  .drive-profile { flex:none; max-height:43%; padding:6px 8px; }
+  .drive-profile-heading { gap:8px; font-size:11px; }
+  .drive-profile-heading button { flex:none; min-height:36px; }
+  .drive-chart svg { height:145px; min-width:520px; }
+  .drive-chart { overflow-x:auto; }
+  .drive-readout { font-size:11px; }
+  .drive-cards { grid-template-columns:repeat(5,145px); }
+}
+
+.drive-point-note summary { font-size:10px; color:#58717e; cursor:pointer; }
+.drive-point-note small { display:block; margin-top:3px; }
+.drive-profile-heading { position:sticky; top:0; z-index:2; background:#fff; border-bottom:1px solid #dce5ea; padding-bottom:5px; }

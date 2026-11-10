@@ -17,7 +17,7 @@ https://github.com/bousai-wx-lab/winter-road-navi/security/advisories/new
 - 認証、アカウント、フォーム、住所入力、現在地取得を持ちません。
 - Cookie、Web Storage、IndexedDB、アクセス解析を使用しません。
 - JavaScript、CSS、Web Workerは同じ公開リポジトリから配信します。
-- 外部通信先は国土地理院のタイル配信先だけです。
+- 外部通信は国土地理院、気象庁、公開気象データ配信元に加え、ドライブ解析時のFOSSGIS Valhalla経路サービスを使います。経路サービスへ選択した始点・終点と出発日時を送り、画面にも明記します。住所検索・現在地取得・経路の永続保存は行いません。
 - Content Security Policyでスクリプト、スタイル、画像、通信、Workerの配信元を制限します。
 - GitHub Pagesへ出すファイルを完全一致一覧に限定し、全Git履歴と配信用アーカイブを公開前に検査します。
 

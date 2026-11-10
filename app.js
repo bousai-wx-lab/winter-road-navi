@@ -3,7 +3,7 @@ import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=2026
 import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20261110-outline1";
 import { createRoadTemperature } from "./road-temperature.js?v=20261023-zoomcolor1";
 import { initSnow } from "./snow-control.js?v=20261110-outline1";
-import { initLiveTemperature } from "./live-temperature-control.js?v=20261110-outline1";
+import { initLiveTemperature } from "./live-temperature-control.js?v=20261110-daily-diff1";
 import { initWeather } from "./weather-control.js?v=20261110-outline1";
 import { initLiveSnow } from "./live-snow-control.js?v=20261109-panel1";
 import { initForecastRisk } from "./forecast-risk-control.js?v=20261109-panel2";
@@ -276,7 +276,7 @@ function initializeControllers() {
   liveSnow = initLiveSnow(map,{onChange:refreshTooltip});
   weather = initWeather(map,{onChange(){if(displayMode==="forecast" && displayView==="risk"){risk.setTarget(weather?.current());liveSnow?.setForecastTarget(weather?.current());}refreshTooltip();forecastTimeline.render();}});
   liveTemperature = initLiveTemperature(map, {
-    onChange(){forecastTimeline.render();},
+    onChange(){refreshTooltip();forecastTimeline.render();},
     onData(shown) {
       if (displayMode === "normal" || displayView !== "temperature") return;
       useGrid(shown.data.grid); tooltipDay = shown.day; tooltipTemperatureState = "ready";

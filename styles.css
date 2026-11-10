@@ -503,6 +503,8 @@ main {
 #liveSlot, #weatherSlot { width: 100%; }
 .live-time-buttons { display: flex; gap: 6px; margin: 6px 0; }
 .live-time-buttons button { flex: 1; }
+.temperature-comparison { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 7px; }
+.temperature-comparison button[aria-pressed="true"] { background: #155c72; border-color: #155c72; color: #fff; }
 .date-row, .date-selects, .play-row { display: flex; align-items: center; gap: 6px; }
 .date-row { justify-content: space-between; }
 .date-row > button { width: 32px; padding: 0; font-size: 22px; }

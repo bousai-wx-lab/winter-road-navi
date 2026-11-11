@@ -1,5 +1,5 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
-import { createRouteClient, departureTime, routeRequest, sampleRoute, routeSegments, validPoint, ROUTE_COLORS, PRIORITIES } from "./drive-route-data.js";
+import { createRouteClient, departureTime, routeRequest, sampleRoute, routeSegments, validPoint, ROUTE_COLORS, PRIORITIES, ROAD_KIND_LABELS } from "./drive-route-data.js?v=20261111-road-kind1";
 import { createDriveWeather } from "./drive-weather-data.js";
 import { timeLabel } from "./live-temperature-data.js";
 import { NORMAL_ROAD_RULES } from "./road-risk-data.js";
@@ -66,9 +66,10 @@ export function initDrive(map,hooks={}) {
     if(!result)return;index=Math.max(0,Math.min(result.samples.length-1,Math.round(index)));$("drivePosition").value=String(index);
     const s=result.samples[index];$("drivePositionLabel").textContent=`${s.km.toFixed(1)}km · ${timeLabel(s.time).slice(5)}${s.restMinutes?`（休憩${s.restMinutes}分後）`:""}`;
     const heading=node("strong",`${sourceLabel(s.source)} · ${s.riskLabel}`),body=node("span",`${s.elevation===null?"標高不明":`${Math.round(s.elevation)}m`}　${s.weather?`${s.weather}　`:""}気温 ${compactTemperature(s.temperature).replace("\n"," / ")}${s.temperature.includes("℃")?"℃":""}　積雪 ${compactSnow(s.snow)}${/\d/.test(s.snow)?"cm":""}`),note=node("details",undefined,"drive-point-note");note.append(node("summary","詳細"),node("small",`気温 ${s.temperature}。積雪深 ${s.snow}。${s.note}`));
-    $("driveReadout").replaceChildren(heading,body,note);$("driveReadout").dataset.source=s.source;$("driveReadout").dataset.rank=String(s.rank);
+    const roadKind=node("strong",ROAD_KIND_LABELS[s.roadKind]||ROAD_KIND_LABELS.unknown,"drive-road-kind");roadKind.dataset.roadKind=s.roadKind||"unknown";
+    $("driveReadout").replaceChildren(roadKind,heading,body,note);$("driveReadout").dataset.source=s.source;$("driveReadout").dataset.rank=String(s.rank);
     if(active){if(index===0||index===result.samples.length-1){markers.inspect?.remove();delete markers.inspect;}else pointMarker("inspect",s.coordinate,"●");if(move)map.easeTo({center:s.coordinate,duration:300});}
-    const line=$("driveChart").querySelector(".drive-position-line");if(line){const axis=profileAxis(result.samples),x=axis.left+axis.width*s.km/result.route.distance;line.setAttribute("x1",x);line.setAttribute("x2",x);}
+    for(const line of $("driveChart").querySelectorAll(".drive-position-line")){const axis=profileAxis(result.samples),x=axis.left+axis.width*s.km/result.route.distance;line.setAttribute("x1",x);line.setAttribute("x2",x);}
     const buttons=Array.from($("driveCards").querySelectorAll("button"));
     const nearest=buttons.reduce((best,b)=>Math.abs(Number(b.dataset.km)-s.km)<Math.abs(Number(best.dataset.km)-s.km)?b:best,buttons[0]);
     for(const button of buttons)button.setAttribute("aria-pressed",String(button===nearest));
@@ -98,8 +99,18 @@ export function initDrive(map,hooks={}) {
     }
     if(!valid.length)chart.append(svg("text",{x:500,y:60,"text-anchor":"middle"},"標高データなし"));
     chart.append(svg("line",{x1:axis.left,x2:axis.left,y1:8,y2:85,class:"drive-position-line"}));
-    chart.addEventListener("click",event=>{const box=chart.getBoundingClientRect(),km=Math.max(0,Math.min(route.distance,((event.clientX-box.left)/box.width*1000-axis.left)/axis.width*route.distance));let nearest=0;for(let i=1;i<samples.length;i++)if(Math.abs(samples[i].km-km)<Math.abs(samples[nearest].km-km))nearest=i;readout(nearest,true);});
-    $("driveChart").replaceChildren(chart);$("drivePosition").max=String(samples.length-1);
+    const selectDistance=event=>{const box=event.currentTarget.getBoundingClientRect(),km=Math.max(0,Math.min(route.distance,((event.clientX-box.left)/box.width*1000-axis.left)/axis.width*route.distance));let nearest=0;for(let i=1;i<samples.length;i++)if(Math.abs(samples[i].km-km)<Math.abs(samples[nearest].km-km))nearest=i;readout(nearest,true);};
+    chart.addEventListener("click",selectDistance);
+    const roads=svg("svg",{viewBox:"0 0 1000 22",preserveAspectRatio:"none",class:"drive-road-strip",role:"img","aria-label":"道路区分。濃い帯は高速道路、薄い帯は一般道。標高断面と同じ距離位置。"});
+    roads.append(svg("text",{x:8,y:15},"道路区分"));
+    for(const section of route.roadSections){
+      const width=x(section.endKm)-x(section.startKm),label=ROAD_KIND_LABELS[section.kind],group=svg("g",{"data-road-kind":section.kind,"data-start-km":section.startKm,"data-end-km":section.endKm});
+      group.append(svg("title",{},`${label} · ${section.startKm.toFixed(1)}〜${section.endKm.toFixed(1)}km`),svg("rect",{x:x(section.startKm),y:2,width,height:18,class:`drive-road-${section.kind}`}));
+      if(width>=58)group.append(svg("text",{x:x(section.startKm)+width/2,y:15,"text-anchor":"middle",class:section.kind==="highway"?"drive-road-text-light":""},label));
+      roads.append(group);
+    }
+    roads.append(svg("line",{x1:axis.left,x2:axis.left,y1:0,y2:22,class:"drive-position-line"}));roads.addEventListener("click",selectDistance);
+    $("driveChart").replaceChildren(chart,roads);$("drivePosition").max=String(samples.length-1);
     // Columns share the profile's distance axis; every sample remains available via the slider.
     const columns=Array.from({length:axis.columns},(_,j)=>{const km=route.distance*j/(axis.columns-1);return samples.reduce((best,s,i)=>Math.abs(s.km-km)<Math.abs(samples[best].km-km)?i:best,0);});
     const table=node("table",undefined,"drive-weather-table"),head=document.createElement("thead"),body=document.createElement("tbody"),header=document.createElement("tr");

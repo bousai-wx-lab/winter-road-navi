@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {departureTime,routeRequest,decodePolyline,decodeRoute,sampleRoute,routeSegments,estimateSnow,createRouteClient} from "../drive-route-data.js";
+import {departureTime,routeRequest,decodePolyline,decodeRoute,sampleRoute,routeSegments,estimateSnow,createRouteClient,roadKindAt,kmBetween} from "../drive-route-data.js";
 import {forecastPeriods,sourceForTime,createDriveWeather} from "../drive-weather-data.js";
 
 const departure=Date.parse("2026-11-10T07:00:00+09:00");
@@ -68,4 +68,39 @@ test("route service reports failure without automatic retries, observes rate lim
 test("invalid geometry, service failures and impossible duration cannot turn into a straight route",()=>{
   assert.throws(()=>decodePolyline("?"));assert.throws(()=>decodeRoute({trip:{status:1,legs:[]}}));
   assert.throws(()=>decodeRoute({trip:{status:0,legs:[{summary:{length:1001,time:5000}}]}}));
+});
+
+function roadFixture(){
+  const points=[[138,36],[138.01,36],[138.02,36],[138.03,36],[138.04,36]],last=[0,0];
+  const encode=n=>{n=n<0?-n*2-1:n*2;let s="";while(n>=32){s+=String.fromCharCode((n%32|32)+63);n=Math.floor(n/32);}return s+String.fromCharCode(n+63);};
+  const shape=points.map(p=>[p[1],p[0]].map((v,i)=>{const n=Math.round(v*1e6),s=encode(n-last[i]);last[i]=n;return s;}).join("")).join("");
+  const length=points.slice(1).reduce((sum,p,i)=>sum+kmBetween(points[i],p),0),summary={length,time:400,has_highway:true};
+  return {trip:{status:0,summary,legs:[{shape,summary,maneuvers:[
+    {begin_shape_index:0,end_shape_index:1,time:100},
+    {begin_shape_index:1,end_shape_index:2,time:100,highway:true},
+    {begin_shape_index:2,end_shape_index:3,time:100,highway:true},
+    {begin_shape_index:3,end_shape_index:4,time:100},
+    {begin_shape_index:4,end_shape_index:4,time:0}
+  ]}]}};
+}
+test("road sections retain distance boundaries, merge adjacent guidance sections, and survive rests",()=>{
+  const r=decodeRoute(roadFixture());
+  assert.deepEqual(r.roadSections.map(s=>s.kind),["local","highway","local"]);
+  const boundary=r.distances[1];
+  assert.equal(r.roadSections[1].startKm,boundary);assert.equal(r.roadSections[1].endKm,r.distances[3]);
+  assert.equal(roadKindAt(r,0),"local");assert.equal(roadKindAt(r,boundary-.00001),"local");
+  assert.equal(roadKindAt(r,boundary),"highway");assert.equal(roadKindAt(r,r.distance),"local");
+  assert.equal(roadKindAt(r,-1),"unknown");assert.equal(roadKindAt(r,r.distance+1),"unknown");
+  const stop=sampleRoute(r,departure,[{km:boundary,minutes:20}]).filter(s=>s.km===boundary);
+  assert.deepEqual(stop.map(s=>s.roadKind),["highway","highway"]);assert.equal(stop[1].time-stop[0].time,1200000);
+});
+test("all-local routes accept omitted false flags; absent or inconsistent road metadata stays unknown",()=>{
+  const local=roadFixture();local.trip.summary.has_highway=false;
+  for(const m of local.trip.legs[0].maneuvers)delete m.highway;
+  assert.deepEqual(decodeRoute(local).roadSections.map(s=>s.kind),["local"]);
+  for(const mutate of [j=>delete j.trip.summary.has_highway,j=>j.trip.summary.has_highway=false,j=>j.trip.legs[0].maneuvers[0].highway="false"]){
+    const json=roadFixture();mutate(json);const r=decodeRoute(json);
+    assert.deepEqual(r.roadSections.map(s=>s.kind),["unknown"]);
+    assert.ok(sampleRoute(r,departure).every(s=>s.roadKind==="unknown"));
+  }
 });

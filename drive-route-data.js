@@ -4,6 +4,7 @@ export const ROUTE_API = "https://valhalla1.openstreetmap.de/route";
 export const ROUTE_LIMIT_KM = 1000;
 export const ROUTE_COLORS = Object.freeze(ROAD_RISK_COLORS.map((color,i)=>i===1?"#197c88":color));
 export const PRIORITIES = {fastest:"時間優先",highway:"高速優先",local:"一般道優先",shortest:"距離優先"};
+export const ROAD_KIND_LABELS = {highway:"高速道路",local:"一般道",unknown:"区分不明"};
 
 export function validPoint(point) {
   return Array.isArray(point) && point.length === 2 && point.every(Number.isFinite)
@@ -49,11 +50,24 @@ export function decodeRoute(json) {
   if(geometricLength<=0 || Math.abs(geometricLength-distance)>Math.max(.5,distance*.05))throw new Error("経路の長さと形状が一致しません");
   for(let i=0;i<distances.length;i++)distances[i]*=distance/geometricLength;
   if(!Array.isArray(leg.maneuvers) || leg.maneuvers.length>20000)throw new Error("区間ごとの所要時間がありません");
+  // Valhalla omits highway=false. Check the summary before interpreting omission
+  // as a local road; old/inconsistent responses must remain unknown.
+  const highwayInfo=typeof trip.summary?.has_highway==="boolean"
+    && trip.summary.has_highway===leg.maneuvers.some(m=>m.highway===true)
+    && leg.maneuvers.every(m=>m.highway===undefined||typeof m.highway==="boolean");
+  const roadSections=[];
   let elapsed=0,previous=0;
   for(const m of leg.maneuvers){
     const a=m.begin_shape_index,b=m.end_shape_index;
     if(!Number.isInteger(a)||!Number.isInteger(b)||a!==previous||b<a||b>=coordinates.length||!Number.isFinite(m.time)||m.time<0)throw new Error("区間ごとの所要時間が不正です");
     for(let i=a;i<=b;i++)times[i]=elapsed+(distances[b]===distances[a]?0:(distances[i]-distances[a])/(distances[b]-distances[a])*m.time);
+    if(distances[b]>distances[a]){
+      const kind=highwayInfo?(m.highway?"highway":"local"):"unknown",last=roadSections.at(-1);
+      // These are guidance sections, not surveyed road boundaries. A maneuver's
+      // highway flag means it contains a highway; explain the boundary precision in the UI.
+      if(last?.kind===kind)last.endKm=distances[b];
+      else roadSections.push({startKm:distances[a],endKm:distances[b],kind});
+    }
     elapsed+=m.time;previous=b;
   }
   if(previous!==coordinates.length-1 || times.some(t=>t===null) || Math.abs(elapsed-seconds)>Math.max(5,seconds*.01))throw new Error("区間ごとの所要時間を照合できません");
@@ -62,7 +76,12 @@ export function decodeRoute(json) {
   const elevation=leg.elevation,interval=leg.elevation_interval;
   const hasElevation=Array.isArray(elevation) && elevation.length>1 && elevation.length<=10000 && Number.isFinite(interval) && interval>0
     && Math.abs((elevation.length-1)*interval-distance*1000)<interval*2+100;
-  return {coordinates,distances,times,distance,seconds,elevation:hasElevation?elevation:null,elevationInterval:interval,hasHighway:Boolean(trip.summary.has_highway),hasToll:Boolean(trip.summary.has_toll)};
+  return {coordinates,distances,times,distance,seconds,roadSections,elevation:hasElevation?elevation:null,elevationInterval:interval,hasHighway:Boolean(trip.summary.has_highway),hasToll:Boolean(trip.summary.has_toll)};
+}
+export function roadKindAt(route,km) {
+  if(!Number.isFinite(km)||km<0||km>route.distance)return "unknown";
+  const sections=route.roadSections||[];
+  return sections.find((s,i)=>km>=s.startKm&&(km<s.endKm||(i===sections.length-1&&km===s.endKm)))?.kind||"unknown";
 }
 export function validateBreaks(breaks,distance) {
   if(!Array.isArray(breaks)||breaks.length>12)throw new Error("休憩は12か所まで指定できます");
@@ -88,7 +107,7 @@ export function sampleRoute(route,departure,breaks=[]) {
   return positions.flatMap(km=>{
     const point=interpolateAt(route,km),rest=stops.filter(b=>b.km<km-1e-8).reduce((sum,b)=>sum+b.minutes*60,0);
     const minutes=stops.filter(b=>Math.abs(b.km-km)<1e-8).reduce((sum,b)=>sum+b.minutes,0);
-    const arrival={...point,km,time:departure+(point.seconds+rest)*1000,restMinutes:0};
+    const arrival={...point,km,roadKind:roadKindAt(route,km),time:departure+(point.seconds+rest)*1000,restMinutes:0};
     return minutes?[arrival,{...arrival,time:arrival.time+minutes*60000,restMinutes:minutes}]:[arrival];
   });
 }

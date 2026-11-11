@@ -664,6 +664,14 @@ main {
 .drive-strip-content { min-width:900px; }
 .drive-chart svg { display:block; width:100%; height:80px; cursor:crosshair; }
 .drive-chart text { font:12px sans-serif; fill:#426172; }
+.drive-chart .drive-road-strip { height:22px; }
+.drive-road-strip rect { stroke:#fff; stroke-width:1; }
+.drive-road-highway { fill:#35546a; }
+.drive-road-local { fill:#dfe9ef; }
+.drive-road-unknown { fill:#d3d3d3; }
+.drive-road-strip .drive-road-text-light { fill:#fff; }
+.drive-road-kind { padding:1px 5px; border-radius:3px; background:#dfe9ef; white-space:nowrap; }
+.drive-road-kind[data-road-kind="highway"] { background:#35546a; color:#fff; }
 .drive-grid { stroke:#dce5ea; stroke-width:1; }
 .drive-position-line { stroke:#176b83; stroke-width:1.5; stroke-dasharray:4 3; }
 .drive-trip-meta { display:flex; align-items:baseline; justify-content:space-between; gap:8px; font-size:11px; }

@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、白縁の丸で示す実況積雪深にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261111-road-kind1">
-    <script type="module" src="./app.js?v=20261118-drive-snowfall1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261118-point1">
+    <script type="module" src="./app.js?v=20261118-point1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -78,6 +78,7 @@
         </section>
         <div id="dataTiming" class="data-timing" aria-live="polite" hidden><div id="issueTimeRow" hidden><span>気象庁発表</span><strong id="issueTime"></strong></div><div id="observationTimeRow" hidden><span id="observationTimeLabel">実況</span><strong id="observationTime"></strong></div></div>
         <div id="liveViewControls" class="live-view-controls" hidden><label for="liveView">表示</label><select id="liveView"><option value="temperature">気温</option><option value="weather">天気</option><option value="snow">積雪深</option></select></div>
+        <p id="forecastPointHint" class="section-hint" hidden>地図をクリックすると、地点の予測を時系列で表示します。</p>
         <section id="normalControls" class="temperature-controls" aria-label="選択日の平年値">
           <h3>表示する日 <span>平年値</span></h3>
           <p class="section-hint">気温・積雪とも、この月日の平年値を表示</p>
@@ -206,6 +207,21 @@
           </aside>
         </section>
 
+        <section id="forecastPoint" class="drive-profile forecast-point" aria-labelledby="forecastPointHeading" hidden>
+          <div class="drive-profile-heading">
+            <strong id="forecastPointHeading">地点の予測</strong>
+            <div class="forecast-point-actions">
+              <button id="forecastPointToggle" type="button" aria-expanded="true" aria-controls="forecastPointBody">折りたたむ</button>
+              <button id="forecastPointClose" type="button">閉じる</button>
+            </div>
+          </div>
+          <div id="forecastPointBody">
+            <div class="forecast-point-meta"><p id="forecastPointStatus" role="status"></p><button id="forecastPointRetry" type="button" hidden>再試行</button></div>
+            <div id="forecastPointScroll" class="drive-strip" tabindex="0" aria-label="地点の時系列予測。横にスクロールして確認できます。" hidden>
+              <table id="forecastPointTable" class="drive-weather-table" aria-label="地点の時系列予測"></table>
+            </div>
+          </div>
+        </section>
         <section id="driveProfile" class="drive-profile" aria-label="走行ルートの標高断面図と気象" hidden>
           <div class="drive-profile-heading"><strong id="driveSummary"></strong><button id="driveProfileToggle" type="button" aria-expanded="true" aria-controls="driveProfileBody">断面図を折りたたむ</button></div>
           <div id="driveProfileBody">

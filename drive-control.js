@@ -4,6 +4,7 @@ import { createDriveWeather } from "./drive-weather-data.js?v=20261118-drive-sno
 import { timeLabel } from "./live-temperature-data.js";
 import { NORMAL_ROAD_RULES } from "./road-risk-data.js";
 import { RISK_RULES } from "./forecast-risk-data.js";
+import { colorWeatherCell, weatherTableAmount } from "./weather-table-style.js?v=20261118-drive-profile1";
 
 const $=id=>document.getElementById(id), SVG="http://www.w3.org/2000/svg";
 function svg(tag,attributes,text){const el=document.createElementNS(SVG,tag);for(const [key,value] of Object.entries(attributes))el.setAttribute(key,String(value));if(text!==undefined)el.textContent=text;return el;}
@@ -13,6 +14,36 @@ function profileAxis(samples){const columns=Math.min(9,new Set(samples.map(s=>s.
 const compactTemperature=text=>text.replace(/(-?\d+(?:\.\d+)?)℃以上\s*(-?\d+(?:\.\d+)?)℃未満/g,"$1〜<$2").replaceAll("℃","").replace("最低 ","低 ").replace("／最高 ","\n高 ");
 const compactSnow=text=>text.replaceAll("cm","").replace("現象あり・", "あり ").replace("現象なし","なし");
 const weatherIcon={"晴れ":"☀","くもり":"☁","雨":"☂","雨または雪":"☂❄","雪":"❄"};
+
+function colorDriveTemperature(cell, content) {
+  const lines = content.split("\n");
+  if (lines.length === 1) {
+    colorWeatherCell(cell, "temp3h", Number.isFinite(Number(content)) ? content : null);
+    return;
+  }
+  cell.replaceChildren(...lines.map(text => {
+    const reading = node("span", text, "drive-temperature-level");
+    const lowerBound = text.match(/^[低高] (-?\d+)〜</)?.[1] ?? null;
+    colorWeatherCell(reading, "temp3h", lowerBound);
+    return reading;
+  }));
+}
+
+function styleDriveWeather(cell, field, sample) {
+  if (field === "weather" && sample.source !== "normal") {
+    colorWeatherCell(cell, "weather3h", sample.weather === "資料なし" ? null : sample.weather);
+  } else if (field === "temperature") {
+    colorDriveTemperature(cell, cell.textContent);
+  } else if (field === "snowfall" && sample.source === "forecast") {
+    const value = sample.snowfall === "降雪量なし" ? "1未満" : sample.snowfall.replace("cm", "");
+    const display = weatherTableAmount(sample.weather, value);
+    if (display === "—") {
+      cell.textContent = "—";
+      if (value === "1未満") cell.title = "1cm未満";
+    }
+    colorWeatherCell(cell, "snow3h", display === "資料なし" ? null : display);
+  }
+}
 
 export function initDrive(map,hooks={}) {
   const routeClient=createRouteClient(),weather=createDriveWeather();
@@ -80,6 +111,15 @@ export function initDrive(map,hooks={}) {
     for(const button of buttons)button.setAttribute("aria-pressed",String(button===nearest));
     hooks.onSelection?.(s);
   }
+  function updateProfileVisibility() {
+    const toggle = $("driveProfileToggle");
+    const label = collapsed ? "断面図を開く" : "断面図を折りたたむ";
+    $("driveProfileBody").hidden = collapsed;
+    $("driveProfileHelp").hidden = collapsed;
+    toggle.setAttribute("aria-expanded", String(!collapsed));
+    toggle.setAttribute("aria-label", label);
+    toggle.title = label;
+  }
   function renderProfile(){
     if(!result)return;
     const {route,samples,departure,priority}=result,stops=readBreaks().reduce((sum,b)=>sum+b.minutes,0),endTime=samples.at(-1).time;
@@ -89,12 +129,12 @@ export function initDrive(map,hooks={}) {
     $("driveTripTiming").title=`出発 ${timeLabel(departure)} → 到着予定 ${timeLabel(endTime)}`;
     $("driveNotices").textContent=[...result.notices,!route.elevation?"標高を取得できませんでした。経路の気象は下に表示します。":"",priority==="local"&&route.hasHighway?"一般道優先ですが、一部に高速道路を含む経路です。":"",route.hasToll?"有料道路を含みます。":""].filter(Boolean).join(" ");
     $("driveProfileHelpLabel").textContent=$("driveNotices").textContent?"説明・注意あり":"表示の説明";
-    $("driveProfile").hidden=!active;$("driveProfileBody").hidden=collapsed;$("driveProfileToggle").textContent=collapsed?"断面図を開く":"断面図を折りたたむ";$("driveProfileToggle").setAttribute("aria-expanded",String(!collapsed));
-    const chart=svg("svg",{viewBox:"0 0 1000 90",preserveAspectRatio:"none",role:"img","aria-label":"横軸は走行距離km、縦軸は標高m。下の気象表と同じ距離位置。路線の色は区間の気象リスク。"});
+    $("driveProfile").hidden=!active;updateProfileVisibility();
+    const chart=svg("svg",{viewBox:"0 0 1000 72",preserveAspectRatio:"none",role:"img","aria-label":"横軸は走行距離km、縦軸は標高m。下の気象表と同じ距離位置。路線の色は区間の気象リスク。"});
     const valid=samples.filter(s=>Number.isFinite(s.elevation)),bottom=Math.min(0,...valid.map(s=>Math.floor(s.elevation/100)*100)),top=Math.max(bottom+100,...valid.map(s=>Math.ceil(s.elevation/100)*100));
-    const axis=profileAxis(samples),x=km=>axis.left+axis.width*km/route.distance,y=z=>82-66*(z-bottom)/(top-bottom);
+    const axis=profileAxis(samples),x=km=>axis.left+axis.width*km/route.distance,y=z=>64-49*(z-bottom)/(top-bottom);
     for(let i=0;i<=2;i++){const z=bottom+(top-bottom)*i/2;chart.append(svg("line",{x1:axis.left,y1:y(z),x2:x(route.distance),y2:y(z),class:"drive-grid"}),svg("text",{x:60,y:y(z)+4,"text-anchor":"end"},String(Math.round(z))));}
-    chart.append(svg("text",{x:8,y:14},"標高m"));
+    chart.append(svg("text",{x:6,y:10,class:"drive-axis-unit"},"標高m"));
     const haloGroup=svg("g",{}),routeGroup=svg("g",{});chart.append(haloGroup,routeGroup);
     for(let i=0;i<samples.length-1;i++){const a=samples[i],b=samples[i+1],rank=a.rank===0||b.rank===0?0:Math.max(a.rank,b.rank);
       if(Number.isFinite(a.elevation)&&Number.isFinite(b.elevation)){
@@ -102,8 +142,8 @@ export function initDrive(map,hooks={}) {
         haloGroup.append(svg("line",{...line,stroke:"#607a8b","stroke-width":6}));routeGroup.append(svg("line",{...line,stroke:ROUTE_COLORS[rank],"stroke-width":4}));
       }
     }
-    if(!valid.length)chart.append(svg("text",{x:500,y:60,"text-anchor":"middle"},"標高データなし"));
-    chart.append(svg("line",{x1:axis.left,x2:axis.left,y1:8,y2:85,class:"drive-position-line"}));
+    if(!valid.length)chart.append(svg("text",{x:500,y:48,"text-anchor":"middle"},"標高データなし"));
+    chart.append(svg("line",{x1:axis.left,x2:axis.left,y1:7,y2:68,class:"drive-position-line"}));
     const selectDistance=event=>{const box=event.currentTarget.getBoundingClientRect(),km=Math.max(0,Math.min(route.distance,((event.clientX-box.left)/box.width*1000-axis.left)/axis.width*route.distance));let nearest=0;for(let i=1;i<samples.length;i++)if(Math.abs(samples[i].km-km)<Math.abs(samples[nearest].km-km))nearest=i;readout(nearest,true);};
     chart.addEventListener("click",selectDistance);
     const roads=svg("svg",{viewBox:"0 0 1000 22",preserveAspectRatio:"none",class:"drive-road-strip",role:"img","aria-label":"道路区分。濃い帯は高速道路、薄い帯は一般道。標高断面と同じ距離位置。"});
@@ -134,14 +174,16 @@ export function initDrive(map,hooks={}) {
       row.dataset.field=key;heading.scope="row";row.append(heading);
       for(const index of columns){
         const sample=samples[index],cell=node("td",display(sample));
-        cell.title=sample[key] ?? cell.textContent;row.append(cell);
+        cell.title=sample[key] ?? cell.textContent;
+        styleDriveWeather(cell, key, sample);
+        row.append(cell);
       }
       body.append(row);
     }
     table.append(head,body);$("driveCards").replaceChildren(table);readout(0);map.resize();
   }
   $("drivePosition").addEventListener("input",event=>readout(Number(event.target.value)));
-  $("driveProfileToggle").addEventListener("click",()=>{collapsed=!collapsed;$("driveProfileBody").hidden=collapsed;$("driveProfileToggle").textContent=collapsed?"断面図を開く":"断面図を折りたたむ";$("driveProfileToggle").setAttribute("aria-expanded",String(!collapsed));map.resize();});
+  $("driveProfileToggle").addEventListener("click",()=>{collapsed=!collapsed;updateProfileVisibility();map.resize();});
   $("driveReset").addEventListener("click",()=>{clearResult();start=end=null;lastRoute=null;picking="start";collapsed=false;$("driveStart").value=$("driveEnd").value=$("driveDeparture").value="";$("driveBreaks").replaceChildren();$("drivePriority").value="fastest";updateSelection();status("始点 A と終点 B を地図で選んでください");});
   $("driveAnalyze").addEventListener("click",async()=>{
     clearResult();const current=token;abort=new AbortController();const signal=abort.signal;

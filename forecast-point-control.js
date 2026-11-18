@@ -1,29 +1,7 @@
 import { LIVE_POLL_MS, timeLabel } from "./live-temperature-data.js";
 import { forecastTickLabel } from "./forecast-timeline.js?v=20261118-point-time1";
 import { POINT_FORECAST_FIELDS, forecastMunicipality, pointForecastCell, readPointForecast } from "./forecast-point-data.js?v=20261118-point-time1";
-import { paletteColor } from "./temperature-layer.js";
-
-const weatherColors = {"晴れ":"weather-sun", "くもり":"weather-cloud", "雨":"weather-rain", "雨または雪":"weather-mix", "雪":"weather-snow"};
-const rainColors = {"1未満":"forecast-point-low", "1〜4":"amount-1", "5〜9":"amount-5", "10〜14":"amount-10", "15〜19":"amount-15", "20以上":"amount-20"};
-const snowColors = {"1未満":"forecast-point-low", "1〜2":"amount-1", "3〜5":"amount-5", "6以上":"amount-10"};
-const categoryColors = {weather3h:weatherColors, precip3h:rainColors, snow3h:snowColors};
-
-function colorValue(entry, kind, value) {
-  if (value === null) {
-    entry.classList.add("forecast-point-missing");
-  } else if (kind === "temp3h") {
-    const color = paletteColor(Math.min(81, Math.max(1, Math.floor(Number(value)) + 41)));
-    const [r, g, b] = color.slice(1).match(/../g).map(pair => {
-      const channel = parseInt(pair, 16) / 255;
-      return channel < .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
-    });
-    entry.style.backgroundColor = color;
-    entry.style.color = .2126 * r + .7152 * g + .0722 * b > .179 ? "#000" : "#fff";
-  } else {
-    const color = categoryColors[kind][value];
-    if (color) entry.classList.add(color);
-  }
-}
+import { colorWeatherCell, weatherTableAmount } from "./weather-table-style.js?v=20261118-drive-profile1";
 
 export function initForecastPoint(map, Marker, onChooseTime) {
   const panel = document.getElementById("forecastPoint");
@@ -53,6 +31,15 @@ export function initForecastPoint(map, Marker, onChooseTime) {
   function resize() {
     requestAnimationFrame(() => map.resize());
   }
+
+  function scaleMarker() {
+    const size = Math.max(6, Math.min(13, 6 + (map.getZoom() - 2.5) * .5));
+    pin.style.setProperty("--forecast-point-size", `${size}px`);
+  }
+
+  map.on("zoom", () => {
+    if (!panel.hidden) scaleMarker();
+  });
 
   function setExpanded(expanded) {
     body.hidden = !expanded;
@@ -148,8 +135,14 @@ export function initForecastPoint(map, Marker, onChooseTime) {
             columns.set(period.end, {button, cells:[]});
             entry.append(button);
           } else {
-            entry.textContent = value;
-            colorValue(entry, POINT_FORECAST_FIELDS[index - 1][0], period.values[index - 1]);
+            const [kind] = POINT_FORECAST_FIELDS[index - 1];
+            const amountUnit = kind === "precip3h" ? "mm" : kind === "snow3h" ? "cm" : null;
+            entry.textContent = amountUnit ? weatherTableAmount(period.values[0], value) : value;
+            if (entry.textContent === "—") {
+              entry.title = value === "1未満" ? `1${amountUnit}未満`
+                : value === "資料なし" ? value : `元の予報：${value}（${amountUnit}）`;
+            }
+            colorWeatherCell(entry, kind, entry.textContent === "—" ? "—" : period.values[index - 1]);
           }
           columns.get(period.end).cells.push(entry);
         }
@@ -213,6 +206,7 @@ export function initForecastPoint(map, Marker, onChooseTime) {
     coordinates.textContent = `${y.toFixed(3)}°, ${x.toFixed(3)}°`;
     marker.setLngLat(cell?.center ?? [lng, lat]).addTo(map);
     panel.hidden = false;
+    scaleMarker();
     scroller.scrollLeft = 0;
     setExpanded(true);
     if (cell) {

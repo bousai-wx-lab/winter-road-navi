@@ -2,9 +2,12 @@ import { createTemperatureLayer, lookupCell } from "./temperature-layer.js";
 import { checkedSnowManifest, decodeSnowDay, expandSnowBins, snowFillBins, SNOW_COLORS, snowBinLabel } from "./snow-display-data.js?v=20260924-snow2";
 import { createSnowContourLayer } from "./snow-contour-layer.js?v=20260924-snow2";
 import { MAP_OUTLINE_LAYER } from "./road-style.js?v=20261110-outline1";
+import { AMEDAS_ROOT, stationCoordinate } from "./live-snow-data.js?v=20261118-observed-snow2";
 
 const ROOT = "./data/snow/";
 const $ = (id) => document.getElementById(id);
+const POINT_SOURCE = "normal-snow-points";
+const POINT_LABELS = "normal-snow-point-labels";
 
 async function checkedSnowDay(record, count) {
   const response = await fetch(ROOT + record.url, { cache: "no-cache" });
@@ -26,12 +29,14 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
   const positiveOnly = $("snowPositiveOnly"), scaleStart = $("snowScaleStart");
   const contourCaption = $("snowContourCaption"), zeroContourLegend = $("snowZeroContourLegend");
   const status = $("snowStatus"), preparation = $("snowPreparationStatus"), point = $("snowPoint");
+  const format = $("normalSnowFormat");
   const retry = $("retrySnow");
   const cache = new Map(), pending = new Map();
   let manifest = null, layer = null, contours = null, selectedDay = null, displayedDay = null;
   let bins = null, tooltipBins = null, tooltipDay = null, tooltipEnabled = false, tooltipError = false;
   let selectedPoint = null, request = 0, prefetchPromise = null;
   let startPromise = null, modeActive = true;
+  let pointStations = null;
 
   function showStatus(message, state = "ready") {
     status.textContent = message;
@@ -41,7 +46,63 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
   function hide() {
     layer?.setVisible(false);
     contours?.setVisible(false);
+    hidePoints();
     delete $("map").dataset.snowDay;
+  }
+
+  function hidePoints() {
+    for (const id of [POINT_SOURCE,POINT_LABELS]) if (map.getLayer(id)) map.setLayoutProperty(id,"visibility","none");
+    delete $("map").dataset.normalSnowPoints;
+  }
+
+  async function showPoints() {
+    const day = displayedDay, values = bins;
+    if (!values || !day) return;
+    try {
+      pointStations ??= (async () => {
+        const response=await fetch(AMEDAS_ROOT+"const/amedastable.json",{credentials:"omit",referrerPolicy:"no-referrer"});
+        if (!response.ok) throw new Error("観測所の位置を取得できません");
+        const table=await response.json();
+        if (!table || Object.keys(table).length>2500) throw new Error("観測所の一覧が不正です");
+        return Object.values(table).filter(station=>station.elems?.[5]==="1").map(stationCoordinate).filter(Boolean);
+      })();
+      const coordinates=await pointStations;
+      if (!modeActive || !toggle.checked || format.value!=="points" || day!==displayedDay || bins!==values) return;
+      if (!map.getSource(POINT_SOURCE)) {
+        map.addSource(POINT_SOURCE,{type:"geojson",data:{type:"FeatureCollection",features:[]}});
+        map.addLayer({id:POINT_SOURCE,source:POINT_SOURCE,type:"circle",paint:{"circle-radius":["interpolate",["linear"],["zoom"],3,2,7,5,10,8],
+          "circle-color":["get","color"],"circle-stroke-color":"#405564","circle-stroke-width":1}}, "general-road-casing");
+        map.addLayer({id:POINT_LABELS,source:POINT_SOURCE,type:"symbol",minzoom:7,layout:{"text-field":["get","label"],
+          "text-font":["sans-serif"],"text-size":11,"text-anchor":"top","text-offset":[0,1.1]},
+          paint:{"text-color":"#143c54","text-halo-color":"#fff","text-halo-width":2}}, "general-road-casing");
+      }
+      const filtered = positiveOnly.getAttribute("aria-pressed")==="true";
+      const features=coordinates.flatMap(coordinate=>{
+        const cell=lookupCell(grid,...coordinate), bin=cell<0 ? 0 : values[cell];
+        if (filtered && bin>0 && bin<3) return [];
+        const label=bin===0?"資料なし":bin===1?"なし":bin===2?"0cm":snowBinLabel(bin);
+        return [{type:"Feature",geometry:{type:"Point",coordinates:coordinate},properties:{label,color:bin<2?"#d5dde2":SNOW_COLORS[bin]}}];
+      });
+      map.getSource(POINT_SOURCE).setData({type:"FeatureCollection",features});
+      for (const id of [POINT_SOURCE,POINT_LABELS]) map.setLayoutProperty(id,"visibility","visible");
+      $("map").dataset.normalSnowPoints=String(features.length);
+    } catch {
+      pointStations=null;
+      if (modeActive && toggle.checked && format.value==="points") {
+        hidePoints();showStatus("観測所の位置を取得できません。再試行できます。","error");retry.hidden=false;
+      }
+    }
+  }
+
+  function updateFormat() {
+    const points = format.value==="points", show = modeActive && toggle.checked && Boolean(displayedDay);
+    layer?.setVisible(show && !points);
+    contours?.setVisible(show && !points);
+    $("normalSnowPointsNote").hidden=!points;
+    for (const rule of [".snow-options .opacity-control",".snow-depth-scale",".snow-depth-scale-label",".snow-contour-legend"]) {
+      document.querySelector(rule).hidden=points;
+    }
+    if (show && points) void showPoints(); else hidePoints();
   }
 
   function refreshPoint() {
@@ -62,6 +123,7 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
     zeroContourLegend.hidden = active;
     contours?.setPositiveOnly(active);
     if (bins && displayedDay === selectedDay && layer) layer.setBins(snowFillBins(bins, active));
+    updateFormat();
     refreshPoint();
   }
 
@@ -69,10 +131,9 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
     const decoded = expandSnowBins(compact, grid.count);
     layer.setBins(snowFillBins(decoded, positiveOnly.getAttribute("aria-pressed") === "true"));
     contours.setContours(compact.contours);
-    layer.setVisible(modeActive && toggle.checked);
-    contours.setVisible(modeActive && toggle.checked);
     bins = decoded;
     displayedDay = day;
+    updateFormat();
     tooltipBins = decoded;
     tooltipDay = day;
     $("map").dataset.snowDay = day;
@@ -215,6 +276,7 @@ export function initSnow(map, grid, temperatureManifest, onTooltipChange = () =>
     if (selectedDay) void setDay(selectedDay);
     void prepareSeason();
   });
+  format.addEventListener("change",updateFormat);
   positiveOnly.addEventListener("click", () => {
     positiveOnly.setAttribute("aria-pressed", String(positiveOnly.getAttribute("aria-pressed") !== "true"));
     updateMode();

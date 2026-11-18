@@ -6,7 +6,7 @@ import {MAP_OUTLINE_LAYER} from "./road-style.js?v=20261110-outline1";
 const $=id=>document.getElementById(id);
 export function initWeather(map,hooks={}) {
   let active=false,mode="observed",view="weather",slots=[],selected=null,token=0,abort=null,timer=null,current=null;
-  let followTime=null;
+  let followTime=null,latestOnly=false;
   const saved={observed:null,forecast:null},sources=[],layers=[];
   const product=()=>weatherProduct(mode,view);
   function metadata() {
@@ -27,7 +27,7 @@ export function initWeather(map,hooks={}) {
   function status(message,state) {$("weatherStatus").textContent=message;$("weatherStatus").dataset.state=state;$("weatherRefresh").hidden=state!=="error";hooks.onChange?.();}
   function controls() {
     const index=slots.findIndex(s=>s.id===selected);
-    $("weatherPrevious").disabled=index<=0;$("weatherNext").disabled=index<0 || index>=slots.length-1;$("weatherSlot").disabled=!slots.length;
+    $("weatherPrevious").disabled=latestOnly || index<=0;$("weatherNext").disabled=latestOnly || index<0 || index>=slots.length-1;$("weatherSlot").disabled=latestOnly || !slots.length;
     hooks.onChange?.();
   }
   function paint() {
@@ -51,12 +51,12 @@ export function initWeather(map,hooks={}) {
       if(!active || request!==token)return;
       const following=mode==="observed" && (!selected || selected===slots.at(-1)?.id);
       slots=next;
-      const slot=followTime!==null && mode==="forecast" ? forecastSlotAtTime(slots,followTime)
+      const slot=latestOnly ? slots.at(-1) : followTime!==null && mode==="forecast" ? forecastSlotAtTime(slots,followTime)
         : (!refresh || !following) && slots.find(s=>s.id===selected)
           || (mode==="observed"?slots.at(-1):slots.find(s=>Date.parse(s.end)>Date.now()) || slots.at(-1));
       if(!slot){status("通過時刻に対応する予測画像がありません","unavailable");$("mapTemperatureLabel").textContent="この通過時刻の予測画像は資料なし";return;}
       current=slot;
-      if(followTime===null){selected=slot.id;saved[mode]=selected;}
+      if(followTime===null && !latestOnly){selected=slot.id;saved[mode]=selected;}
       $("weatherSlot").replaceChildren(...slots.map(s=>new Option(s.label,s.id)));$("weatherSlot").value=slot.id;controls();
       $("weatherUpdated").textContent=`${requestProduct.label} · ${requestProduct.resolution}${requestProduct.unit?` · ${requestProduct.unit}`:""}${mode==="forecast"?` · 発表：${timeLabel(slot.base)}`:" · 毎時の推計"}`;
       $("weatherNotice").textContent=weatherNotice(mode,slot);$("weatherNotice").hidden=!$("weatherNotice").textContent;
@@ -74,7 +74,7 @@ export function initWeather(map,hooks={}) {
       clear();status(`${requestProduct.name}を取得・確認できません。再読込できます。`,"error");$("mapTemperatureLabel").textContent=`${requestProduct.name}を表示できません`;
     }
   }
-  function choose(id) {if(!active || !slots.some(s=>s.id===id))return;selected=id;saved[mode]=id;$("weatherSlot").value=id;controls();void load();}
+  function choose(id) {if(!active || latestOnly || !slots.some(s=>s.id===id))return;selected=id;saved[mode]=id;$("weatherSlot").value=id;controls();void load();}
   $("weatherSlot").addEventListener("change",()=>choose($("weatherSlot").value));
   $("weatherPrevious").addEventListener("click",()=>choose(slots[Math.max(0,slots.findIndex(s=>s.id===selected)-1)]?.id));
   $("weatherNext").addEventListener("click",()=>choose(slots[Math.min(slots.length-1,slots.findIndex(s=>s.id===selected)+1)]?.id));
@@ -82,10 +82,12 @@ export function initWeather(map,hooks={}) {
   document.addEventListener("visibilitychange",()=>{if(active && !document.hidden)void load(true);});
   map.on("sourcedata",loaded);
   map.on("error",event=>{if(active && sources.includes(event.sourceId)){++token;abort?.abort();clear();status(`${product().name}画像の一部を取得できません。再読込してください。`,"error");$("mapTemperatureLabel").textContent=`${product().name}を表示できません`;}});
-  return {setActive(value,nextMode=mode,nextView=view) {
+  return {setActive(value,nextMode=mode,nextView=view,nextLatestOnly=false) {
     weatherProduct(nextMode,nextView);
-    saved[mode]=selected;active=value;++token;abort?.abort();clearInterval(timer);clear();
-    if(nextMode!==mode || nextView!==view){mode=nextMode;view=nextView;selected=saved[mode];slots=[];}
+    if(!latestOnly)saved[mode]=selected;
+    active=value;++token;abort?.abort();clearInterval(timer);clear();
+    if(nextMode!==mode || nextView!==view || nextLatestOnly!==latestOnly){mode=nextMode;view=nextView;selected=saved[mode];slots=[];}
+    latestOnly=nextLatestOnly;
     if(value)metadata();
     if(value){void load(true);timer=setInterval(()=>{if(!document.hidden)void load(true);},600000);}
     controls();

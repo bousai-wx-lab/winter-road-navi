@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { forecastMunicipality, pointForecastCell, readPointForecast } from "../forecast-point-data.js";
 import { RISK_LEVELS } from "../forecast-risk-data.js";
+import { weatherTableAmount } from "../weather-table-style.js";
 
 const now = () => Date.parse("2026-11-18T04:45:00Z");
 const issued = "20261118020000";
@@ -84,4 +85,14 @@ test("municipality labels correspond to the displayed forecast cell centre", () 
   assert.equal(forecastMunicipality(boundaries, pointForecastCell(139.692,35.690)), "東京都新宿区");
   assert.equal(forecastMunicipality(boundaries, pointForecastCell(138,37.5)), "");
   assert.equal(forecastMunicipality(null, point), "");
+});
+
+test("clear and cloudy weather use a dash independently of the amount", () => {
+  assert.equal(weatherTableAmount("晴れ", "1未満"), "—");
+  assert.equal(weatherTableAmount("くもり", "1未満"), "—");
+  assert.equal(weatherTableAmount("晴れ", "1〜4"), "—");
+  assert.equal(weatherTableAmount("くもり", "資料なし"), "—");
+  assert.equal(weatherTableAmount("雪", "1未満"), "1未満");
+  assert.equal(weatherTableAmount("雨", "1〜4"), "1〜4");
+  assert.equal(weatherTableAmount("資料なし", "資料なし"), "資料なし");
 });

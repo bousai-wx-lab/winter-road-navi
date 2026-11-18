@@ -732,24 +732,25 @@ main {
 .drive-profile-heading { position:sticky; top:0; z-index:3; background:#fff; border-bottom:1px solid #dce5ea; padding-bottom:3px; }
 
 .tool-layout[data-mode="forecast"] .map-column { grid-template-rows:auto minmax(0,1fr) auto; }
-.forecast-point-marker { width:14px; height:14px; pointer-events:none; }
-.forecast-point-marker::after { content:""; display:block; width:14px; height:14px; border:2px solid #fff; border-radius:2px; background:#155c72; box-shadow:0 0 0 2px #155c72; transform:rotate(45deg); }
-.forecast-point-actions { display:flex; flex:none; border:1px solid #c4d6de; border-radius:6px; background:#f7fafb; }
+.forecast-point-marker { width:var(--forecast-point-size,7px); height:var(--forecast-point-size,7px); pointer-events:none; }
+.forecast-point-marker::after { content:""; display:block; box-sizing:border-box; width:100%; height:100%; border:1px solid #fff; border-radius:1px; background:#155c72c7; box-shadow:0 0 0 1px #155c72; transform:rotate(45deg); }
+.drive-profile-actions { display:flex; flex:none; border:1px solid #c4d6de; border-radius:6px; background:#f7fafb; }
 .forecast-point { padding:2px 8px; max-height:min(185px,40svh); }
 .forecast-point .drive-profile-heading { gap:6px; padding-bottom:2px; }
 .forecast-point-title { display:flex; align-items:baseline; flex-wrap:wrap; gap:1px 8px; min-width:0; }
 .forecast-point-title > :empty { display:none; }
 .forecast-point-title > * { white-space:nowrap; }
 #forecastPointCoordinates, #forecastPointIssued { color:#405e70; font-size:11px; font-variant-numeric:tabular-nums; }
-.forecast-point .forecast-point-actions button { display:grid; place-items:center; width:27px; height:24px; padding:0; border:0; border-radius:5px 0 0 5px; background:transparent; color:#315a6d; }
-.forecast-point .forecast-point-actions button + button { border-left:1px solid #dce6eb; border-radius:0 5px 5px 0; }
-.forecast-point .forecast-point-actions button:hover { background:#e4f1f6; color:#134e66; }
-.forecast-point .forecast-point-actions button:focus-visible { outline-offset:-2px; }
-.forecast-point-icon { display:block; position:relative; width:12px; height:12px; }
-.forecast-point-chevron::after { content:""; position:absolute; top:1px; left:2px; width:7px; height:7px; border-right:1.6px solid currentColor; border-bottom:1.6px solid currentColor; border-radius:1px; transform:rotate(45deg); }
-#forecastPointToggle[aria-expanded="false"] .forecast-point-chevron::after { top:2px; left:1px; transform:rotate(-45deg); }
-.forecast-point-cross::before,.forecast-point-cross::after { content:""; position:absolute; top:5px; left:0; width:12px; height:1.6px; border-radius:1px; background:currentColor; transform:rotate(45deg); }
-.forecast-point-cross::after { transform:rotate(-45deg); }
+.drive-profile .drive-profile-actions button { display:grid; place-items:center; width:27px; height:24px; padding:0; border:0; border-radius:5px 0 0 5px; background:transparent; color:#315a6d; }
+.drive-profile .drive-profile-actions button:only-child { border-radius:5px; }
+.drive-profile .drive-profile-actions button + button { border-left:1px solid #dce6eb; border-radius:0 5px 5px 0; }
+.drive-profile .drive-profile-actions button:hover { background:#e4f1f6; color:#134e66; }
+.drive-profile .drive-profile-actions button:focus-visible { outline-offset:-2px; }
+.drive-profile-icon { display:block; position:relative; width:12px; height:12px; }
+.drive-profile-chevron::after { content:""; position:absolute; top:1px; left:2px; width:7px; height:7px; border-right:1.6px solid currentColor; border-bottom:1.6px solid currentColor; border-radius:1px; transform:rotate(45deg); }
+.drive-profile-actions button[aria-expanded="false"] .drive-profile-chevron::after { top:2px; left:1px; transform:rotate(-45deg); }
+.drive-profile-cross::before,.drive-profile-cross::after { content:""; position:absolute; top:5px; left:0; width:12px; height:1.6px; border-radius:1px; background:currentColor; transform:rotate(45deg); }
+.drive-profile-cross::after { transform:rotate(-45deg); }
 .forecast-point-meta { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:2px 0; }
 .forecast-point .drive-weather-table { table-layout:auto; }
 .forecast-point .drive-weather-table :is(th,td) { min-width:68px; padding:3px 5px; white-space:nowrap; }
@@ -759,19 +760,39 @@ main {
 .forecast-point .drive-weather-table thead button:focus-visible { outline-offset:-2px; }
 .forecast-point .drive-weather-table .forecast-point-selected { box-shadow:inset 2px 0 #155c72, inset -2px 0 #155c72; }
 .forecast-point .drive-weather-table tr:last-child .forecast-point-selected { border-bottom:2px solid #155c72; }
-.forecast-point .drive-weather-table td { color:#102536; font-weight:600; }
-.forecast-point .drive-weather-table :is(.weather-rain,.amount-10) { color:#fff; }
-.forecast-point .drive-weather-table .forecast-point-low { background:#f6fafc; }
-.forecast-point .drive-weather-table .forecast-point-missing { color:#526675; background:#edf1f3; font-weight:400; }
+.drive-weather-table td { color:#102536; font-weight:600; }
+.drive-weather-table :is(.weather-rain,.amount-10) { color:#fff; }
+.drive-weather-table .weather-table-low { background:#f6fafc; }
+.drive-weather-table .weather-table-missing { color:#526675; background:#edf1f3; font-weight:400; }
 @media (max-width:760px) {
   .forecast-point { padding-inline:4px; }
   .forecast-point-title { column-gap:5px; }
   #forecastPointIssued { order:1; }
   #forecastPointPlace { order:2; }
   #forecastPointCoordinates { order:3; }
-  .forecast-point .forecast-point-actions button { width:31px; height:29px; min-height:29px; }
+  .drive-profile .drive-profile-actions button { width:31px; height:29px; min-height:29px; }
   .forecast-point .drive-weather-table thead button { min-height:30px; }
 }
 .forecast-point .drive-weather-table tr > :first-child { width:1%; }
 .forecast-point .drive-weather-table thead th { background:#f2f6f8; color:#254e64; }
 .forecast-point .drive-weather-table tbody tr:nth-child(even) { background:#f5f8fa; }
+
+#driveProfile { padding:2px 8px; max-height:min(260px,42svh); }
+#driveProfile .drive-profile-heading { gap:6px; padding-bottom:2px; }
+#driveProfile .drive-trip-meta { justify-content:flex-start; flex-wrap:wrap; gap:1px 8px; min-width:0; }
+#driveProfile #driveTripTiming { white-space:nowrap; color:#405e70; font-variant-numeric:tabular-nums; }
+.drive-profile-tools { display:flex; align-items:center; gap:6px; flex:none; }
+#driveProfile .drive-chart svg { height:61px; }
+#driveProfile .drive-chart .drive-axis-unit { font-size:10px; }
+#driveProfile .drive-chart .drive-road-strip { height:19px; }
+#driveProfile .drive-weather-table td { padding:1px 3px; }
+#driveProfile .drive-weather-table tr[data-field="temperature"] td:has(.drive-temperature-level) { padding:0; }
+.drive-temperature-level { display:block; padding:0 2px; }
+#driveProfile .drive-weather-table button { gap:0; padding:2px 0; }
+#driveProfile #drivePosition { height:13px; margin:0; }
+#driveProfile .drive-selection { padding:2px 5px; }
+@media (max-width:760px) {
+  #driveProfile { padding-inline:4px; }
+  #driveProfile .drive-chart svg { height:56px; }
+  #driveProfile .drive-weather-table button { min-height:30px; }
+}

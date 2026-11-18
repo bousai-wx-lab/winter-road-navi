@@ -1,4 +1,4 @@
-import {WEATHER_ROOT,weatherProduct,weatherSlots,weatherTile,weatherNotice} from "./weather-data.js?v=20261010-amounts1";
+import {WEATHER_ROOT,weatherProduct,weatherSlots,weatherTile,weatherNotice} from "./weather-data.js?v=20261119-snowdepth1";
 import {timeLabel} from "./live-temperature-data.js";
 import {forecastTickLabel,forecastSlotAtTime} from "./forecast-timeline.js?v=20261118-point-time1";
 import {MAP_OUTLINE_LAYER} from "./road-style.js?v=20261110-outline1";
@@ -9,13 +9,17 @@ export function initWeather(map,hooks={}) {
   let followTime=null,latestOnly=false;
   const saved={observed:null,forecast:null},sources=[],layers=[];
   const product=()=>weatherProduct(mode,view);
+  const slotAtTime=time=>view==="snowdepth"?slots.find(slot=>Date.parse(slot.end)===time):forecastSlotAtTime(slots,time);
   function metadata() {
     const {name}=product();
     $("weatherControls").setAttribute("aria-label",`${name}の設定`);
     $("weatherTitle").textContent=name;$("weatherSlotLabel").textContent="対象日時";
     $("weatherOpacityLabelText").textContent=`${name}の濃さ `;
     $("weatherLegend").hidden=view!=="weather";$("precipitationLegend").hidden=view!=="precipitation";$("snowfallLegend").hidden=view!=="snowfall";
-    $("weatherDescription").textContent=view==="weather"
+    $("snowDepthLegend").hidden=view!=="snowdepth";
+    $("weatherDescription").textContent=view==="snowdepth"
+      ? "気象庁の降雪短時間予報による積雪深を、約5km格子の公式画像のまま表示します。予報の基準時刻から6時間先まで、1時間ごとの積雪深です。10分ごと・タブ復帰時に更新を確認します。"
+      : view==="weather"
       ? "気象庁の天気画像をそのまま表示。無色は海域・資料なしです。10分ごと・タブ復帰時に更新を確認します。"
       : `気象庁の約5kmメッシュ・3時間の合計を公式画像のまま表示。${view==="snowfall"?"降雪量は期間中に新たに降る雪の量で、積雪深ではありません。":""}無色は${view==="snowfall"?"降雪":"降水"}なし・海域・資料なしを含み、無色だけで資料の有無は判別できません。10分ごと・タブ復帰時に更新を確認します。`;
   }
@@ -51,18 +55,18 @@ export function initWeather(map,hooks={}) {
       if(!active || request!==token)return;
       const following=mode==="observed" && (!selected || selected===slots.at(-1)?.id);
       slots=next;
-      const slot=latestOnly ? slots.at(-1) : followTime!==null && mode==="forecast" ? forecastSlotAtTime(slots,followTime)
+      const slot=latestOnly ? slots.at(-1) : followTime!==null && mode==="forecast" ? slotAtTime(followTime)
         : (!refresh || !following) && slots.find(s=>s.id===selected)
           || (mode==="observed"?slots.at(-1):slots.find(s=>Date.parse(s.end)>Date.now()) || slots.at(-1));
       if(!slot){status("通過時刻に対応する予測画像がありません","unavailable");$("mapTemperatureLabel").textContent="この通過時刻の予測画像は資料なし";return;}
       current=slot;
       if(followTime===null && !latestOnly){selected=slot.id;saved[mode]=selected;}
       $("weatherSlot").replaceChildren(...slots.map(s=>new Option(s.label,s.id)));$("weatherSlot").value=slot.id;controls();
-      $("weatherUpdated").textContent=`${requestProduct.label} · ${requestProduct.resolution}${requestProduct.unit?` · ${requestProduct.unit}`:""}${mode==="forecast"?` · 発表：${timeLabel(slot.base)}`:" · 毎時の推計"}`;
-      $("weatherNotice").textContent=weatherNotice(mode,slot);$("weatherNotice").hidden=!$("weatherNotice").textContent;
+      $("weatherUpdated").textContent=`${requestProduct.label} · ${requestProduct.resolution}${requestProduct.unit?` · ${requestProduct.unit}`:""}${mode==="forecast"?` · ${view==="snowdepth"?"予報の基準時刻":"発表"}：${timeLabel(slot.base)}`:" · 毎時の推計"}`;
+      $("weatherNotice").textContent=weatherNotice(mode,slot,Date.now(),view);$("weatherNotice").hidden=!$("weatherNotice").textContent;
       for(const z of [4,6,8,10]) {
         const tile=weatherTile(mode,slot,z,view),id=`weather-${request}-${z}`;sources.push(id);layers.push(id);
-        map.addSource(id,{type:"raster",tiles:[tile.url],tileSize:tile.tileSize,minzoom:tile.nativeZoom,maxzoom:tile.nativeZoom,bounds:[122,20,154,48],attribution:'<a href="https://www.jma.go.jp/bosai/'+(mode==="observed"?'suikei':'wdist')+'/" target="_blank" rel="noopener noreferrer">気象庁の'+requestProduct.name+'</a>'});
+        map.addSource(id,{type:"raster",tiles:[tile.url],tileSize:tile.tileSize,minzoom:tile.nativeZoom,maxzoom:tile.nativeZoom,bounds:[122,20,154,48],attribution:'<a href="https://www.jma.go.jp/bosai/'+(view==="snowdepth"?'snow':mode==="observed"?'suikei':'wdist')+'/" target="_blank" rel="noopener noreferrer">気象庁の'+requestProduct.name+'</a>'});
         map.addLayer({id,type:"raster",source:id,minzoom:z===4?0:z-1,...(z<10?{maxzoom:z+1}:{}),paint:{"raster-opacity":Number($("weatherOpacity").value)/100,"raster-resampling":"nearest","raster-fade-duration":0}},MAP_OUTLINE_LAYER);
       }
       $("map").dataset.weatherMode=mode;$("map").dataset.weatherElement=requestProduct.element;$("map").dataset.weatherTarget=slot.end;$("map").dataset.weatherBase=slot.base;
@@ -94,6 +98,6 @@ export function initWeather(map,hooks={}) {
   },setFollowTime(time){
     if(time!==null && !Number.isFinite(time))throw new Error("通過時刻が不正です");
     const changed=followTime!==time;followTime=time;
-    if(changed && time!==null && active && mode==="forecast" && (!current || forecastSlotAtTime(slots,time)?.id!==current.id))void load();
+    if(changed && time!==null && active && mode==="forecast" && (!current || slotAtTime(time)?.id!==current.id))void load();
   },choose,current:()=>current,title:()=>product().name,timeline:()=>({selected,slots:mode==="forecast"?slots.map(s=>({id:s.id,end:Date.parse(s.end),label:s.label,shortLabel:forecastTickLabel(s.end)})):[]}),label:()=>current?.label || `${product().name}を準備中`};
 }

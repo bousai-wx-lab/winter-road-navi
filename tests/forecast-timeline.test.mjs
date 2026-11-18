@@ -103,6 +103,27 @@ test("map forecast timeline and existing weather controls share native slots thr
     assert.equal(map.sources.size,0);
     controller.setActive(false);controller.setFollowTime(null);controller.setActive(true,"forecast");
     await until(()=>get("map").dataset.weatherTarget==="2099-01-01T06:00:00Z");
+    const weatherRecords=records;
+    records=Array.from({length:7},(_,hour)=>({basetime:"20990101000000",validtime:`209901010${hour}0000`,elements:["snowd"]}));
+    controller.setActive(true,"forecast","snowdepth");
+    await until(()=>get("map").dataset.weatherElement==="snowd" && get("map").dataset.weatherReady==="true");
+    assert.equal(get("forecastTimeRange").max,"5");
+    assert.equal(get("forecastTimeTicks").children.length,6);
+    assert.equal(get("snowDepthLegend").hidden,false);assert.equal(get("snowfallLegend").hidden,true);
+    assert.equal([...map.sources.values()].every(s=>s.tiles[0].includes("/snow/") && s.tiles[0].includes("/surf/snowd/")),true);
+    timeline.chooseTime(Date.parse("2099-01-01T06:00:00Z"));
+    await until(()=>get("forecastTimeNext").disabled);
+    get("forecastTimePrevious").emit("click");
+    await until(()=>get("map").dataset.weatherTarget==="2099-01-01T05:00:00Z");
+    assert.equal(get("forecastTimeRange").value,"4");
+    assert.equal(get("forecastTimeLabel").textContent,"2099/1/1 14:00の予想積雪深");
+    controller.setFollowTime(Date.parse("2099-01-01T05:30:00Z"));
+    await until(()=>get("weatherStatus").dataset.state==="unavailable");
+    assert.equal(map.sources.size,0,"an hourly point forecast must not be stretched to a three-hour interval");
+    controller.setActive(false);controller.setFollowTime(null);records=weatherRecords;
+    controller.setActive(true,"forecast","weather");
+    await until(()=>get("map").dataset.weatherElement==="wm");
+    assert.equal(get("snowDepthLegend").hidden,true);
     timeline.setVisible(false);controller.setActive(false);assert.equal(get("forecastTimeline").hidden,true);assert.equal(map.resizes,2);
     controller.choose(records[1].validtime);await nextTurn();assert.equal(get("map").dataset.weatherTarget,undefined);
   }finally{controller.setActive(false);Object.assign(globalThis,saved);}

@@ -19,10 +19,10 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "bytes": 44972,
+      "bytes": 42136,
       "mime_type": "text/markdown",
       "path": "README.md",
-      "sha256": "0c60feea6b2ba8e8848d9630d64412493911a397bf623ce03df77b744e9466ea"
+      "sha256": "ef9aa04263a1010f4c22f3c245dcc4728de01331b58e6b867f0091fc705cc4fa"
     },
     {
       "bytes": 1572,
@@ -6481,7 +6481,7 @@
       "sha256": "938219194a6978ac72eb0dfe0f1361106aaf59be4ab44d4c81c4c64e79fe9224"
     }
   ],
-  "generated_at_utc": "2026-11-18T03:25:54+00:00",
+  "generated_at_utc": "2026-11-18T04:09:19+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

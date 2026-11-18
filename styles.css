@@ -730,3 +730,14 @@ main {
 .drive-point-note summary { font-size:10px; color:#58717e; cursor:pointer; }
 .drive-point-note small { display:block; margin-top:3px; }
 .drive-profile-heading { position:sticky; top:0; z-index:3; background:#fff; border-bottom:1px solid #dce5ea; padding-bottom:3px; }
+
+.tool-layout[data-mode="forecast"] .map-column { grid-template-rows:auto minmax(0,1fr) auto; }
+.forecast-point-marker { width:14px; height:14px; pointer-events:none; }
+.forecast-point-marker::after { content:""; display:block; width:14px; height:14px; border:2px solid #fff; border-radius:2px; background:#155c72; box-shadow:0 0 0 2px #155c72; transform:rotate(45deg); }
+.forecast-point-actions { display:flex; gap:6px; flex:none; }
+.forecast-point-meta { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:2px 0; }
+.forecast-point .drive-weather-table { table-layout:auto; }
+.forecast-point .drive-weather-table :is(th,td) { min-width:72px; padding:5px 7px; white-space:nowrap; }
+.forecast-point .drive-weather-table tr > :first-child { width:1%; }
+.forecast-point .drive-weather-table thead th { background:#f2f6f8; color:#254e64; }
+.forecast-point .drive-weather-table tbody tr:nth-child(even) { background:#f5f8fa; }

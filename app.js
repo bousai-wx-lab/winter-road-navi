@@ -10,6 +10,7 @@ import { initLiveSnow } from "./live-snow-control.js?v=20261118-observed-snow1";
 import { initForecastRisk } from "./forecast-risk-control.js?v=20261110-risk-colors1";
 import { ROAD_RISK_COLORS, NORMAL_ROAD_RULES, createNormalRoadRisk } from "./road-risk-data.js?v=20261110-risk-colors1";
 import { RISK_RULES } from "./forecast-risk-data.js?v=20261110-risk-colors1";
+import { initForecastPoint } from "./forecast-point-control.js?v=20261118-point1";
 import { initForecastTimeline } from "./forecast-timeline.js?v=20261110-drive4";
 import { timeLabel } from "./live-temperature-data.js";
 import { lookupCell, binLabel } from "./temperature-layer.js";
@@ -28,7 +29,7 @@ const interactiveLayers = ["highway", "general-road"];
 let roadTemperature = null;
 let normalTemperature = null, liveTemperature = null, displayMode = "normal";
 let weather = null, liveSnow = null, risk = null, roadPalette = "temperature", displayView = "temperature";
-let forecastTimeline = null, drive = null;
+let forecastTimeline = null, forecastPoint = null, drive = null;
 let driveSample = null, driveBackground = null, driveBackgroundTimer = null;
 const temperatureAppearance = Object.fromEntries(["normal","observed","forecast"].map(mode => [mode,{checked:true,opacity:"65"}]));
 function saveTemperatureAppearance(mode) {
@@ -313,6 +314,7 @@ function applyDisplay() {
   roadTemperature?.clear(); temperatureBins = null; tooltipDay = null;
   document.querySelector("#normalControls").hidden = mode !== "normal";
   document.querySelector("#liveViewControls").hidden = !live;
+  document.querySelector("#forecastPointHint").hidden = mode !== "forecast";
   document.querySelector("#liveControls").hidden = !live || !temperature;
   document.querySelector("#weatherControls").hidden = !distribution;
   document.querySelector("#riskControls").hidden = !riskView;
@@ -342,7 +344,7 @@ function applyDisplay() {
   document.querySelector("#map").dataset.displayMode = mode;
   document.querySelector("#map").dataset.displayView = live ? displayView : "temperature";
   document.querySelector("#dataMeaning").textContent = !live ? "気温・積雪とも平年の推定分布です。予報・実況・路面状態ではありません。" : displayView === "snow" ? "白縁の丸は積雪深の観測点です。点のない場所の積雪深は推定しません。道路上の積雪ではありません。" : displayView === "precipitation" ? "予測降水量は約5kmメッシュ内の平均3時間降水量（mm）です。" : displayView === "snowfall" ? "予測降雪量は約5kmメッシュ内の平均3時間降雪量（cm）です。積雪深ではありません。" : displayView === "weather" ? mode === "observed" ? "実況天気は気象庁の推計気象分布です。各地点の実測値ではありません。" : "予測天気は気象庁の3時間の代表的な天気です。" : `${label}の格子気温です。路面温度・凍結・通行可否を示しません。`;
-  if(riskView)document.querySelector("#dataMeaning").textContent="色付きの線は道路の独自リスク区分、背景は予測天気です。白縁の丸は最新実況に選択時刻までの予想降雪を足した簡易目安です。融雪・沈降は計算しません。";
+  if(riskView)document.querySelector("#dataMeaning").textContent="色付きの線は道路の独自リスク区分、背景は予測天気です。白縁の丸は最新の実況積雪深です。";
   document.querySelector(".road-section .road-temperature-legend").setAttribute("aria-label", live ? `道路の${label}気温の色分け` : "道路の平年気温の色分け");
   document.querySelector("#map-heading").textContent = live ? `${label}${viewName}と全国の道路地図` : "全国の1km気温・積雪平年メッシュと道路地図";
   snow?.setActive(mode === "normal");
@@ -361,6 +363,7 @@ function switchDisplayMode(mode) {
   if(!normalTemperature || !liveTemperature || mode === displayMode)return;
   if(["observed","forecast"].includes(displayMode))selectedViews[displayMode]=displayView;
   saveTemperatureAppearance(displayMode);
+  if (displayMode === "forecast") forecastPoint?.dismiss();
   displayMode=mode;
   if(mode!=="drive")restoreTemperatureAppearance(mode);
   if(["observed","forecast"].includes(mode)) {
@@ -380,6 +383,7 @@ document.querySelector("#liveMode").addEventListener("click", () => switchDispla
 document.querySelector("#forecastMode").addEventListener("click", () => switchDisplayMode("forecast"));
 document.querySelector("#driveMode").addEventListener("click", () => switchDisplayMode("drive"));
 function initializeControllers() {
+  forecastPoint = initForecastPoint(map, maplibregl.Marker);
   drive=initDrive(map,{onSelection(sample){
     driveSample=sample;clearTimeout(driveBackgroundTimer);
     if(!sample)syncDriveBackground();
@@ -491,6 +495,10 @@ map.on("mouseleave", () => { hovered = null; refreshTooltip(); });
 
 map.on("click", (event) => {
   if(displayMode === "drive") return;
+  if (displayMode === "forecast") {
+    usingDefaultView = false;
+    forecastPoint?.select(event.lngLat);
+  }
   if (tooltipToggle.checked) {
     hovered = { lng: event.lngLat.lng, lat: event.lngLat.lat, x: event.point.x, y: event.point.y };
     refreshTooltip();

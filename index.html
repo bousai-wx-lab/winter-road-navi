@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、白縁の丸で示す実況積雪深にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261118-point1">
-    <script type="module" src="./app.js?v=20261118-point1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261118-point-time2">
+    <script type="module" src="./app.js?v=20261118-point-time2" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -209,14 +209,19 @@
 
         <section id="forecastPoint" class="drive-profile forecast-point" aria-labelledby="forecastPointHeading" hidden>
           <div class="drive-profile-heading">
-            <strong id="forecastPointHeading">地点の予測</strong>
+            <div class="forecast-point-title">
+              <strong id="forecastPointHeading">地点の予測</strong>
+              <strong id="forecastPointPlace"></strong>
+              <span id="forecastPointCoordinates"></span>
+              <span id="forecastPointIssued"></span>
+            </div>
             <div class="forecast-point-actions">
-              <button id="forecastPointToggle" type="button" aria-expanded="true" aria-controls="forecastPointBody">折りたたむ</button>
-              <button id="forecastPointClose" type="button">閉じる</button>
+              <button id="forecastPointToggle" type="button" aria-label="折りたたむ" title="折りたたむ" aria-expanded="true" aria-controls="forecastPointBody"><span class="forecast-point-icon forecast-point-chevron" aria-hidden="true"></span></button>
+              <button id="forecastPointClose" type="button" aria-label="閉じる" title="閉じる"><span class="forecast-point-icon forecast-point-cross" aria-hidden="true"></span></button>
             </div>
           </div>
           <div id="forecastPointBody">
-            <div class="forecast-point-meta"><p id="forecastPointStatus" role="status"></p><button id="forecastPointRetry" type="button" hidden>再試行</button></div>
+            <div id="forecastPointNotice" class="forecast-point-meta" hidden><p id="forecastPointStatus" role="status"></p><button id="forecastPointRetry" type="button" hidden>再試行</button></div>
             <div id="forecastPointScroll" class="drive-strip" tabindex="0" aria-label="地点の時系列予測。横にスクロールして確認できます。" hidden>
               <table id="forecastPointTable" class="drive-weather-table" aria-label="地点の時系列予測"></table>
             </div>
@@ -246,6 +251,7 @@
         <details id="panelDetails" class="live-data-details"><summary>データと計算の詳細</summary>
           <div data-help="normal"><h4>選択日の平年値</h4><p>気温は1℃ごとの色分け。欠測・未収録は無色です。</p><p>1991〜2020年を基に独自算出・内挿。気温と日最深積雪は、選択した同じ月日の平年推定値です。9月15日から翌6月15日までの275日に対応します。</p><p>積雪なし・欠測は無色。積雪あり0cmは白で、「1cm以上のみ」を選ぶと無色になります。細い実線は推定した1km格子境界に沿います。</p><p id="seasonPreparationStatus" aria-live="polite"></p><p id="snowPreparationStatus" aria-live="polite"></p></div>
           <div data-help="temperature" hidden><h4>気温</h4><p id="liveUpdated"></p><p id="liveSource"></p><p id="liveColorNote"></p><p id="liveUpdateNote"></p></div>
+          <div data-help="forecastPoint" hidden><h4>地点の予測</h4><p>地点名は、<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2026.html" target="_blank" rel="noopener noreferrer">国土交通省の国土数値情報（2026年1月1日の行政区域データ）</a>を基に、Bousai Wx Labが予測メッシュの中心位置で集計しています。</p></div>
           <div data-help="weather" hidden><h4>天気・降水・降雪</h4><p id="weatherUpdated"></p><p id="weatherDescription"></p></div>
           <div data-help="risk" hidden><h4>道路の気象条件</h4><p id="riskUpdated"></p><p>対象時刻の気温と前12時間の降水、3時間の天気・降雪から色分けします。降水後の低温は黄・オレンジ、雪は降雪量に応じてピンク・赤・紫・黒を優先。欠けた降水・降雪予報は、計算上0として扱います。</p></div>
           <div data-help="snow" hidden><h4>積雪深</h4><p id="liveSnowDisplayHelp" class="section-hint">拡大すると数値を表示。丸を押すと地点の詳細。</p><p id="liveSnowUpdated"></p><p>気象庁アメダス等の観測。0cmは雪なしと1cm未満の積雪を区別しません。斜線は実況の資料なしです。観測地点以外の積雪深は推定しません。</p><p>予測値モードの丸も、最新の正時の実況積雪深を表示します。</p><p>実況は過去24時間の正時を選択できます。10分ごと・タブ復帰時に配信を確認します。</p></div>

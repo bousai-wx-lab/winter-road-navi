@@ -4,14 +4,14 @@ import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=2026
 import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20261110-drive4";
 import { createRoadTemperature } from "./road-temperature.js?v=20261023-zoomcolor1";
 import { initSnow } from "./snow-control.js?v=20261110-drive4";
-import { initLiveTemperature } from "./live-temperature-control.js?v=20261110-drive4";
-import { initWeather } from "./weather-control.js?v=20261110-drive4";
+import { initLiveTemperature } from "./live-temperature-control.js?v=20261118-point-time1";
+import { initWeather } from "./weather-control.js?v=20261118-point-time1";
 import { initLiveSnow } from "./live-snow-control.js?v=20261118-observed-snow1";
 import { initForecastRisk } from "./forecast-risk-control.js?v=20261110-risk-colors1";
 import { ROAD_RISK_COLORS, NORMAL_ROAD_RULES, createNormalRoadRisk } from "./road-risk-data.js?v=20261110-risk-colors1";
 import { RISK_RULES } from "./forecast-risk-data.js?v=20261110-risk-colors1";
-import { initForecastPoint } from "./forecast-point-control.js?v=20261118-point1";
-import { initForecastTimeline } from "./forecast-timeline.js?v=20261110-drive4";
+import { initForecastPoint } from "./forecast-point-control.js?v=20261118-point-time2";
+import { initForecastTimeline } from "./forecast-timeline.js?v=20261118-point-time1";
 import { timeLabel } from "./live-temperature-data.js";
 import { lookupCell, binLabel } from "./temperature-layer.js";
 import { startMap, showMapState } from "./map-recovery.js?v=20261024-recovery1";
@@ -328,7 +328,7 @@ function applyDisplay() {
   appearance.hidden = !temperature;
   document.querySelector(".control-panel").dataset.mode = mode;
   for (const help of document.querySelectorAll("[data-help]")) {
-    help.hidden = !({normal:!live,temperature:live && temperature,weather:distribution,risk:riskView,snow:riskView || mode === "observed" && displayView === "snow"}[help.dataset.help]);
+    help.hidden = !({normal:!live,temperature:live && temperature,weather:distribution,forecastPoint:mode === "forecast",risk:riskView,snow:riskView || mode === "observed" && displayView === "snow"}[help.dataset.help]);
   }
   document.querySelector(".road-section .road-temperature-legend").hidden = !live || !temperature;
   document.querySelector("#normalRoadControls").hidden = live;
@@ -383,7 +383,7 @@ document.querySelector("#liveMode").addEventListener("click", () => switchDispla
 document.querySelector("#forecastMode").addEventListener("click", () => switchDisplayMode("forecast"));
 document.querySelector("#driveMode").addEventListener("click", () => switchDisplayMode("drive"));
 function initializeControllers() {
-  forecastPoint = initForecastPoint(map, maplibregl.Marker);
+  forecastPoint = initForecastPoint(map, maplibregl.Marker, end => forecastTimeline.chooseTime(end));
   drive=initDrive(map,{onSelection(sample){
     driveSample=sample;clearTimeout(driveBackgroundTimer);
     if(!sample)syncDriveBackground();
@@ -392,7 +392,11 @@ function initializeControllers() {
   document.querySelector("#driveBackgroundToggle").addEventListener("change",syncDriveBackground);
   document.querySelector("#driveMode").disabled=false;
   setStatus("道路を表示中。細い一般道路は地図を拡大すると現れます", "ready");
-  forecastTimeline = initForecastTimeline(map,()=>displayMode === "forecast" ? displayView==="risk" || isDistributionView(displayView) ? weather : liveTemperature : null);
+  forecastTimeline = initForecastTimeline(
+    map,
+    () => displayMode === "forecast" ? (displayView === "risk" || isDistributionView(displayView) ? weather : liveTemperature) : null,
+    forecastPoint.syncTime,
+  );
   risk=initForecastRisk({
     onData(data,target){if(!showing("forecast","risk"))return;useGrid(data.grid,"risk");roadTemperature?.setClasses(data.classes,new Date(Date.parse(target.end)+9*3600000).toISOString().slice(5,10));refreshTooltip();},
     onUnavailable(state){if(!showing("forecast","risk"))return;roadTemperature?.clear();setRoadTemperatureState(state);},

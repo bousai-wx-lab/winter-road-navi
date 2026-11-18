@@ -1,6 +1,6 @@
 import {WEATHER_ROOT,weatherProduct,weatherSlots,weatherTile,weatherNotice} from "./weather-data.js?v=20261010-amounts1";
 import {timeLabel} from "./live-temperature-data.js";
-import {forecastTickLabel,forecastSlotAtTime} from "./forecast-timeline.js?v=20261110-drive4";
+import {forecastTickLabel,forecastSlotAtTime} from "./forecast-timeline.js?v=20261118-point-time1";
 import {MAP_OUTLINE_LAYER} from "./road-style.js?v=20261110-outline1";
 
 const $=id=>document.getElementById(id);
@@ -93,5 +93,5 @@ export function initWeather(map,hooks={}) {
     if(time!==null && !Number.isFinite(time))throw new Error("通過時刻が不正です");
     const changed=followTime!==time;followTime=time;
     if(changed && time!==null && active && mode==="forecast" && (!current || forecastSlotAtTime(slots,time)?.id!==current.id))void load();
-  },choose,current:()=>current,title:()=>product().name,timeline:()=>({selected,slots:mode==="forecast"?slots.map(s=>({id:s.id,label:s.label,shortLabel:forecastTickLabel(s.end)})):[]}),label:()=>current?.label || `${product().name}を準備中`};
+  },choose,current:()=>current,title:()=>product().name,timeline:()=>({selected,slots:mode==="forecast"?slots.map(s=>({id:s.id,end:Date.parse(s.end),label:s.label,shortLabel:forecastTickLabel(s.end)})):[]}),label:()=>current?.label || `${product().name}を準備中`};
 }

@@ -10,6 +10,7 @@
     "app.js",
     "assets/bousaiwxlab-site-icon.png",
     "assets/coastline-overview.json",
+    "data/forecast-municipalities.json",
     "data/snow/01-01.json.gz",
     "data/snow/01-02.json.gz",
     "data/snow/01-03.json.gz",

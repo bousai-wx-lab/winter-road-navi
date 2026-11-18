@@ -1,6 +1,6 @@
 import {createTemperatureLayer, lookupCell, paletteColor} from "./temperature-layer.js";
 import {LIVE_ROOT,LIVE_KINDS,LIVE_POLL_MS,liveSlots,liveFile,liveSlotKey,chooseLiveSlot,decodeLiveCSV,timeLabel,utcTime,liveFreshness,isDailyTemperature,previousComparison} from "./live-temperature-data.js?v=20261110-daily-diff1";
-import {forecastTickLabel,forecastSlotAtTime} from "./forecast-timeline.js?v=20261110-drive4";
+import {forecastTickLabel,forecastSlotAtTime} from "./forecast-timeline.js?v=20261118-point-time1";
 import {MAP_OUTLINE_LAYER} from "./road-style.js?v=20261110-outline1";
 
 const $=id=>document.getElementById(id);
@@ -21,6 +21,7 @@ export function initLiveTemperature(map,hooks={}) {
   let manifest=null,slots=[],selectedId=null,selectedTarget=null,followingLatest=true,shown=null,layer=null,grid=null,pinned=null,layerMode=null;
   let comparison="value",layerGrid=null,layerDifference=false;
   let followTime=null;
+  let hourlySlots = [];
   const legend=$("liveTemperatureGradient").getContext("2d");
   for(let bin=1;bin<=81;bin++){legend.fillStyle=paletteColor(bin);legend.fillRect((bin-1)*4,0,4,18);}
   const differenceLegend=$("liveDifferenceGradient").getContext("2d");
@@ -63,7 +64,7 @@ export function initLiveTemperature(map,hooks={}) {
     if(next!==mode) {
       selections[mode]={kind,selectedId,selectedTarget,followingLatest};
       ({kind,selectedId,selectedTarget,followingLatest}=selections[next]);
-      mode=next;slots=[];
+      mode=next;slots=[];hourlySlots=[];
     }
     kindSelect.replaceChildren(...MODE_KINDS[mode].map(key=>new Option(({current:"現在の気温",observed:"日最低・日最高",temp3h:"3時間ごとの気温",daily:"日最低・日最高"})[key],key)));
     kindSelect.value=kind;
@@ -161,6 +162,12 @@ export function initLiveTemperature(map,hooks={}) {
       }
       if(!active || token!==request) return;
       manifest=nextManifest;slots=nextSlots;
+      if (kind === "daily") {
+        try {
+          hourlySlots = liveSlots(manifest, "temp3h").filter(s => s.status !== "unavailable")
+            .map(s => ({id:s.id, validtime:s.validtime, end:Date.parse(utcTime(s.validtime))}));
+        } catch { hourlySlots = []; }
+      }
       if(!slot){loading=false;hooks.onUnavailable?.("unavailable");setStatus("通過時刻に対応する予測気温がありません","unavailable");$("mapTemperatureLabel").textContent="この通過時刻の予測気温は資料なし";return;}
       if(followTime===null){selectedId=slot.id;selectedTarget=liveSlotKey(slot,kind);followingLatest=(kind==="current" || kind==="observed") && slot.id===slots.at(-1).id;}
       select.replaceChildren(...slots.map(s=>new Option(`${s.target_date} · ${s.label}${s.status==="unavailable"?"（データなし）":""}`,s.id)));
@@ -201,7 +208,19 @@ export function initLiveTemperature(map,hooks={}) {
       catch {layer?.setVisible(false);setStatus("地図の色を切り替えられません。再読込できます。","error");}
     });
   }
-  kindSelect.addEventListener("change",()=>{if(!MODE_KINDS[mode].includes(kindSelect.value))return;kind=kindSelect.value;selectedId=null;selectedTarget=null;slots=[];followingLatest=true;controls();void load();});
+  function selectKind(next, target = null) {
+    if (!MODE_KINDS[mode].includes(next)) return;
+    kind = next;
+    kindSelect.value = next;
+    selectedId = null;
+    selectedTarget = target;
+    slots = [];
+    hourlySlots = [];
+    followingLatest = target === null;
+    controls();
+    void load();
+  }
+  kindSelect.addEventListener("change", () => selectKind(kindSelect.value));
   select.addEventListener("change",()=>choose(select.value));
   $("livePrevious").addEventListener("click",()=>choose(slots[Math.max(0,slots.findIndex(s=>s.id===selectedId)-1)]?.id));
   $("liveNext").addEventListener("click",()=>choose(slots[Math.min(slots.length-1,slots.findIndex(s=>s.id===selectedId)+1)]?.id));
@@ -219,7 +238,12 @@ export function initLiveTemperature(map,hooks={}) {
       if(changed && time!==null && active && mode==="forecast" && (!shown || followSlot(slots)?.id!==shown.slot.id))void load();
     },
     choose,
-    timeline:()=>({selected:selectedId,slots:mode==="forecast"?slots.map(s=>({id:s.id,
+    chooseHourly(id) {
+      const slot = hourlySlots.find(s => s.id === id);
+      if (active && mode === "forecast" && kind === "daily" && slot) selectKind("temp3h", slot.validtime);
+    },
+    timeline:()=>({selected:selectedId,hourlySlots,slots:mode==="forecast"?slots.map(s=>({id:s.id,
+      end:kind==="temp3h" && s.status!=="unavailable" ? Date.parse(utcTime(s.validtime)) : null,
       label:kind==="daily"?`${s.target_date} · 予想${s.element==="min"?"最低":"最高"}気温${s.status==="unavailable"?"（データなし）":""}`:timeLabel(utcTime(s.validtime)),
       shortLabel:kind==="daily"?`${Number(s.target_date.slice(-2))}日${s.element==="min"?"最低":"最高"}`:forecastTickLabel(utcTime(s.validtime))})):[]}),
     setActive(value) {

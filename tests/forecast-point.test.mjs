@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { pointForecastCell, readPointForecast } from "../forecast-point-data.js";
+import { readFileSync } from "node:fs";
+import { forecastMunicipality, pointForecastCell, readPointForecast } from "../forecast-point-data.js";
 import { RISK_LEVELS } from "../forecast-risk-data.js";
 
 const now = () => Date.parse("2026-11-18T04:45:00Z");
@@ -75,4 +76,12 @@ test("point forecast drops mixed updates and respects a cancelled selection", as
   controller.abort();
   await assert.rejects(readPointForecast(point, {...fixture, now, signal:controller.signal}), {name:"AbortError"});
   assert.deepEqual(fixture.requests, []);
+});
+
+test("municipality labels correspond to the displayed forecast cell centre", () => {
+  const boundaries = JSON.parse(readFileSync(new URL("../data/forecast-municipalities.json", import.meta.url), "utf8"));
+  assert.equal(forecastMunicipality(boundaries, pointForecastCell(142.719,43.325)), "北海道南富良野町");
+  assert.equal(forecastMunicipality(boundaries, pointForecastCell(139.692,35.690)), "東京都新宿区");
+  assert.equal(forecastMunicipality(boundaries, pointForecastCell(138,37.5)), "");
+  assert.equal(forecastMunicipality(null, point), "");
 });

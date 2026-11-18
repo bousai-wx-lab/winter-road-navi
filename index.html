@@ -6,11 +6,11 @@
     <meta name="referrer" content="no-referrer">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp https://www.jma.go.jp; connect-src 'self' https://cyberjapandata.gsi.go.jp https://nature-wx-lab.github.io https://www.jma.go.jp https://valhalla1.openstreetmap.de; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
     <title>冬道そなえナビ | Bousai Wx Lab</title>
-    <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、白縁の丸で示す実況積雪深や、実況に予想降雪を加算した簡易積雪目安にも切り替えられます。路面の安全判定ではありません。">
+    <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、白縁の丸で示す実況積雪深にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
     <link rel="stylesheet" href="./styles.css?v=20261111-road-kind1">
-    <script type="module" src="./app.js?v=20261111-road-kind1" referrerpolicy="no-referrer"></script>
+    <script type="module" src="./app.js?v=20261118-observed-snow1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -134,7 +134,7 @@
         <div id="liveSnowControlsHome">
           <section id="liveSnowControls" class="temperature-controls dynamic-controls" aria-label="実況積雪深の設定" hidden>
             <div class="section-heading"><h3><b id="liveSnowTitle">実況積雪深</b> <span>cm · 拡大で数値</span></h3><label class="check-label"><input id="liveSnowPoints" type="checkbox" checked>表示</label></div>
-            <p id="liveSnowModeNote" class="section-hint" hidden>実況に予想降雪を加算。融雪は未考慮。</p>
+            <p id="liveSnowModeNote" class="section-hint" hidden>丸は最新の観測値です。上の予報時刻とは別に更新されます。</p>
             <div id="liveSnowTimeSelection" class="field-row"><label for="liveSnowSlot">観測時刻</label><select id="liveSnowSlot"></select></div>
             <div class="station-row"><label for="liveSnowStation" class="visually-hidden">積雪の観測地点</label><select id="liveSnowStation" disabled><option value="">地点を選択</option></select><button id="liveSnowRefresh" type="button" hidden>再試行</button></div>
             <div id="liveSnowPointLegend" class="live-snow-legend" aria-label="積雪観測点の色分け（cm）"></div>
@@ -232,7 +232,7 @@
           <div data-help="temperature" hidden><h4>気温</h4><p id="liveUpdated"></p><p id="liveSource"></p><p id="liveColorNote"></p><p id="liveUpdateNote"></p></div>
           <div data-help="weather" hidden><h4>天気・降水・降雪</h4><p id="weatherUpdated"></p><p id="weatherDescription"></p></div>
           <div data-help="risk" hidden><h4>道路の気象条件</h4><p id="riskUpdated"></p><p>対象時刻の気温と前12時間の降水、3時間の天気・降雪から色分けします。降水後の低温は黄・オレンジ、雪は降雪量に応じてピンク・赤・紫・黒を優先。欠けた降水・降雪予報は、計算上0として扱います。</p></div>
-          <div data-help="snow" hidden><h4>積雪深</h4><p id="liveSnowDisplayHelp" class="section-hint">拡大すると数値を表示。丸を押すと地点の詳細。</p><p id="liveSnowUpdated"></p><p id="liveSnowForecastNotice" hidden></p><p>気象庁アメダス等の観測。0cmは雪なしと1cm未満の積雪を区別しません。斜線は実況の資料なし、または計算不能です。観測地点以外の積雪深は推定しません。</p><p>予測では最新実況に3時間降雪予報を累積。1〜2cmは1cm、3〜5cmは3cm、6cm以上は6cmを加算し、最初の枠は実況と重なっても全量加算します。融雪・沈降は計算しません。欠けた降雪予報は0cm加算。基準の実況がない地点は資料なしです。通信・形式・発表回の確認に失敗した場合は計算を止めます。</p><p>実況は過去24時間の正時を選択できます。10分ごと・タブ復帰時に配信を確認します。</p></div>
+          <div data-help="snow" hidden><h4>積雪深</h4><p id="liveSnowDisplayHelp" class="section-hint">拡大すると数値を表示。丸を押すと地点の詳細。</p><p id="liveSnowUpdated"></p><p>気象庁アメダス等の観測。0cmは雪なしと1cm未満の積雪を区別しません。斜線は実況の資料なしです。観測地点以外の積雪深は推定しません。</p><p>予測値モードの丸も、最新の正時の実況積雪深を表示します。</p><p>実況は過去24時間の正時を選択できます。10分ごと・タブ復帰時に配信を確認します。</p></div>
           <p class="road-temperature-note">線の色は1km格子の気温・積雪平年値による独自区分です。積雪面の表示と独立し、より悪い条件を優先します。現在の路面状態ではありません。</p><p>高速道路は太線、一般道路は細線。拡大すると細街路も表示します。気温で着色する場合、0℃以下・0℃超〜2℃・2℃超〜5℃で区分し、5℃超は道路区分色です。</p>
         </details>
 
@@ -266,7 +266,7 @@
           <p>実況・予想気温：<a href="https://nature-wx-lab.github.io/weather-distribution-plus/" target="_blank" rel="noopener noreferrer">Nature Wx Lab「天気分布予報プラス」</a>の数値配信を使用。予想は気象庁の約5km天気分布予報、実況は気象庁のアメダス10分値・日別値から内挿した約5kmメッシュです。元ツールの実況気温の約1km色タイルとは異なり、2℃境界を数値で判定します。実況は地点の実測値そのものではなく、更新・配信の遅れがあり得ます。予想は日最低・日最高と3時間気温、実況の日別値は過去7日を含みます。いずれも路面温度・凍結・通行可否を示しません。</p>
           <p>天気：実況は気象庁の<a href="https://www.jma.go.jp/jma/kishou/know/suikei_kishou/kaisetsu.html" target="_blank" rel="noopener noreferrer">推計気象分布</a>（約1km・毎時）、予測は<a href="https://www.jma.go.jp/jma/kishou/know/kurashi/bunpu.html" target="_blank" rel="noopener noreferrer">天気分布予報</a>（約5km・3時間の代表的な天気）の公式画像です。実況天気も観測点の値そのものではありません。</p>
           <p>予測の3時間降水量・3時間降雪量：気象庁の天気分布予報の公式画像を約5kmの元格子・元の色で表示します。降水量は1〜4・5〜9・10〜14・15〜19・20mm以上、降雪量は1〜2・3〜5・6cm以上の階級です。対象時刻は3時間の終端です。降雪量は新たに降る雪の量で、積雪深や道路上の雪ではありません。無色は降水・降雪なし、海域、資料なしを含みます。</p>
-          <p>実況積雪深：<a href="https://www.jma.go.jp/bosai/amedas/" target="_blank" rel="noopener noreferrer">気象庁アメダス等</a>の正時の観測値を白縁の丸で表示します。資料なしは斜線、0cmは薄いグレー、1cm以上は積雪深に応じて色分けします。数値は地図を拡大したときに表示します。観測点間の補間や推定面・等値線は使用しません。0cmは雪なしと1cm未満の積雪を区別しない共通表示です。予測値モードの丸は、最新実況に選択時刻までの各3時間予報の代表値1・3・6cmを足した簡易目安です。最初の枠は重なる時間も全量加算し、融雪・沈降は未考慮です。公式の積雪深予報や道路上の積雪・通行可否ではありません。</p>
+          <p>実況積雪深：<a href="https://www.jma.go.jp/bosai/amedas/" target="_blank" rel="noopener noreferrer">気象庁アメダス等</a>の正時の観測値を白縁の丸で表示します。資料なしは斜線、0cmは薄いグレー、1cm以上は積雪深に応じて色分けします。数値は地図を拡大したときに表示します。観測点間の補間や推定面・等値線は使用しません。0cmは雪なしと1cm未満の積雪を区別しない共通表示です。予測値モードの丸も最新の正時の実況積雪深を表示し、予報の対象時刻とは別に更新されます。</p>
           <p class="privacy-note">このツールは現在地を取得せず、住所入力・Cookie・ブラウザ保存・アクセス解析を使用しません。通常の地図の地点選択は画面内で処理します。ドライブの「解析スタート」では、選択した始点・終点と出発日時をFOSSGISのValhallaサービスへ送信します。経路・日時をこのツールで永続保存しません。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。実況値・予測値モードでは、気温データを天気分布予報プラスの配信元（GitHub Pages）、天気画像・観測データを気象庁へ要求します。</p>
         </div>
         <p class="footer-copyright">© 2026 Bousai Wx Lab.</p>

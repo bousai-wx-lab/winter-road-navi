@@ -10,7 +10,7 @@
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
     <link rel="stylesheet" href="./styles.css?v=20261111-road-kind1">
-    <script type="module" src="./app.js?v=20261118-observed-snow1" referrerpolicy="no-referrer"></script>
+    <script type="module" src="./app.js?v=20261118-drive-snowfall1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -71,7 +71,7 @@
             <p>青緑は指定条件に該当なし、灰色は資料不足。重なる条件は雪を優先してより悪い色を使います。路面の安全・通行可否ではありません。</p>
             <p>約500mごとに照合し、間の線は両端の悪い方の色。狭い区間の変化は捉えきれない場合があります。各区間の通過時刻に予測期間を照合。期間外だけ平年値へ切替。予測区間の通信失敗を平年値で埋めません。気温・天気は該当する3時間枠を使います。</p>
             <p>平年区間は日最低・日最高の1℃帯を表示し、日最低で判定。平年積雪は9/15〜6/15のみ。それ以外は積雪資料不足として灰色になります。平年値には天気を表示しません。</p>
-            <p>予測積雪深は100km以内・最大4観測点の実況に予想降雪を加え、距離の2乗の逆数で内挿。融雪・沈降・標高差は未考慮。道路上の積雪ではありません。</p>
+            <p>予測区間は、通過予定時刻を含む気象庁の3時間降雪量（約5km格子）の階級を表示します。平年値区間は、その月日の日最深積雪の平年推定値を表示します。</p>
             <p>高速・一般道は優先条件で、必ずその種別だけになるとは限りません。距離優先も厳密な最短を保証しません。休憩地点は立ち寄れる施設を検索したものではありません。</p>
             <p>経路・標高：<a href="https://valhalla.openstreetmap.de/" target="_blank" rel="noopener noreferrer">FOSSGIS / Valhalla</a>、道路：<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>。<a href="https://www.openstreetmap.org/" target="_blank" rel="noopener noreferrer">道路データの修正</a>。無料サービスの混雑・停止時は解析できません。</p>
           </details>
@@ -214,7 +214,7 @@
               <p>使用した予測値・平年値は、表の「データ」行に表示します。</p>
                   <p>道路区分の帯は濃色が高速道路、淡色が一般道。経路案内の区間単位の目安で、高速道路の出入口付近などは実際の境界とずれる場合があります。</p>
               <p>線の色は気象リスク。標高は地表の目安で、橋・トンネル内の路面高ではありません。</p>
-              <p>平年の気温は「低＝日最低、高＝日最高」。例：2〜&lt;3は2℃以上3℃未満。積雪の「約」は推定、「あり 0」は現象あり0cmです。</p>
+              <p>平年の気温は「低＝日最低、高＝日最高」。例：2〜&lt;3は2℃以上3℃未満。予測の「3時間降雪量」は気象庁の予報、平年値の「積雪深」は日最深積雪の平年推定値です。「あり 0」は積雪現象あり0cmです。</p>
             </div></details></div>
             <div class="drive-strip"><div class="drive-strip-content"><div id="driveChart" class="drive-chart"></div><div id="driveCards"></div></div></div>
             <input id="drivePosition" type="range" min="0" max="1" value="0" step="1" aria-label="断面図の距離の位置">

@@ -4,9 +4,6 @@ import { normalRoadClass, NORMAL_ROAD_RULES } from "./road-risk-data.js?v=202611
 import { expandGrid, lookupCell, binLabel } from "./temperature-layer.js";
 import { decodeDisplayDay, unpackRoadClasses, validRoadClassContract } from "./temperature-display-data.js";
 import { checkedSnowManifest, decodeSnowDay, expandSnowBins, snowBinLabel } from "./snow-display-data.js";
-import { AMEDAS_ROOT, snowHour, snowMapKey, decodeSnowStations } from "./live-snow-data.js";
-import { forecastSnowSlots, forecastSnowGrid, addForecastSnow } from "./forecast-snow-data.js";
-import { estimateSnow } from "./drive-route-data.js";
 
 const STEP=3*3600000, WEATHER=["資料なし","晴れ","くもり","雨","雨または雪","雪"];
 export function forecastPeriods(manifest,now=Date.now()) {
@@ -22,7 +19,12 @@ export function sourceForTime(time,periods) {
   const target=periods.find(s=>time<=s.end && time>=s.end-STEP);
   return {source:"forecast",target:target?.status==="available"?target:null};
 }
-const unknown=(sample,source,note)=>({...sample,source,rank:0,riskLabel:"資料不足",temperature:"資料なし",snow:"資料なし",weather:source==="normal"?null:"資料なし",note});
+const SNOWFALL_LABELS={0:"降雪量なし",1:"1〜2cm",3:"3〜5cm",6:"6cm以上"};
+export function forecastSnowfallLabel(category) {
+  return SNOWFALL_LABELS[category] ?? "資料なし";
+}
+
+const unknown=(sample,source,note)=>({...sample,source,rank:0,riskLabel:"資料不足",temperature:"資料なし",snow:"資料なし",snowfall:"資料なし",weather:source==="normal"?null:"資料なし",note});
 
 export function createDriveWeather({fetchImpl=fetch,now=Date.now}={}) {
   return async function analyze(samples,signal,onProgress=()=>{}) {
@@ -44,19 +46,13 @@ export function createDriveWeather({fetchImpl=fetch,now=Date.now}={}) {
     try{manifest=await manifestNow();periods=forecastPeriods(manifest,now());}catch(error){if(signal?.aborted)throw error;return {samples:samples.map(s=>unknown(s,"unknown","予測期間を確認できないため、平年値への自動切替を止めました")),notices:["予測期間を取得できませんでした。再解析してください。"]};}
     const groups=new Map(),result=new Array(samples.length),notices=[];
     samples.forEach((sample,i)=>{const context=sourceForTime(sample.time,periods),key=context.source+":"+(context.day||context.target?.validtime||"missing");if(!groups.has(key))groups.set(key,{context,items:[]});groups.get(key).items.push({...sample,index:i});});
-    let normalPromise,stationPromise;
+    let normalPromise;
     function normals(){return normalPromise??=(async()=>{
       const roots=["./data/temperature/","./data/temperature-max/","./data/snow/"],list=await Promise.all(roots.map(root=>get(root+"manifest.json"))),[minimum,maximum,snow]=list;
       if(list.slice(0,2).some(m=>m.cell_count!==387717||m.baseline!=="1991-2020"||m.bin_min!==-40||m.bin_step!==1||m.bin_count!==81||m.files?.length!==366||!validRoadClassContract(m.road_classes)) || maximum.grid.sha256!==minimum.grid.sha256)throw new Error("平年気温の定義を確認できません");
       const grid=expandGrid(await packed(minimum.grid,roots[0]));
       const days=minimum.days.filter(d=>d>="09-15"||d<="06-15").sort((a,b)=>(a>="09-15"?0:1)-(b>="09-15"?0:1)||a.localeCompare(b));
       checkedSnowManifest(snow,grid.count,minimum.grid.sha256,days);return {roots,list,grid};
-    })();}
-    function stations(){return stationPromise??=(async()=>{
-      const hour=snowHour(await get(AMEDAS_ROOT+"data/latest_time.txt",false));
-      if(now()-Date.parse(hour)>95*60000||Date.parse(hour)-now()>5*60000)throw new Error("積雪の基準実況が古いか不正です");
-      const [table,data]=await Promise.all([get(AMEDAS_ROOT+"const/amedastable.json"),get(AMEDAS_ROOT+`data/map/${snowMapKey(hour)}.json`)]);
-      return {hour,points:decodeSnowStations(table,data,hour)};
     })();}
     async function normalGroup(group){
       const {grid,list,roots}=await normals(),day=group.context.day;
@@ -74,22 +70,16 @@ export function createDriveWeather({fetchImpl=fetch,now=Date.now}={}) {
       const target=group.context.target;if(!target)throw new Error("この予測期間は資料がありません");
       const plan=riskSlots(manifest,target),points=group.items;
       const grid={count:points.length,rowScale:20,colScale:16,rows:Uint16Array.from(points,s=>Math.floor(s.coordinate[1]*20)),cols:Uint16Array.from(points,s=>Math.floor(s.coordinate[0]*16))};
-      const field=async(slot,kind,targetGrid=grid)=>slot?projectRiskField(await get(LIVE_ROOT+`forecast_${slot.id}_value.geojson`),targetGrid,kind):new Int16Array(targetGrid.count);
+      const field=async(slot,kind)=>slot?projectRiskField(await get(LIVE_ROOT+`forecast_${slot.id}_value.geojson`),grid,kind):new Int16Array(grid.count);
       const [weather,precip,snowfall,temperature,history]=await Promise.all([
         field(plan.weather3h,"weather3h"),field(plan.precip3h,"precip3h"),field(plan.snow3h,"snow3h"),
         get(LIVE_ROOT+liveFile("temp3h",plan.temperature),false).then(text=>decodeLiveCSV(text,"temp3h",plan.temperature)),
         Promise.all(plan.history.map(async p=>({weather:await field(p.weather3h,"weather3h"),precipitation:await field(p.precip3h,"precip3h")}))),
       ]);
-      let snowStations=null,snowNote="積雪深は取得できません";
-      try{
-        const baseline=await stations(),snowPlan=forecastSnowSlots(manifest,target,baseline.hour),stationGrid=forecastSnowGrid(baseline.points),fields=[];
-        for(const slot of snowPlan.slots)fields.push(slot.missing?new Int16Array(stationGrid.count):await field(slot,"snow3h",stationGrid));
-        const added=addForecastSnow(baseline.points,fields);snowStations=baseline.points.map((s,i)=>({...s,value:added[i].value}));snowNote=`基準実況 ${baseline.hour}。100km以内の最大4観測点から距離加重で推定。降雪予報を加算、融雪・沈降・標高差は未考慮。`;
-      }catch(error){if(signal?.aborted)throw error;notices.push("積雪深を推定できない区間があります。気温・降雪のリスク色とは別に「資料なし」と表示します。");}
       points.forEach((s,i)=>{
         const cell=lookupCell(temperature.grid,...s.coordinate),value=cell<0?NaN:temperature.values[cell];
-        const rank=riskClass(weather[i],precip[i],snowfall[i],value,history.map(h=>({weather:h.weather[i],precipitation:h.precipitation[i]}))),depth=snowStations?estimateSnow(snowStations,s.coordinate):null;
-        result[s.index]={...s,source:"forecast",rank,riskLabel:RISK_RULES[rank].short||RISK_RULES[rank].label,weather:WEATHER[weather[i]]||"資料なし",temperature:Number.isFinite(value)?`${value.toFixed(1)}℃`:"資料なし",snow:depth?`推定 約${Math.round(depth.value)}cm`:"資料なし",forecastEnd:target.end,note:`予測対象 ${timeLabel(target.end-STEP)}〜${timeLabel(target.end)}。枠の終端の気温・同じ枠の天気と降雪を使用。${snowNote}${depth?` 最寄り約${Math.round(depth.distance)}km、${depth.count}地点。`:""}`};
+        const rank=riskClass(weather[i],precip[i],snowfall[i],value,history.map(h=>({weather:h.weather[i],precipitation:h.precipitation[i]})));
+        result[s.index]={...s,source:"forecast",rank,riskLabel:RISK_RULES[rank].short||RISK_RULES[rank].label,weather:WEATHER[weather[i]]||"資料なし",temperature:Number.isFinite(value)?`${value.toFixed(1)}℃`:"資料なし",snowfall:forecastSnowfallLabel(plan.snow3h ? snowfall[i] : null),forecastEnd:target.end,note:`予測対象 ${timeLabel(target.end-STEP)}〜${timeLabel(target.end)}。枠の終端の気温と、同じ枠の天気・気象庁の3時間降雪量（約5km格子）を使用。`};
       });
     }
     let done=0;

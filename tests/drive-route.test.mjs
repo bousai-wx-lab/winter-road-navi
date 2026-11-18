@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {departureTime,routeRequest,decodePolyline,decodeRoute,sampleRoute,routeSegments,estimateSnow,createRouteClient,roadKindAt,kmBetween} from "../drive-route-data.js";
-import {forecastPeriods,sourceForTime,createDriveWeather} from "../drive-weather-data.js";
+import {forecastPeriods,sourceForTime,createDriveWeather,forecastSnowfallLabel} from "../drive-weather-data.js";
 
 const departure=Date.parse("2026-11-10T07:00:00+09:00");
 test("empty departure is now; entered wall time is always JST and invalid dates fail",()=>{
@@ -49,6 +49,10 @@ test("forecast boundaries are determined per arrival time; missing slots within 
   assert.equal(sourceForTime(Date.parse("2026-11-10T12:00:00.001+09:00"),periods).source,"normal");
   assert.equal(sourceForTime(Date.parse("2026-11-10T05:59:59+09:00"),periods).source,"normal");
   assert.throws(()=>forecastPeriods(manifest,departure+24*3600000));
+});
+test("drive readout keeps official snowfall ranges and distinguishes no snowfall from missing data",()=>{
+  assert.deepEqual([0,1,3,6,-1,null].map(forecastSnowfallLabel),
+    ["降雪量なし","1〜2cm","3〜5cm","6cm以上","資料なし","資料なし"]);
 });
 test("manifest failures fail closed without showing climatology as the current forecast",async()=>{
   const analyze=createDriveWeather({fetchImpl:async()=>{throw new Error("offline");},now:()=>departure});

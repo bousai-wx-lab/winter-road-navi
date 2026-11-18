@@ -10,7 +10,7 @@ import { initLiveSnow } from "./live-snow-control.js?v=20261118-observed-snow1";
 import { initForecastRisk } from "./forecast-risk-control.js?v=20261110-risk-colors1";
 import { ROAD_RISK_COLORS, NORMAL_ROAD_RULES, createNormalRoadRisk } from "./road-risk-data.js?v=20261110-risk-colors1";
 import { RISK_RULES } from "./forecast-risk-data.js?v=20261110-risk-colors1";
-import { initForecastPoint } from "./forecast-point-control.js?v=20261118-point-time1";
+import { initForecastPoint } from "./forecast-point-control.js?v=20261118-point-time2";
 import { initForecastTimeline } from "./forecast-timeline.js?v=20261118-point-time1";
 import { timeLabel } from "./live-temperature-data.js";
 import { lookupCell, binLabel } from "./temperature-layer.js";

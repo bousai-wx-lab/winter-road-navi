@@ -60,7 +60,6 @@ export function initForecastPoint(map, Marker, onChooseTime) {
     const label = expanded ? "折りたたむ" : "展開する";
     toggle.setAttribute("aria-label", label);
     toggle.title = label;
-    toggle.textContent = expanded ? "▼" : "▶";
     resize();
     if (expanded) revealSelectedTime();
   }

@@ -1,6 +1,6 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
-import { createRouteClient, departureTime, routeRequest, sampleRoute, routeSegments, validPoint, ROUTE_COLORS, PRIORITIES, ROAD_KIND_LABELS } from "./drive-route-data.js?v=20261111-road-kind1";
-import { createDriveWeather } from "./drive-weather-data.js?v=20261118-drive-snowfall1";
+import { createRouteClient, departureTime, returnDepartureTime, routeRequest, sampleRoute, routeSegments, validPoint, ROUTE_COLORS, PRIORITIES, ROAD_KIND_LABELS } from "./drive-route-data.js?v=20261118-drive-roundtrip1";
+import { createDriveWeather } from "./drive-weather-data.js?v=20261118-drive-temperature1";
 import { timeLabel } from "./live-temperature-data.js";
 import { NORMAL_ROAD_RULES } from "./road-risk-data.js";
 import { RISK_RULES } from "./forecast-risk-data.js";
@@ -10,6 +10,7 @@ const $=id=>document.getElementById(id), SVG="http://www.w3.org/2000/svg";
 function svg(tag,attributes,text){const el=document.createElementNS(SVG,tag);for(const [key,value] of Object.entries(attributes))el.setAttribute(key,String(value));if(text!==undefined)el.textContent=text;return el;}
 function node(tag,text,className){const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(className)el.className=className;return el;}
 const sourceLabel=source=>source==="forecast"?"予測値":source==="normal"?"平年値":"資料不足";
+const errorMessage=error=>error.message?.match(/[ぁ-んァ-ヶ一-龠]/)?error.message:"解析に失敗しました。通信を確認して再実行してください";
 function profileAxis(samples){const columns=Math.min(9,new Set(samples.map(s=>s.km)).size);return {columns,left:66+934/columns/2,width:934*(columns-1)/columns};}
 const compactTemperature=text=>text.replace(/(-?\d+(?:\.\d+)?)℃以上\s*(-?\d+(?:\.\d+)?)℃未満/g,"$1〜<$2").replaceAll("℃","").replace("最低 ","低 ").replace("／最高 ","\n高 ");
 const compactSnow=text=>text.replaceAll("cm","").replace("現象あり・", "あり ").replace("現象なし","なし");
@@ -38,6 +39,11 @@ function styleDriveWeather(cell, field, sample) {
     colorWeatherCell(cell, "weather3h", sample.weather === "資料なし" ? null : sample.weather);
   } else if (field === "temperature") {
     colorDriveTemperature(cell, cell.textContent);
+    if (sample.temperatureTime != null) {
+      const forecastTime = timeLabel(sample.temperatureTime);
+      cell.title = `${sample.temperature}（${forecastTime}の予想）`;
+      cell.append(node("small", `${forecastTime.slice(5)}予想`, "drive-temperature-time"));
+    }
   } else if (field === "snowfall" && sample.source === "forecast") {
     const display = cell.textContent.replace("cm", "");
     if (sample.snowfall === "降雪量なし") cell.title = "1cm未満";
@@ -47,7 +53,9 @@ function styleDriveWeather(cell, field, sample) {
 
 export function initDrive(map,hooks={}) {
   const routeClient=createRouteClient(),weather=createDriveWeather();
-  let active=false,picking="start",start=null,end=null,token=0,abort=null,result=null,collapsed=false,lastRoute=null;
+  let active=false,picking="start",start=null,end=null,token=0,abort=null,trip=null,collapsed=false,direction="outbound";
+  const routeCache = {outbound:null, returning:null};
+  const selectedLeg = () => trip?.[direction];
   const markers={},empty={type:"FeatureCollection",features:[]};
   function status(text,state="ready"){$("driveStatus").textContent=text;$("driveStatus").dataset.state=state;}
   function layers(){
@@ -58,7 +66,10 @@ export function initDrive(map,hooks={}) {
     map.moveLayer("drive-route-halo");map.moveLayer("drive-route-line");
   }
   function clearResult(){
-    ++token;abort?.abort();result=null;$("driveAnalyze").disabled=false;$("driveProfile").hidden=true;$("driveChart").replaceChildren();$("driveCards").replaceChildren();$("driveReadout").replaceChildren();$("driveSummary").textContent="";$("driveNotices").textContent="";
+    ++token;abort?.abort();trip=null;direction="outbound";$("driveAnalyze").disabled=false;$("driveProfile").hidden=true;$("driveChart").replaceChildren();$("driveCards").replaceChildren();$("driveReadout").replaceChildren();$("driveSummary").textContent="";$("driveTripTiming").textContent="";$("driveNotices").textContent="";
+    $("driveLegControls").hidden=true;
+    $("driveReturnNotice").hidden=true;
+    $("driveReturnNotice").textContent="";
     map.getSource("drive-route")?.setData(empty);markers.inspect?.remove();delete markers.inspect;hooks.onSelection?.(null);map.resize();
   }
   function invalidate(){clearResult();status("条件を変更しました。「解析スタート」で更新してください");}
@@ -78,30 +89,45 @@ export function initDrive(map,hooks={}) {
   for(const key of ["start","end"]){
     $(key==="start"?"driveStart":"driveEnd").addEventListener("change",event=>{
       const values=event.target.value.split(/[,、\s]+/).filter(Boolean).map(Number),point=[values[1],values[0]];
-      invalidate();lastRoute=null;
+      invalidate();
       if(!validPoint(point)){if(key==="start")start=null;else end=null;status("座標は日本付近の「緯度, 経度」で指定してください","error");}
       else {if(key==="start")start=point;else end=point;picking=start&&end?null:!start?"start":"end";}
       updateSelection();
     });
   }
-  for(const id of ["driveDeparture","drivePriority"])$(id).addEventListener("change",()=>{invalidate();lastRoute=null;});
-  $("driveAddBreak").addEventListener("click",()=>{
-    if($("driveBreaks").children.length>=12)return;
+  for(const id of ["driveDeparture","drivePriority","driveStayHours","driveReturnDeparture"])$(id).addEventListener("change",invalidate);
+  function updateReturnFields() {
+    const requested = $("driveReturnToggle").checked;
+    const byStay = $("driveReturnMethod").value === "stay";
+    $("driveReturnFields").hidden = !requested;
+    $("driveStayField").hidden = !byStay;
+    $("driveReturnDepartureField").hidden = byStay;
+    $("driveOutboundBreakHeading").textContent = requested ? "往路の休憩" : "休憩";
+  }
+  for (const id of ["driveReturnToggle","driveReturnMethod"]) $(id).addEventListener("change",() => {updateReturnFields(); invalidate();});
+  updateReturnFields();
+  function addBreak(container){
+    if(container.children.length>=12)return;
     const row=node("div",undefined,"drive-break"),km=document.createElement("input"),minutes=document.createElement("input"),remove=node("button","削除");
     km.type=minutes.type="number";km.min="0";km.step="0.1";km.placeholder="出発からkm";km.setAttribute("aria-label","休憩位置（出発からkm）");minutes.min="1";minutes.max="1440";minutes.step="1";minutes.placeholder="休憩の分数";minutes.setAttribute("aria-label","休憩時間（分）");remove.type="button";
     for(const input of [km,minutes])input.addEventListener("change",invalidate);
-    remove.addEventListener("click",()=>{row.remove();invalidate();});row.append(km,minutes,remove);$("driveBreaks").append(row);km.focus();
-  });
-  function readBreaks(){return Array.from($("driveBreaks").children).map(row=>{const [a,b]=row.querySelectorAll("input");if(!a.value&&!b.value)return null;if(!a.value||!b.value)throw new Error("休憩の距離と分数を両方入力してください");return {km:Number(a.value),minutes:Number(b.value)};}).filter(Boolean);}
+    remove.addEventListener("click",()=>{row.remove();invalidate();});row.append(km,minutes,remove);container.append(row);km.focus();
+  }
+  $("driveAddBreak").addEventListener("click",()=>addBreak($("driveBreaks")));
+  $("driveAddReturnBreak").addEventListener("click",()=>addBreak($("driveReturnBreaks")));
+  function readBreaks(id){return Array.from($(id).children).map(row=>{const [a,b]=row.querySelectorAll("input");if(!a.value&&!b.value)return null;if(!a.value||!b.value)throw new Error("休憩の距離と分数を両方入力してください");return {km:Number(a.value),minutes:Number(b.value)};}).filter(Boolean);}
   function readout(index,move=false){
+    const result = selectedLeg();
     if(!result)return;index=Math.max(0,Math.min(result.samples.length-1,Math.round(index)));$("drivePosition").value=String(index);
+    result.selection = index;
     const s=result.samples[index];$("drivePositionLabel").textContent=`${s.km.toFixed(1)}km · ${timeLabel(s.time).slice(5)}${s.restMinutes?`（休憩${s.restMinutes}分後）`:""}`;
     const heading=node("strong",`${sourceLabel(s.source)} · ${s.riskLabel}`);
     const snowReadout=s.source==="forecast" ? `3時間降雪量：${driveSnowfallLabel(s)}` :
       s.source==="normal" ? `積雪深：${s.snow}` : "雪の資料なし";
-    const body=node("span",`${s.elevation===null?"標高不明":`${Math.round(s.elevation)}m`}　${s.weather?`${s.weather}　`:""}気温 ${compactTemperature(s.temperature).replace("\n"," / ")}${s.temperature.includes("℃")?"℃":""}　${snowReadout}`);
+    const temperatureTime = s.temperatureTime == null ? "" : `（${timeLabel(s.temperatureTime).slice(5)}予想）`;
+    const body=node("span",`${s.elevation===null?"標高不明":`${Math.round(s.elevation)}m`}　${s.weather?`${s.weather}　`:""}気温 ${compactTemperature(s.temperature).replace("\n"," / ")}${s.temperature.includes("℃")?"℃":""}${temperatureTime}　${snowReadout}`);
     const note=node("details",undefined,"drive-point-note");
-    note.append(node("summary","詳細"),node("small",`気温 ${s.temperature}。 ${snowReadout}。 ${s.note}`));
+    note.append(node("summary","詳細"),node("small",`気温 ${s.temperature}${temperatureTime}。 ${snowReadout}。 ${s.note}`));
     const roadKind=node("strong",ROAD_KIND_LABELS[s.roadKind]||ROAD_KIND_LABELS.unknown,"drive-road-kind");roadKind.dataset.roadKind=s.roadKind||"unknown";
     $("driveReadout").replaceChildren(roadKind,heading,body,note);$("driveReadout").dataset.source=s.source;$("driveReadout").dataset.rank=String(s.rank);
     if(active){if(index===0||index===result.samples.length-1){markers.inspect?.remove();delete markers.inspect;}else pointMarker("inspect",s.coordinate,"●");if(move)map.easeTo({center:s.coordinate,duration:300});}
@@ -121,13 +147,16 @@ export function initDrive(map,hooks={}) {
     toggle.title = label;
   }
   function renderProfile(){
+    const result = selectedLeg();
     if(!result)return;
-    const {route,samples,departure,priority}=result,stops=readBreaks().reduce((sum,b)=>sum+b.minutes,0),endTime=samples.at(-1).time;
+    const {route,samples,departure,priority,stops}=result,endTime=samples.at(-1).time;
     const sources=new Set(samples.map(s=>s.source));
-    $("driveSummary").textContent=`${route.distance.toFixed(1)}km · 走行 約${Math.round(route.seconds/60)}分${stops?` ＋ 休憩${stops}分`:""} · ${PRIORITIES[priority]} · ${sourceLabel(samples[0].source)}${sources.size>1?"／"+[...sources].filter(s=>s!==samples[0].source).map(sourceLabel).join("／"):""}`;
+    const sourceSummary = sources.size === 1 && sources.has("normal")
+      ? "全区間 平年値（予測期間外）" : [...sources].map(sourceLabel).join("／");
+    $("driveSummary").textContent=`${route.distance.toFixed(1)}km · 走行 約${Math.round(route.seconds/60)}分${stops?` ＋ 休憩${stops}分`:""} · ${PRIORITIES[priority]} · ${sourceSummary}`;
     $("driveTripTiming").textContent=`出発 ${timeLabel(departure).slice(5)} → 到着 ${timeLabel(endTime).slice(5)}`;
     $("driveTripTiming").title=`出発 ${timeLabel(departure)} → 到着予定 ${timeLabel(endTime)}`;
-    $("driveNotices").textContent=[...result.notices,!route.elevation?"標高を取得できませんでした。経路の気象は下に表示します。":"",priority==="local"&&route.hasHighway?"一般道優先ですが、一部に高速道路を含む経路です。":"",route.hasToll?"有料道路を含みます。":""].filter(Boolean).join(" ");
+    $("driveNotices").textContent=[...trip.notices,!route.elevation?"標高を取得できませんでした。経路の気象は下に表示します。":"",priority==="local"&&route.hasHighway?"一般道優先ですが、一部に高速道路を含む経路です。":"",route.hasToll?"有料道路を含みます。":""].filter(Boolean).join(" ");
     $("driveProfileHelpLabel").textContent=$("driveNotices").textContent?"説明・注意あり":"表示の説明";
     $("driveProfile").hidden=!active;updateProfileVisibility();
     const chart=svg("svg",{viewBox:"0 0 1000 72",preserveAspectRatio:"none",role:"img","aria-label":"横軸は走行距離km、縦軸は標高m。下の気象表と同じ距離位置。路線の色は区間の気象リスク。"});
@@ -180,40 +209,103 @@ export function initDrive(map,hooks={}) {
       }
       body.append(row);
     }
-    table.append(head,body);$("driveCards").replaceChildren(table);readout(0);map.resize();
+    table.append(head,body);$("driveCards").replaceChildren(table);readout(result.selection);map.resize();
+  }
+  function showLeg(fit = false) {
+    const result = selectedLeg();
+    if (!result) return;
+    $("driveLegControls").hidden = !trip.roundTrip;
+    $("driveOutboundLeg").setAttribute("aria-pressed", String(direction === "outbound"));
+    $("driveReturnLeg").setAttribute("aria-pressed", String(direction === "returning"));
+    $("driveReturnLeg").disabled = !trip.returning;
+    $("driveReturnNotice").hidden = !trip.returnError;
+    $("driveReturnNotice").textContent = trip.returnError ? `復路：${trip.returnError}` : "";
+    layers();
+    map.getSource("drive-route").setData(routeSegments(result.route, result.samples));
+    renderProfile();
+    if (fit) {
+      const bounds = new maplibregl.LngLatBounds();
+      for (const coordinate of result.route.coordinates) bounds.extend(coordinate);
+      map.fitBounds(bounds,{padding:50,maxZoom:12,duration:500});
+    }
+  }
+  for (const [id,leg] of [["driveOutboundLeg","outbound"],["driveReturnLeg","returning"]]) {
+    $(id).addEventListener("click",() => {
+      if (!trip?.[leg] || direction === leg) return;
+      direction = leg;
+      showLeg(true);
+    });
+  }
+  async function planLeg(leg, from, to, departure, priority, breaks, signal) {
+    const request = routeRequest(from,to,priority,departure);
+    const key = JSON.stringify(request);
+    const cached = routeCache[leg];
+    const route = cached?.key === key ? cached.route : await routeClient(request,signal,{waitForCooldown:leg==="returning"});
+    signal.throwIfAborted();
+    routeCache[leg] = {key,route};
+    const points = sampleRoute(route,departure,breaks);
+    return {route,departure,priority,points,stops:breaks.reduce((sum,b)=>sum+b.minutes,0)};
   }
   $("drivePosition").addEventListener("input",event=>readout(Number(event.target.value)));
   $("driveProfileToggle").addEventListener("click",()=>{collapsed=!collapsed;updateProfileVisibility();map.resize();});
-  $("driveReset").addEventListener("click",()=>{clearResult();start=end=null;lastRoute=null;picking="start";collapsed=false;$("driveStart").value=$("driveEnd").value=$("driveDeparture").value="";$("driveBreaks").replaceChildren();$("drivePriority").value="fastest";updateSelection();status("始点 A と終点 B を地図で選んでください");});
+  $("driveReset").addEventListener("click",()=>{
+    clearResult();
+    start=end=null;routeCache.outbound=routeCache.returning=null;picking="start";collapsed=false;
+    $("driveStart").value=$("driveEnd").value=$("driveDeparture").value=$("driveReturnDeparture").value="";
+    $("driveBreaks").replaceChildren();$("driveReturnBreaks").replaceChildren();
+    $("drivePriority").value="fastest";$("driveReturnMethod").value="stay";$("driveStayHours").value="2";$("driveReturnToggle").checked=false;
+    updateReturnFields();updateSelection();status("始点 A と終点 B を地図で選んでください");
+  });
   $("driveAnalyze").addEventListener("click",async()=>{
     clearResult();const current=token;abort=new AbortController();const signal=abort.signal;
-    const timeout=setTimeout(()=>{if(current===token){abort.abort();status("解析が時間内に終わりませんでした。時間をおいて再実行してください","error");}},90000);
+    const roundTrip = $("driveReturnToggle").checked;
+    const timeout=setTimeout(()=>{if(current===token){abort.abort();status("解析が時間内に終わりませんでした。時間をおいて再実行してください","error");}},roundTrip?180000:90000);
     try{
       // Read the visible fields again: autofill/accessibility input may not emit change.
       const parsePoint=id=>{const v=$(id).value.split(/[,、\s]+/).filter(Boolean).map(Number);return v.length===2?[v[1],v[0]]:null;};
       start=parsePoint("driveStart");end=parsePoint("driveEnd");
-      const departure=departureTime($("driveDeparture").value),priority=$("drivePriority").value,request=routeRequest(start,end,priority,departure),breaks=readBreaks();
-      $("driveAnalyze").disabled=true;picking=null;updateSelection();status("自動車の経路と標高を取得しています","loading");
-      const cacheKey=JSON.stringify(request),route=lastRoute?.key===cacheKey?lastRoute.route:await routeClient(request,signal);
-      if(current!==token)return;lastRoute={key:cacheKey,route};
-      const points=sampleRoute(route,departure,breaks);status("経路の通過時刻を計算しました。気象を照合しています","loading");
+      const departure=departureTime($("driveDeparture").value),priority=$("drivePriority").value;
+      $("driveAnalyze").disabled=true;picking=null;updateSelection();
+      status(roundTrip?"往路の経路と標高を取得しています":"自動車の経路と標高を取得しています","loading");
+      const outbound = await planLeg("outbound",start,end,departure,priority,readBreaks("driveBreaks"),signal);
+      let returning = null, returnError = null;
+      if (roundTrip) {
+        try {
+          const options = {method:$("driveReturnMethod").value,hours:$("driveStayHours").value,departure:$("driveReturnDeparture").value};
+          const returnDeparture = returnDepartureTime(options,outbound.points.at(-1).time);
+          status("復路の経路と標高を取得しています","loading");
+          returning = await planLeg("returning",end,start,returnDeparture,priority,readBreaks("driveReturnBreaks"),signal);
+        } catch (error) {
+          signal.throwIfAborted();
+          returnError = errorMessage(error);
+        }
+      }
+      if(current!==token || !active)return;
+      const points = returning ? [...outbound.points,...returning.points] : outbound.points;
+      status("経路の通過時刻を計算しました。気象を照合しています","loading");
       const data=await weather(points,signal,text=>{if(current===token)status(text,"loading");});
-      if(current!==token||!active)return;
-      result={...data,route,departure,priority};collapsed=false;layers();map.getSource("drive-route").setData(routeSegments(route,data.samples));renderProfile();
-      const bounds=new maplibregl.LngLatBounds();for(const coordinate of route.coordinates)bounds.extend(coordinate);map.fitBounds(bounds,{padding:50,maxZoom:12,duration:500});
-      status(`解析できました。${data.samples.length}地点の通過時刻を反映しています`);
+      if(current!==token||!active||signal.aborted)return;
+      const withWeather = ({points,...leg}, start) => ({...leg,samples:data.samples.slice(start,start+points.length),selection:0});
+      trip = {
+        outbound:withWeather(outbound,0),
+        returning:returning?withWeather(returning,outbound.points.length):null,
+        roundTrip,returnError,notices:data.notices,
+      };
+      collapsed=false;showLeg(true);
+      if (returnError) status(`往路を表示しました。復路：${returnError}`,"error");
+      else status(`${returning?"往路・復路":"経路"}を解析しました。${data.samples.length}地点の通過時刻を反映しています`);
       if(matchMedia("(max-width:760px)").matches){document.querySelector(".control-panel").classList.add("is-collapsed");$("panelToggle").setAttribute("aria-expanded","false");$("panelToggle").textContent="設定を開く";}
-    }catch(error){if(current!==token||signal.aborted)return;status(error.message?.match(/[ぁ-んァ-ヶ一-龠]/)?error.message:"解析に失敗しました。通信を確認して再実行してください","error");}
+    }catch(error){if(current!==token||signal.aborted)return;status(errorMessage(error),"error");}
     finally{clearTimeout(timeout);if(current===token)$("driveAnalyze").disabled=false;}
   });
   const legend=$("driveLegend");
   for(let rank=2;rank<=8;rank++){const line=node("div",undefined,"drive-legend-row"),swatch=node("i");swatch.style.backgroundColor=ROUTE_COLORS[rank];line.append(swatch,node("span",NORMAL_ROAD_RULES[rank]),node("span",RISK_RULES[rank].short));legend.append(line);}
   map.on("click",event=>{
     if(!active)return;
-    if(picking){const point=[event.lngLat.lng,event.lngLat.lat];if(!validPoint(point)){status("日本付近の道路上を選んでください","error");return;}invalidate();lastRoute=null;
+    if(picking){const point=[event.lngLat.lng,event.lngLat.lat];if(!validPoint(point)){status("日本付近の道路上を選んでください","error");return;}invalidate();
       if(picking==="start"){start=point;$("driveStart").value=`${point[1].toFixed(5)}, ${point[0].toFixed(5)}`;picking="end";}else{end=point;$("driveEnd").value=`${point[1].toFixed(5)}, ${point[0].toFixed(5)}`;picking=null;}
       updateSelection();status(start&&end?"始点・終点を選びました。「解析スタート」を押してください":"終点 B を地図で選んでください");
-    }else if(result && map.getLayer("drive-route-line")){const hit=map.queryRenderedFeatures([[event.point.x-8,event.point.y-8],[event.point.x+8,event.point.y+8]],{layers:["drive-route-line"]})[0];if(hit)readout(Number(hit.properties.index));}
+    }else if(selectedLeg() && map.getLayer("drive-route-line")){const hit=map.queryRenderedFeatures([[event.point.x-8,event.point.y-8],[event.point.x+8,event.point.y+8]],{layers:["drive-route-line"]})[0];if(hit)readout(Number(hit.properties.index));}
   });
-  return {bringToFront(){if(active)for(const id of ["drive-route-halo","drive-route-line"])if(map.getLayer(id))map.moveLayer(id);},setActive(value){active=value;$("driveControls").hidden=!value;$("driveProfile").hidden=!value||!result;if(!value){if(!result && $("driveAnalyze").disabled)status("解析を中止しました。「解析スタート」で再実行できます");++token;abort?.abort();$("driveAnalyze").disabled=false;for(const marker of Object.values(markers))marker.remove();}else{layers();updateSelection();if(result){map.getSource("drive-route").setData(routeSegments(result.route,result.samples));renderProfile();}}for(const id of ["drive-route-halo","drive-route-line"])if(map.getLayer(id))map.setLayoutProperty(id,"visibility",value?"visible":"none");map.resize();},isPicking:()=>Boolean(picking)};
+  return {bringToFront(){if(active)for(const id of ["drive-route-halo","drive-route-line"])if(map.getLayer(id))map.moveLayer(id);},setActive(value){active=value;$("driveControls").hidden=!value;$("driveProfile").hidden=!value||!trip;if(!value){if(!trip && $("driveAnalyze").disabled)status("解析を中止しました。「解析スタート」で再実行できます");++token;abort?.abort();$("driveAnalyze").disabled=false;for(const marker of Object.values(markers))marker.remove();}else{layers();updateSelection();showLeg();}for(const id of ["drive-route-halo","drive-route-line"])if(map.getLayer(id))map.setLayoutProperty(id,"visibility",value?"visible":"none");map.resize();},isPicking:()=>Boolean(picking)};
 }

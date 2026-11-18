@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {departureTime,routeRequest,decodePolyline,decodeRoute,sampleRoute,routeSegments,estimateSnow,createRouteClient,roadKindAt,kmBetween} from "../drive-route-data.js";
+import {departureTime,returnDepartureTime,routeRequest,decodePolyline,decodeRoute,sampleRoute,routeSegments,estimateSnow,createRouteClient,roadKindAt,kmBetween} from "../drive-route-data.js";
 import {forecastPeriods,sourceForTime,createDriveWeather,forecastSnowfallLabel} from "../drive-weather-data.js";
+import {RISK_LEVELS} from "../forecast-risk-data.js";
 
 const departure=Date.parse("2026-11-10T07:00:00+09:00");
 test("empty departure is now; entered wall time is always JST and invalid dates fail",()=>{
@@ -24,6 +25,19 @@ test("rests affect departure from a stop, not arrival; multiple rests accumulate
   assert.equal(points.at(-1).elevation,300);
   assert.throws(()=>sampleRoute(route,departure,[{km:2,minutes:5}]));
   assert.throws(()=>sampleRoute(route,departure,[{km:1,minutes:-1}]));
+});
+test("return time uses the outbound arrival including its own rests, or a specified JST date",()=>{
+  const arrival=sampleRoute(route,departure,[{km:1,minutes:30}]).at(-1).time;
+  const leave=hours=>returnDepartureTime({method:"stay",hours},arrival);
+  assert.equal(leave("1.5"),Date.parse("2026-11-10T09:20:00+09:00"));
+  assert.equal(leave("2"),leave("1.5")+30*60000);
+  assert.equal(leave("0"),arrival);
+  assert.equal(returnDepartureTime({method:"departure",departure:"2026-11-11T17:00"},arrival),
+    Date.parse("2026-11-11T17:00:00+09:00"));
+  assert.throws(()=>leave(""),/滞在時間/);
+  assert.throws(()=>leave("-1"),/滞在時間/);
+  assert.throws(()=>returnDepartureTime({method:"departure",departure:"2026-11-10T07:30"},arrival),/到着予定時刻以降/);
+  assert.throws(()=>returnDepartureTime({method:"departure",departure:""},arrival),/入力/);
 });
 test("map risk segments retain original road bends and mark missing samples unknown",()=>{
   const samples=[{coordinate:route.coordinates[0],km:0,rank:3,source:"forecast"},{coordinate:route.coordinates[2],km:2,rank:7,source:"forecast"}];
@@ -50,6 +64,92 @@ test("forecast boundaries are determined per arrival time; missing slots within 
   assert.equal(sourceForTime(Date.parse("2026-11-10T05:59:59+09:00"),periods).source,"normal");
   assert.throws(()=>forecastPeriods(manifest,departure+24*3600000));
 });
+
+const forecastTimes = {
+  morningStart: "20261109210000",
+  morningEnd: "20261110000000",
+  noon: "20261110030000",
+  eveningStart: "20261110060000",
+  eveningEnd: "20261110090000",
+};
+function forecastWeatherFixture({wrongMorningIssue = false, missingEveningFile = false} = {}) {
+  const temperatureValues = [-1, 4, 8, 6, 1];
+  const times = Object.values(forecastTimes);
+  const layers = {};
+  for (const kind of ["temp3h", "weather3h", "precip3h", "snow3h"]) {
+    layers[kind] = {slots: (kind === "temp3h" ? times : times.slice(1)).map(validtime => ({
+      id: `${kind}_${validtime}`, validtime, status: "available", target_date: "2026-11-10",
+      basetime: wrongMorningIssue && kind === "temp3h" && validtime === forecastTimes.morningStart
+        ? "20261109170000" : "20261109200000",
+    }))};
+  }
+  const manifest = {generated_at: "2026-11-10T05:00:00+09:00", layers};
+  const area = [[[137,35],[139,35],[139,37],[137,37],[137,35]]];
+  const temperatureRequests = [];
+  async function fetchImpl(url) {
+    const file = new URL(url).pathname.split("/").at(-1);
+    if (file === "forecast_manifest.json") return Response.json(manifest);
+    const match = /^forecast_(\w+?)_(\d{14})_value\.(geojson|csv)$/.exec(file);
+    assert.ok(match, file);
+    const [,kind,validtime] = match;
+    if (kind === "temp3h") {
+      temperatureRequests.push(validtime);
+      if (missingEveningFile && validtime === forecastTimes.eveningEnd) return new Response("", {status: 404});
+      const value = temperatureValues[times.indexOf(validtime)];
+      const rows = ["longitude,latitude,forecast_c,source_date,target_date"];
+      for (let row=600; row<763; row++) {
+        for (let col=2080; col<2272; col++) rows.push(`${(col+.5)/16},${(row+.5)/20},${value},2026-11-10,2026-11-10`);
+      }
+      return new Response(rows.join("\n"));
+    }
+    const level = kind === "weather3h" ? "Rain" : kind === "precip3h" ? "1<=mm<5" : null;
+    return Response.json({
+      type: "FeatureCollection",
+      features: Object.keys(RISK_LEVELS[kind]).map(code => ({
+        type: "Feature", properties: {level: code},
+        geometry: {type: "Polygon", coordinates: code === level ? area : []},
+      })),
+    });
+  }
+  return {fetchImpl, temperatureRequests};
+}
+
+const forecastTime = clock => Date.parse(`2026-11-10T${clock}+09:00`);
+const samplesAt = (...clocks) => clocks.map(clock => ({coordinate: [138,36], time: forecastTime(clock), km: 0}));
+
+test("drive uses the colder endpoint for the forecast temperature and route risk, including the exact frame end", async () => {
+  const {fetchImpl, temperatureRequests} = forecastWeatherFixture();
+  const analyze = createDriveWeather({fetchImpl, now: () => departure});
+  const {samples} = await analyze(samplesAt("06:30", "09:00", "09:01", "17:30"));
+  assert.deepEqual(samples.map(s => [s.temperature, s.temperatureTime, s.rank]), [
+    ["-1.0℃", forecastTime("06:00"), 4],
+    ["-1.0℃", forecastTime("06:00"), 4],
+    ["4.0℃", forecastTime("09:00"), 2],
+    ["1.0℃", forecastTime("18:00"), 3],
+  ]);
+  assert.deepEqual(samples.map(s => s.forecastEnd), ["09:00", "09:00", "12:00", "18:00"].map(forecastTime));
+  assert.ok(samples.every(s => s.weather === "雨" && s.snowfall === "降雪量なし"));
+  assert.equal(temperatureRequests.filter(validtime => validtime === forecastTimes.morningEnd).length, 1);
+  const stops = (a, b) => [{...a, km: 0}, {...b, km: 2}];
+  assert.equal(routeSegments(route, stops(samples[0], samples[1])).features[0].properties.color, "#ff8c24");
+  assert.equal(routeSegments(route, stops(samples[3], samples[3])).features[0].properties.color, "#ffe032");
+});
+
+test("a missing or different-issue endpoint never substitutes one temperature or discards the frame's weather", async () => {
+  const {fetchImpl, temperatureRequests} = forecastWeatherFixture({wrongMorningIssue: true, missingEveningFile: true});
+  const analyze = createDriveWeather({fetchImpl, now: () => departure});
+  const {samples, notices} = await analyze(samplesAt("06:30", "17:30"));
+  for (const sample of samples) {
+    assert.equal(sample.source, "forecast");
+    assert.equal(sample.temperature, "資料なし");
+    assert.equal(sample.temperatureTime, null);
+    assert.equal(sample.rank, 0);
+    assert.equal(sample.weather, "雨");
+    assert.equal(sample.snowfall, "降雪量なし");
+  }
+  assert.ok(!temperatureRequests.includes(forecastTimes.morningStart));
+  assert.equal(notices.length, 1);
+});
 test("drive readout keeps official snowfall ranges and distinguishes no snowfall from missing data",()=>{
   assert.deepEqual([0,1,3,6,-1,null].map(forecastSnowfallLabel),
     ["降雪量なし","1〜2cm","3〜5cm","6cm以上","資料なし","資料なし"]);
@@ -68,6 +168,16 @@ test("route service reports failure without automatic retries, observes rate lim
   const calls=[];const client=createRouteClient(async(url,options)=>{calls.push(options);return new Response("",{status:429});},()=>2000);
   await assert.rejects(client({}),/混み合/);await assert.rejects(client({}),/間をあけ/);assert.equal(calls.length,1);
   assert.equal(calls[0].headers["X-Client-Id"],"bousai-wx-lab.github.io/winter-road-navi");assert.equal(calls[0].credentials,"omit");
+});
+test("cancelling during the inter-leg wait sends no return request",async()=>{
+  let requests=0;
+  const client=createRouteClient(async()=>{requests++;return new Response("",{status:429});},()=>2000);
+  await assert.rejects(client({}),/混み合/);
+  const abort=new AbortController();
+  const returning=client({},abort.signal,{waitForCooldown:true});
+  abort.abort();
+  await assert.rejects(returning,{name:"AbortError"});
+  assert.equal(requests,1);
 });
 test("invalid geometry, service failures and impossible duration cannot turn into a straight route",()=>{
   assert.throws(()=>decodePolyline("?"));assert.throws(()=>decodeRoute({trip:{status:1,legs:[]}}));

@@ -674,7 +674,13 @@ main {
 .drive-road-kind[data-road-kind="highway"] { background:#35546a; color:#fff; }
 .drive-grid { stroke:#dce5ea; stroke-width:1; }
 .drive-position-line { stroke:#176b83; stroke-width:1.5; stroke-dasharray:4 3; }
-.drive-trip-meta { display:flex; align-items:baseline; justify-content:space-between; gap:8px; font-size:11px; }
+.drive-trip-meta { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; font-size:11px; }
+.drive-leg-controls { display:inline-flex; align-self:center; }
+.drive-leg-controls button { padding:2px 7px; white-space:nowrap; }
+.drive-leg-controls button + button { margin-left:3px; }
+.drive-leg-controls button[aria-pressed="true"] { background:#155c72; color:#fff; border-color:#155c72; }
+.drive-leg-controls button:disabled { opacity:.55; cursor:default; }
+.drive-return-notice { color:#a43c20; }
 .drive-profile-help { flex:none; }
 .drive-profile-help summary { cursor:pointer; color:#526d7b; }
 .drive-profile-help > div { position:absolute; z-index:5; right:12px; max-width:min(450px,85vw); padding:8px; background:#fff; border:1px solid #bdcfd9; box-shadow:0 3px 12px #173c5230; }
@@ -691,7 +697,9 @@ main {
 .drive-weather-table button[aria-pressed="true"],.drive-weather-table button[aria-pressed="true"]:hover { background:#155c72; color:#fff; }
 .drive-weather-table tr[data-field="source"] { background:#f2f6f8; font-size:10px; font-weight:600; }
 .drive-weather-table tr[data-field="temperature"] { background:#f5f8fa; }
+.drive-temperature-time { display:block; font-size:9px; font-weight:400; white-space:nowrap; }
 .drive-field { display:grid; gap:4px; margin:10px 0; font-weight:600; }
+.drive-return-options { border-top:1px solid #ccdbe5; padding-top:8px; margin-top:10px; }
 .drive-controls input { min-width:0; max-width:100%; width:100%; border:1px solid #bdcfd9; border-radius:5px; padding:7px; font:inherit; color:#153d58; background:#fff; }
 .drive-endpoint { display:grid; grid-template-columns:115px minmax(0,1fr); gap:6px; margin:6px 0; }
 .drive-endpoint button[aria-pressed="true"],.drive-endpoint button[aria-pressed="true"]:hover,#driveAnalyze,#driveAnalyze:hover { background:#155c72; color:#fff; }

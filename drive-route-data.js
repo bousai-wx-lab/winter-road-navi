@@ -21,6 +21,25 @@ export function departureTime(value,now=Date.now()) {
   if (!Number.isFinite(stamp) || new Date(stamp+9*3600000).toISOString().slice(0,16)!==value) throw new Error("出発日時を確認してください");
   return stamp;
 }
+export function returnDepartureTime({method, hours, departure}, arrival) {
+  let time;
+  if (method === "stay") {
+    const duration = Number(hours);
+    if (!hours.trim() || !Number.isFinite(duration) || duration < 0) {
+      throw new Error("滞在時間を0時間以上で入力してください");
+    }
+    time = arrival + duration * 3600000;
+  } else {
+    if (!departure) throw new Error("復路の出発日時を入力してください");
+    time = departureTime(departure);
+  }
+  const date = new Date(time + 9 * 3600000);
+  if (!Number.isFinite(date.valueOf()) || date.getUTCFullYear() > 9999) {
+    throw new Error("復路の出発日時を確認してください");
+  }
+  if (time < arrival) throw new Error("復路は往路の到着予定時刻以降に出発してください");
+  return time;
+}
 export function routeRequest(start,end,priority,departure) {
   if (!validPoint(start) || !validPoint(end) || !Object.hasOwn(PRIORITIES,priority)) throw new Error("日本付近の始点・終点と検索条件を指定してください");
   const direct=kmBetween(start,end);
@@ -131,10 +150,30 @@ export function estimateSnow(stations,point) {
   return {value:nearest.reduce((v,s,i)=>v+s.value*weights[i],0)/sum,count:nearest.length,distance:nearest[0].distance};
 }
 
-export function createRouteClient(fetchImpl=fetch,now=Date.now) {
+function waitForRouteCooldown(ms, signal) {
+  return new Promise((resolve, reject) => {
+    signal?.throwIfAborted();
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", cancel);
+      resolve();
+    }, ms);
+    function cancel() {
+      clearTimeout(timer);
+      reject(signal.reason);
+    }
+    signal?.addEventListener("abort", cancel, {once:true});
+  });
+}
+
+export function createRouteClient(fetchImpl=fetch,now=()=>performance.now()) {
   let last=-Infinity;
-  return async (request,signal)=>{
-    if(now()-last<1500)throw new Error("経路検索は少し間をあけて再実行してください");last=now();
+  return async (request,signal,{waitForCooldown=false}={})=>{
+    for (let wait=last+1500-now(); wait>0; wait=last+1500-now()) {
+      if (!waitForCooldown) throw new Error("経路検索は少し間をあけて再実行してください");
+      await waitForRouteCooldown(wait,signal);
+    }
+    signal?.throwIfAborted();
+    last=now();
     const response=await fetchImpl(ROUTE_API,{method:"POST",headers:{"Content-Type":"application/json","X-Client-Id":"bousai-wx-lab.github.io/winter-road-navi"},body:JSON.stringify(request),credentials:"omit",referrerPolicy:"no-referrer",signal});
     if(!response.ok)throw new Error(response.status===429?"無料経路サービスが混み合っています。時間をおいて再実行してください":"経路を取得できません。道路に近い地点を選び直してください");
     const text=await response.text();if(text.length>5000000)throw new Error("経路データが大きすぎます");return decodeRoute(JSON.parse(text));

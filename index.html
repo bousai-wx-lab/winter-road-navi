@@ -9,8 +9,8 @@
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、白縁の丸で示す実況積雪深にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261118-drive-profile1">
-    <script type="module" src="./app.js?v=20261118-drive-readout1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261118-drive-roundtrip1">
+    <script type="module" src="./app.js?v=20261118-drive-roundtrip1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -54,9 +54,20 @@
           <p id="drivePickHint" class="section-hint">地図をクリックして始点 A を選択</p>
           <label class="drive-field" for="driveDeparture">出発日時（日本時間・空欄なら今すぐ）<input id="driveDeparture" type="datetime-local"></label>
           <label class="drive-field" for="drivePriority">経路の条件<select id="drivePriority"><option value="fastest">時間優先</option><option value="highway">高速優先</option><option value="local">一般道優先</option><option value="shortest">距離優先</option></select></label>
-          <div class="drive-rest-heading"><strong>休憩</strong><button id="driveAddBreak" type="button">＋ 休憩を追加</button></div>
+          <div class="drive-rest-heading"><strong id="driveOutboundBreakHeading">休憩</strong><button id="driveAddBreak" type="button">＋ 休憩を追加</button></div>
           <div id="driveBreaks"></div>
           <p class="section-hint">出発からの距離（km）と分数。休憩後の到着時刻に反映。</p>
+          <div class="drive-return-options">
+            <label class="check-label"><input id="driveReturnToggle" type="checkbox" aria-controls="driveReturnFields">復路も解析する</label>
+            <div id="driveReturnFields" hidden>
+              <label class="drive-field" for="driveReturnMethod">復路の出発時刻の決め方<select id="driveReturnMethod"><option value="stay">目的地での滞在時間</option><option value="departure">出発日時を指定</option></select></label>
+              <label class="drive-field" id="driveStayField" for="driveStayHours">目的地での滞在時間（時間）<input id="driveStayHours" type="number" min="0" step="any" value="2"></label>
+              <label class="drive-field" id="driveReturnDepartureField" for="driveReturnDeparture" hidden>復路の出発日時（日本時間）<input id="driveReturnDeparture" type="datetime-local"></label>
+              <div class="drive-rest-heading"><strong>復路の休憩</strong><button id="driveAddReturnBreak" type="button">＋ 復路の休憩を追加</button></div>
+              <div id="driveReturnBreaks"></div>
+              <p class="section-hint">目的地Bを出てからの距離（km）と分数。</p>
+            </div>
+          </div>
           <div class="drive-actions"><button id="driveAnalyze" type="button">解析スタート</button><button id="driveReset" type="button">リセット</button></div>
           <p id="driveStatus" role="status" aria-live="polite">始点 A と終点 B を地図で選んでください</p>
           <div class="drive-background-control">
@@ -65,11 +76,12 @@
             <p class="section-hint">下の距離バーで選ぶ通過時刻に連動。予測期間外は、その月日の平年値に切り替わります。</p>
             <p id="driveBackgroundStatus" class="section-hint" role="status" aria-live="polite">解析後に重ねて表示できます。</p>
           </div>
-          <p class="drive-service-note">解析時に選択座標・出発日時を無料の経路サービスへ送信します。この画面では保存しません。最大1000km・走行48時間。渋滞・通行止めは反映しません。</p>
+          <p class="drive-service-note">解析時に選択座標・出発日時を無料の経路サービスへ送信します。この画面では保存しません。片道につき最大1000km・走行48時間・休憩12か所。渋滞・通行止めは反映しません。</p>
           <details class="drive-details"><summary>色の条件・計算方法</summary>
             <div class="drive-legend-head"><span>色</span><strong>平年値</strong><strong>予測</strong></div><div id="driveLegend"></div>
             <p>青緑は指定条件に該当なし、灰色は資料不足。重なる条件は雪を優先してより悪い色を使います。路面の安全・通行可否ではありません。</p>
-            <p>約500mごとに照合し、間の線は両端の悪い方の色。狭い区間の変化は捉えきれない場合があります。各区間の通過時刻に予測期間を照合。期間外だけ平年値へ切替。予測区間の通信失敗を平年値で埋めません。気温・天気は該当する3時間枠を使います。</p>
+            <p>約500mごとに照合し、間の線は両端の悪い方の色。狭い区間の変化は捉えきれない場合があります。各区間の通過時刻に予測期間を照合。期間外だけ平年値へ切替。予測区間の通信失敗を平年値で埋めません。</p>
+            <p>予想気温は、通過時刻を含む3時間枠の開始・終了時刻のうち低い方です。表の気温欄に採用した時刻を表示します。両端がそろわない場合、気温は資料なしです。天気と降雪量はその枠の予報を使います。</p>
             <p>平年区間は日最低・日最高の1℃帯を表示し、日最低で判定。平年積雪は9/15〜6/15のみ。それ以外は積雪資料不足として灰色になります。平年値には天気を表示しません。</p>
             <p>予測区間は、通過予定時刻を含む気象庁の3時間降雪量（約5km格子）の階級を表示します。平年値区間は、その月日の日最深積雪の平年推定値を表示します。</p>
             <p>高速・一般道は優先条件で、必ずその種別だけになるとは限りません。距離優先も厳密な最短を保証しません。休憩地点は立ち寄れる施設を検索したものではありません。</p>
@@ -229,7 +241,13 @@
         </section>
         <section id="driveProfile" class="drive-profile" aria-label="走行ルートの標高断面図と気象" hidden>
           <div class="drive-profile-heading">
-            <div class="drive-trip-meta"><strong id="driveSummary"></strong><span id="driveTripTiming"></span></div>
+            <div class="drive-trip-meta">
+              <div id="driveLegControls" class="drive-leg-controls" role="group" aria-label="表示する経路" hidden>
+                <button id="driveOutboundLeg" type="button" aria-pressed="true">往路 A→B</button>
+                <button id="driveReturnLeg" type="button" aria-pressed="false">復路 B→A</button>
+              </div>
+              <strong id="driveSummary"></strong><span id="driveTripTiming"></span>
+            </div>
             <div class="drive-profile-tools">
               <details id="driveProfileHelp" class="drive-profile-help">
                 <summary id="driveProfileHelpLabel">表示の説明</summary>
@@ -246,6 +264,7 @@
               </div>
             </div>
           </div>
+          <p id="driveReturnNotice" class="drive-return-notice" role="status" hidden></p>
           <div id="driveProfileBody">
             <div class="drive-strip"><div class="drive-strip-content"><div id="driveChart" class="drive-chart"></div><div id="driveCards"></div></div></div>
             <input id="drivePosition" type="range" min="0" max="1" value="0" step="1" aria-label="断面図の距離の位置">

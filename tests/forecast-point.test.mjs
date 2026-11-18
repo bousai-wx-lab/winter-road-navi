@@ -87,12 +87,12 @@ test("municipality labels correspond to the displayed forecast cell centre", () 
   assert.equal(forecastMunicipality(null, point), "");
 });
 
-test("forecast amount labels use a dash for clear or cloudy and 0–1 for the lowest wet category", () => {
+test("clear and cloudy weather use a dash independently of the amount", () => {
   assert.equal(weatherTableAmount("晴れ", "1未満"), "—");
   assert.equal(weatherTableAmount("くもり", "1未満"), "—");
   assert.equal(weatherTableAmount("晴れ", "1〜4"), "—");
   assert.equal(weatherTableAmount("くもり", "資料なし"), "—");
-  assert.equal(weatherTableAmount("雪", "1未満"), "0〜1");
+  assert.equal(weatherTableAmount("雪", "1未満"), "1未満");
   assert.equal(weatherTableAmount("雨", "1〜4"), "1〜4");
   assert.equal(weatherTableAmount("資料なし", "資料なし"), "資料なし");
 });

@@ -4,7 +4,7 @@ import { createDriveWeather } from "./drive-weather-data.js?v=20261118-drive-sno
 import { timeLabel } from "./live-temperature-data.js";
 import { NORMAL_ROAD_RULES } from "./road-risk-data.js";
 import { RISK_RULES } from "./forecast-risk-data.js";
-import { colorWeatherCell, weatherTableAmount } from "./weather-table-style.js?v=20261118-amount-label1";
+import { colorWeatherCell, weatherTableAmount } from "./weather-table-style.js?v=20261118-drive-profile1";
 
 const $=id=>document.getElementById(id), SVG="http://www.w3.org/2000/svg";
 function svg(tag,attributes,text){const el=document.createElementNS(SVG,tag);for(const [key,value] of Object.entries(attributes))el.setAttribute(key,String(value));if(text!==undefined)el.textContent=text;return el;}
@@ -30,8 +30,7 @@ function colorDriveTemperature(cell, content) {
 }
 
 function driveSnowfallLabel({weather, snowfall}) {
-  const display = weatherTableAmount(weather, snowfall === "降雪量なし" ? "1未満" : snowfall);
-  return display === "0〜1" ? "0〜1cm" : display;
+  return weatherTableAmount(weather, snowfall === "降雪量なし" ? "1cm未満" : snowfall);
 }
 
 function styleDriveWeather(cell, field, sample) {
@@ -41,7 +40,7 @@ function styleDriveWeather(cell, field, sample) {
     colorDriveTemperature(cell, cell.textContent);
   } else if (field === "snowfall" && sample.source === "forecast") {
     const display = cell.textContent.replace("cm", "");
-    if (sample.snowfall === "降雪量なし") cell.title = "0cm以上1cm未満";
+    if (sample.snowfall === "降雪量なし") cell.title = "1cm未満";
     colorWeatherCell(cell, "snow3h", display === "資料なし" ? null : display);
   }
 }

@@ -1,7 +1,7 @@
 import { LIVE_POLL_MS, timeLabel } from "./live-temperature-data.js";
 import { forecastTickLabel } from "./forecast-timeline.js?v=20261118-point-time1";
 import { POINT_FORECAST_FIELDS, forecastMunicipality, pointForecastCell, readPointForecast } from "./forecast-point-data.js?v=20261118-point-time1";
-import { colorWeatherCell, weatherTableAmount } from "./weather-table-style.js?v=20261118-amount-label1";
+import { colorWeatherCell, weatherTableAmount } from "./weather-table-style.js?v=20261118-drive-profile1";
 
 export function initForecastPoint(map, Marker, onChooseTime) {
   const panel = document.getElementById("forecastPoint");
@@ -138,12 +138,11 @@ export function initForecastPoint(map, Marker, onChooseTime) {
             const [kind] = POINT_FORECAST_FIELDS[index - 1];
             const amountUnit = kind === "precip3h" ? "mm" : kind === "snow3h" ? "cm" : null;
             entry.textContent = amountUnit ? weatherTableAmount(period.values[0], value) : value;
-            if (amountUnit && value === "1未満") {
-              entry.title = `0${amountUnit}以上1${amountUnit}未満`;
-            } else if (entry.textContent === "—") {
-              entry.title = value === "資料なし" ? value : `元の予報：${value}（${amountUnit}）`;
+            if (entry.textContent === "—") {
+              entry.title = value === "1未満" ? `1${amountUnit}未満`
+                : value === "資料なし" ? value : `元の予報：${value}（${amountUnit}）`;
             }
-            colorWeatherCell(entry, kind, entry.textContent === "資料なし" ? null : entry.textContent);
+            colorWeatherCell(entry, kind, entry.textContent === "—" ? "—" : period.values[index - 1]);
           }
           columns.get(period.end).cells.push(entry);
         }

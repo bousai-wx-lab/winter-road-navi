@@ -44,3 +44,32 @@ test("three-hour amounts select their own official elements and preserve interva
     assert.throws(()=>weatherSlots([rows[0],rows[0]],"forecast",view));
   }
 });
+
+test("snow depth uses only the latest issue's one-hour instants within its six-hour range",()=>{
+  const basetime="20261118220000";
+  const forecast=["20261118230000","20261119000000","20261119010000","20261119020000","20261119030000","20261119040000"]
+    .map(validtime=>({basetime,validtime,elements:["snowd"]}));
+  const observations=[{basetime,validtime:basetime,elements:["snowd"]},
+    {basetime:"20261118210000",validtime:"20261118210000",elements:["snowd"]}];
+  const oldForecast={basetime:"20261118210000",validtime:"20261118230000",elements:["snowd"]};
+  const slots=weatherSlots([...forecast,...observations,oldForecast],"forecast","snowdepth");
+  assert.equal(slots.length,6);
+  assert.equal(slots[0].base,"2026-11-18T22:00:00Z");
+  assert.equal(slots[0].start,slots[0].end);
+  assert.equal(slots[5].end,"2026-11-19T04:00:00Z");
+  assert.equal(slots[0].label,"2026/11/19 08:00の予想積雪深");
+  assert.equal(weatherProduct("forecast","snowdepth").unit,"cm");
+  for(const zoom of [4,6,8,10]) {
+    const tile=weatherTile("forecast",slots[0],zoom,"snowdepth");
+    assert.equal(tile.tileSize,256);assert.equal(tile.nativeZoom,zoom);
+    assert.equal(tile.url,`https://www.jma.go.jp/bosai/jmatile/data/snow/${basetime}/none/20261118230000/surf/snowd/${zoom}/{x}/{y}.png`);
+  }
+  for(const validtime of ["20261119050000","20261118233000"]) {
+    assert.throws(()=>weatherSlots([{basetime,validtime,elements:["snowd"]}],"forecast","snowdepth"));
+  }
+  assert.throws(()=>weatherSlots(observations,"forecast","snowdepth"));
+  assert.throws(()=>weatherSlots([forecast[0],forecast[0]],"forecast","snowdepth"));
+  assert.throws(()=>weatherSlots(forecast,"observed","snowdepth"));
+  assert.throws(()=>weatherSlots([...forecast,{basetime:"20261118230000",validtime:"20261118230000",elements:["snowd"]}],"forecast","snowdepth"));
+  assert.match(weatherNotice("forecast",slots[5],Date.parse("2026-11-19T00:01:00Z"),"snowdepth"),/更新が遅れ/);
+});

@@ -6,22 +6,32 @@ export const WEATHER_PRODUCTS=Object.freeze({
   forecast:{family:"wdist",element:"wm",name:"天気",label:"天気分布予報（天気）",resolution:"約5km",tileSize:256},
   precipitation:{family:"wdist",element:"r3",name:"3時間降水量",label:"天気分布予報（3時間降水量）",resolution:"約5km",tileSize:256,unit:"mm/3h"},
   snowfall:{family:"wdist",element:"s3",name:"3時間降雪量",label:"天気分布予報（3時間降雪量）",resolution:"約5km",tileSize:256,unit:"cm/3h"},
+  snowdepth:{family:"snow",element:"snowd",name:"積雪深",label:"降雪短時間予報（積雪深）",resolution:"約5km",tileSize:256,unit:"cm"},
 });
 export const WEATHER_COLORS=["#ffaa00","#aaaaaa","#0041ff","#a0d2ff","#f2f2ff"];
 export function weatherProduct(mode,view="weather") {
-  if(!["observed","forecast"].includes(mode) || !["weather","precipitation","snowfall"].includes(view) || mode==="observed" && view!=="weather") throw new Error("気象分布の種類が不正です");
+  if(!["observed","forecast"].includes(mode) || !["weather","precipitation","snowfall","snowdepth"].includes(view) || mode==="observed" && view!=="weather") throw new Error("気象分布の種類が不正です");
   return WEATHER_PRODUCTS[view==="weather"?mode:view];
 }
 export function weatherSlots(records,mode,view="weather") {
   const product=weatherProduct(mode,view);
   if(!product || !Array.isArray(records) || !records.length || records.length>96) throw new Error("天気の時刻情報が不正です");
-  const slots=records.filter(row=>Array.isArray(row.elements) && row.elements.includes(product.element)).map(row=>{
+  const pointForecast=view==="snowdepth";
+  let rows=records.filter(row=>Array.isArray(row.elements) && row.elements.includes(product.element));
+  if(pointForecast) {
+    for(const row of rows) { utcTime(row.basetime);utcTime(row.validtime); }
+    const latestBase=rows.map(row=>row.basetime).sort().at(-1);
+    rows=rows.filter(row=>row.basetime===latestBase && row.validtime>row.basetime);
+  }
+  const slots=rows.map(row=>{
     const base=utcTime(row.basetime),end=utcTime(row.validtime);
     if(row.member && row.member!=="none" || mode==="observed" && base!==end) throw new Error("天気の対象が不正です");
-    const start=mode==="forecast"?new Date(Date.parse(end)-3*3600000).toISOString():end;
+    const lead=Date.parse(end)-Date.parse(base);
+    if(pointForecast && (lead>6*3600000 || lead%3600000!==0)) throw new Error("積雪深の予報時刻が不正です");
+    const start=mode==="forecast" && !pointForecast?new Date(Date.parse(end)-3*3600000).toISOString():end;
     if(mode==="forecast" && Date.parse(end)<=Date.parse(base)) throw new Error("天気の予報期間が不正です");
     return {basetime:row.basetime,validtime:row.validtime,base,start,end,id:row.validtime,
-      label:mode==="observed"?timeLabel(end):`${timeLabel(start)}〜${timeLabel(end)}の予想`};
+      label:pointForecast?`${timeLabel(end)}の予想積雪深`:mode==="observed"?timeLabel(end):`${timeLabel(start)}〜${timeLabel(end)}の予想`};
   }).sort((a,b)=>a.id.localeCompare(b.id));
   if(!slots.length || new Set(slots.map(s=>s.id)).size!==slots.length) throw new Error("天気の対象が重複・欠落しています");
   return slots;
@@ -36,8 +46,9 @@ export function weatherTile(mode,slot,jmaZoom,view="weather") {
   return {url:`${WEATHER_ROOT}${product.family}/${slot.basetime}/none/${slot.validtime}/surf/${product.element}/${jmaZoom}/{x}/{y}.png`,
     nativeZoom:jmaZoom-(mode==="observed"?1:0),tileSize:product.tileSize};
 }
-export function weatherNotice(mode,slot,now=Date.now()) {
+export function weatherNotice(mode,slot,now=Date.now(),view="weather") {
   if(mode==="observed") return now-Date.parse(slot.end)>2*3600000?"実況天気の更新が遅れています。表示時刻を確認してください。":"";
   if(Date.parse(slot.end)<=now) return "この予想期間は過ぎています。実況値も確認してください。";
+  if(view==="snowdepth") return now-Date.parse(slot.base)>2*3600000?"積雪深予報の更新が遅れています。予報の基準時刻と対象時刻を確認してください。":"";
   return now-Date.parse(slot.base)>14*3600000?"予報発表から時間が経っています。発表時刻を確認してください。":"";
 }

@@ -10,7 +10,7 @@
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
     <link rel="stylesheet" href="./styles.css?v=20261118-drive-roundtrip1">
-    <script type="module" src="./app.js?v=20261118-observed-snow2" referrerpolicy="no-referrer"></script>
+    <script type="module" src="./app.js?v=20261119-snowdepth1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -139,6 +139,7 @@
           <div id="weatherLegend" class="weather-legend" aria-label="天気の凡例"><span><i class="weather-sun"></i>晴れ</span><span><i class="weather-cloud"></i>くもり</span><span><i class="weather-rain"></i>雨</span><span><i class="weather-mix"></i>雨または雪</span><span><i class="weather-snow"></i>雪</span></div>
           <div id="precipitationLegend" class="weather-legend" aria-label="3時間降水量の凡例（mm/3h）" hidden><span><i class="amount-1"></i>1〜4mm</span><span><i class="amount-5"></i>5〜9mm</span><span><i class="amount-10"></i>10〜14mm</span><span><i class="amount-15"></i>15〜19mm</span><span><i class="amount-20"></i>20mm以上</span></div>
           <div id="snowfallLegend" class="weather-legend" aria-label="3時間降雪量の凡例（cm/3h）" hidden><span><i class="amount-1"></i>1〜2cm</span><span><i class="amount-5"></i>3〜5cm</span><span><i class="amount-10"></i>6cm以上</span></div>
+          <p id="snowDepthLegend" class="section-hint" hidden>気象庁の積雪深予報（約5km・1時間ごと）。<a href="https://www.jma.go.jp/bosai/snow/" target="_blank" rel="noopener noreferrer">気象庁の凡例・元の地図</a></p>
 
             <div class="weather-opacity-row"><div class="opacity-control"><label for="weatherOpacity"><span id="weatherOpacityLabelText">天気の濃さ </span><output id="weatherOpacityValue">75%</output></label><input id="weatherOpacity" type="range" min="0" max="100" value="75"></div><button id="weatherRefresh" type="button" hidden>再試行</button></div>
           </section>

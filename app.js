@@ -5,7 +5,7 @@ import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=2
 import { createRoadTemperature } from "./road-temperature.js?v=20261023-zoomcolor1";
 import { initSnow } from "./snow-control.js?v=20261118-observed-snow2";
 import { initLiveTemperature } from "./live-temperature-control.js?v=20261118-point-time1";
-import { initWeather } from "./weather-control.js?v=20261118-observed-snow2";
+import { initWeather } from "./weather-control.js?v=20261119-snowdepth1";
 import { initLiveSnow } from "./live-snow-control.js?v=20261118-observed-snow2";
 import { initSnowAnalysis } from "./snow-analysis-control.js?v=20261118-observed-snow2";
 import { initObservedRoadRisk, OBSERVED_ROAD_RULES } from "./observed-road-risk.js?v=20261118-observed-snow2";
@@ -107,7 +107,7 @@ function syncDriveBackground() {
 }
 const selectedViews = {observed:"temperature",forecast:"risk"};
 const forecastRiskViewLabel = "天気・実況積雪・道路リスク";
-const isDistributionView = view => ["weather","precipitation","snowfall"].includes(view);
+const isDistributionView = view => ["weather","precipitation","snowfall","snowdepth"].includes(view);
 let snow = null, normalRisk = null, normalRoadData = null;
 let observedRisk = null, snowAnalysis = null;
 const snowFormat = document.querySelector("#observedSnowFormat");
@@ -141,6 +141,7 @@ function refreshTiming() {
   document.querySelector("#issueTimeRow").hidden = !issued;
   document.querySelector("#observationTimeRow").hidden = !observed;
   document.querySelector("#issueTime").textContent = issued ? timeLabel(issued) : "";
+  document.querySelector("#issueTimeRow span").textContent = displayView === "snowdepth" ? "予報の基準時刻" : "気象庁発表";
   document.querySelector("#observationTimeLabel").textContent = isRisk ? "積雪の観測時刻" : displayView === "observedRisk" ? "推計天気の時刻" : "実況の対象";
   document.querySelector("#observationTime").textContent = observed ? /^\d{4}-\d{2}-\d{2}$/.test(observed) ? observed.replaceAll("-", "/") : timeLabel(observed) : "";
 }
@@ -333,7 +334,7 @@ function applyDisplay() {
   const observedRiskView=mode==="observed" && displayView==="observedRisk";
   const analysisSurface=showingAnalysisSnow();
   const temperature = !live || displayView === "temperature", distribution = live && (isDistributionView(displayView) || riskView || observedRiskView);
-  const viewName = {risk:forecastRiskViewLabel,observedRisk:forecastRiskViewLabel,weather:"天気",snow:"積雪深",precipitation:"降水量",snowfall:"降雪量",temperature:"気温"}[displayView];
+  const viewName = {risk:forecastRiskViewLabel,observedRisk:forecastRiskViewLabel,weather:"天気",snow:"積雪深",precipitation:"降水量",snowfall:"降雪量",snowdepth:"積雪深",temperature:"気温"}[displayView];
   normalRisk?.clear(); normalRoadData = null;
   delete mapElement.dataset.normalRiskDay; delete mapElement.dataset.normalRiskCounts;
   document.querySelector("#normalRoadRetry").hidden = true;
@@ -376,6 +377,7 @@ function applyDisplay() {
   document.querySelector("#map").dataset.displayView = live ? displayView : "temperature";
   document.querySelector("#dataMeaning").textContent = !live ? "気温・積雪とも平年の推定分布です。予報・実況・路面状態ではありません。" : displayView === "snow" ? "白縁の丸は積雪深の観測点です。点のない場所の積雪深は推定しません。道路上の積雪ではありません。" : displayView === "precipitation" ? "予測降水量は約5kmメッシュ内の平均3時間降水量（mm）です。" : displayView === "snowfall" ? "予測降雪量は約5kmメッシュ内の平均3時間降雪量（cm）です。積雪深ではありません。" : displayView === "weather" ? mode === "observed" ? "実況天気は気象庁の推計気象分布です。各地点の実測値ではありません。" : "予測天気は気象庁の3時間の代表的な天気です。" : `${label}の格子気温です。路面温度・凍結・通行可否を示しません。`;
   if(riskView)document.querySelector("#dataMeaning").textContent="色付きの線は道路の独自リスク区分、背景は予測天気です。白縁の丸は最新の実況積雪深です。";
+  if(displayView === "snowdepth") document.querySelector("#dataMeaning").textContent="気象庁の約5km格子の予想積雪深です。予報の基準時刻から6時間先まで、1時間ごとの公式画像を表示します。";
   if (observedRiskView) {
     document.querySelector("#dataMeaning").textContent="背景は最新の推計天気、線は実況気温と前12時間降水・前3時間降雪による道路の参考色です。";
     document.querySelector(".road-temperature-note").textContent="実況による道路の参考色です。路面状態は道路管理者の情報で確認してください。";
@@ -408,14 +410,14 @@ function switchDisplayMode(mode) {
   if(mode!=="drive")restoreTemperatureAppearance(mode);
   if(["observed","forecast"].includes(mode)) {
     displayView=selectedViews[mode];
-    const options=mode === "observed" ? [["temperature","気温"],["weather","天気"],["snow","積雪深"],["observedRisk",forecastRiskViewLabel]] : [["risk",forecastRiskViewLabel],["temperature","気温"],["weather","天気"],["precipitation","3時間降水量"],["snowfall","3時間降雪量"]];
+    const options=mode === "observed" ? [["temperature","気温"],["weather","天気"],["snow","積雪深"],["observedRisk",forecastRiskViewLabel]] : [["risk",forecastRiskViewLabel],["temperature","気温"],["weather","天気"],["precipitation","3時間降水量"],["snowfall","3時間降雪量"],["snowdepth","積雪深（6時間先まで）"]];
     document.querySelector("#liveView").replaceChildren(...options.map(([value,label])=>new Option(label,value)));
     document.querySelector("#liveView").value=displayView;
   }
   applyDisplay();
 }
 document.querySelector("#liveView").addEventListener("change",event=>{
-  if(displayMode === "normal" || !["temperature","weather",...(displayMode === "observed" ? ["snow","observedRisk"] : ["risk","precipitation","snowfall"])].includes(event.target.value))return;
+  if(displayMode === "normal" || !["temperature","weather",...(displayMode === "observed" ? ["snow","observedRisk"] : ["risk","precipitation","snowfall","snowdepth"])].includes(event.target.value))return;
   displayView=event.target.value;selectedViews[displayMode]=displayView;applyDisplay();
 });
 snowFormat.addEventListener("change",()=>{if (observedSnowView()) applyDisplay();});

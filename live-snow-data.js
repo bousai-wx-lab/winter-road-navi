@@ -21,6 +21,12 @@ export function snowMapKey(hour) {
   if(snowHour(hour)!==hour)throw new Error("積雪は正時の観測を使用します");
   return hour.slice(0,19).replace(/[-:T]/g,"");
 }
+export function stationCoordinate(station) {
+  const degrees = pair => Array.isArray(pair) && pair.length === 2 && pair.every(Number.isFinite)
+    && pair[1] >= 0 && pair[1] < 60 ? pair[0] + pair[1] / 60 : NaN;
+  const lng = degrees(station?.lon), lat = degrees(station?.lat);
+  return lng >= 122 && lng <= 154 && lat >= 20 && lat <= 48 ? [lng,lat] : null;
+}
 export function decodeSnowStations(table,data,hour) {
   snowMapKey(hour);
   if(!table || !data || Array.isArray(table) || Array.isArray(data) || Object.keys(table).length>2500 || Object.keys(data).length>2500)throw new Error("積雪観測の形式が不正です");
@@ -28,9 +34,9 @@ export function decodeSnowStations(table,data,hour) {
   for(const [id,station] of Object.entries(table)) {
     if(!/^[0-9]{5}$/.test(id) || !/^[0-2]{8}$/.test(station.elems ?? ""))throw new Error("観測所の定義が不正です");
     if(station.elems[5]!=="1")continue;
-    const coord=(pair)=>Array.isArray(pair) && pair.length===2 && pair.every(Number.isFinite) && pair[1]>=0 && pair[1]<60?pair[0]+pair[1]/60:NaN;
-    const lat=coord(station.lat),lng=coord(station.lon);
-    if(lat<20 || lat>48 || lng<122 || lng>154 || !Number.isFinite(lat+lng) || typeof station.kjName!=="string" || station.kjName.length>60)throw new Error("積雪観測点の位置が不正です");
+    const coordinate=stationCoordinate(station);
+    if(!coordinate || typeof station.kjName!=="string" || station.kjName.length>60)throw new Error("積雪観測点の位置が不正です");
+    const [lng,lat]=coordinate;
     const raw=data[id]?.snow;
     if(raw!==undefined && (!Array.isArray(raw) || raw.length!==2 || !Number.isInteger(raw[1]) || raw[1]<0 || raw[1]>7 || raw[0]!==null && (!Number.isFinite(raw[0]) || raw[0]<0 || raw[0]>1500)))throw new Error("積雪深・品質が不正です");
     const quality=raw?.[1] ?? 7;

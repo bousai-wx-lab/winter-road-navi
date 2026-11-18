@@ -1,6 +1,6 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import { createRouteClient, departureTime, routeRequest, sampleRoute, routeSegments, validPoint, ROUTE_COLORS, PRIORITIES, ROAD_KIND_LABELS } from "./drive-route-data.js?v=20261111-road-kind1";
-import { createDriveWeather } from "./drive-weather-data.js";
+import { createDriveWeather } from "./drive-weather-data.js?v=20261118-drive-snowfall1";
 import { timeLabel } from "./live-temperature-data.js";
 import { NORMAL_ROAD_RULES } from "./road-risk-data.js";
 import { RISK_RULES } from "./forecast-risk-data.js";
@@ -11,7 +11,7 @@ function node(tag,text,className){const el=document.createElement(tag);if(text!=
 const sourceLabel=source=>source==="forecast"?"予測値":source==="normal"?"平年値":"資料不足";
 function profileAxis(samples){const columns=Math.min(9,new Set(samples.map(s=>s.km)).size);return {columns,left:66+934/columns/2,width:934*(columns-1)/columns};}
 const compactTemperature=text=>text.replace(/(-?\d+(?:\.\d+)?)℃以上\s*(-?\d+(?:\.\d+)?)℃未満/g,"$1〜<$2").replaceAll("℃","").replace("最低 ","低 ").replace("／最高 ","\n高 ");
-const compactSnow=text=>text.replace("推定 約","約").replaceAll("cm","").replace("現象あり・", "あり ").replace("現象なし","なし");
+const compactSnow=text=>text.replaceAll("cm","").replace("現象あり・", "あり ").replace("現象なし","なし");
 const weatherIcon={"晴れ":"☀","くもり":"☁","雨":"☂","雨または雪":"☂❄","雪":"❄"};
 
 export function initDrive(map,hooks={}) {
@@ -65,7 +65,12 @@ export function initDrive(map,hooks={}) {
   function readout(index,move=false){
     if(!result)return;index=Math.max(0,Math.min(result.samples.length-1,Math.round(index)));$("drivePosition").value=String(index);
     const s=result.samples[index];$("drivePositionLabel").textContent=`${s.km.toFixed(1)}km · ${timeLabel(s.time).slice(5)}${s.restMinutes?`（休憩${s.restMinutes}分後）`:""}`;
-    const heading=node("strong",`${sourceLabel(s.source)} · ${s.riskLabel}`),body=node("span",`${s.elevation===null?"標高不明":`${Math.round(s.elevation)}m`}　${s.weather?`${s.weather}　`:""}気温 ${compactTemperature(s.temperature).replace("\n"," / ")}${s.temperature.includes("℃")?"℃":""}　積雪 ${compactSnow(s.snow)}${/\d/.test(s.snow)?"cm":""}`),note=node("details",undefined,"drive-point-note");note.append(node("summary","詳細"),node("small",`気温 ${s.temperature}。積雪深 ${s.snow}。${s.note}`));
+    const heading=node("strong",`${sourceLabel(s.source)} · ${s.riskLabel}`);
+    const snowReadout=s.source==="forecast" ? `3時間降雪量：${s.snowfall}` :
+      s.source==="normal" ? `積雪深：${s.snow}` : "雪の資料なし";
+    const body=node("span",`${s.elevation===null?"標高不明":`${Math.round(s.elevation)}m`}　${s.weather?`${s.weather}　`:""}気温 ${compactTemperature(s.temperature).replace("\n"," / ")}${s.temperature.includes("℃")?"℃":""}　${snowReadout}`);
+    const note=node("details",undefined,"drive-point-note");
+    note.append(node("summary","詳細"),node("small",`気温 ${s.temperature}。 ${snowReadout}。 ${s.note}`));
     const roadKind=node("strong",ROAD_KIND_LABELS[s.roadKind]||ROAD_KIND_LABELS.unknown,"drive-road-kind");roadKind.dataset.roadKind=s.roadKind||"unknown";
     $("driveReadout").replaceChildren(roadKind,heading,body,note);$("driveReadout").dataset.source=s.source;$("driveReadout").dataset.rank=String(s.rank);
     if(active){if(index===0||index===result.samples.length-1){markers.inspect?.remove();delete markers.inspect;}else pointMarker("inspect",s.coordinate,"●");if(move)map.easeTo({center:s.coordinate,duration:300});}
@@ -117,8 +122,21 @@ export function initDrive(map,hooks={}) {
     table.setAttribute("aria-label","経路の距離と通過時刻ごとの気象");const corner=node("th","距離\n通過時刻");corner.scope="col";header.append(corner);
     for(const i of columns){const s=samples[i],cell=document.createElement("th"),button=node("button");cell.scope="col";button.type="button";button.dataset.km=String(s.km);button.title=`${sourceLabel(s.source)} · ${timeLabel(s.time)}`;button.append(node("strong",`${s.km.toFixed(1)}km`),node("span",timeLabel(s.time).slice(5)));button.addEventListener("click",()=>readout(i,true));cell.append(button);header.append(cell);}
     head.append(header);
-    for(const [label,key] of [["データ","source"],["天気","weather"],["気温 ℃","temperature"],["積雪 cm","snow"]]){const row=document.createElement("tr"),heading=node("th",label);row.dataset.field=key;heading.scope="row";row.append(heading);
-      for(const i of columns){const s=samples[i],cell=document.createElement("td");cell.title=key==="source"?sourceLabel(s.source):key==="weather"?s.source==="normal"?"平年値では天気を表示しません":sourceLabel(s.source)+(s.weather?` · ${s.weather}`:""):s[key];cell.textContent=key==="source"?sourceLabel(s.source):key==="weather"?s.source==="normal"?"—":`${weatherIcon[s.weather]||""} ${s.weather||"資料なし"}`.trim():key==="temperature"?compactTemperature(s.temperature):compactSnow(s.snow);row.append(cell);}body.append(row);
+    const rows=[
+      ["データ","source",s=>sourceLabel(s.source)],
+      ["天気","weather",s=>s.source==="normal"?"—":`${weatherIcon[s.weather]||""} ${s.weather||"資料なし"}`.trim()],
+      ["気温 ℃","temperature",s=>compactTemperature(s.temperature)],
+    ];
+    if(sources.has("forecast"))rows.push(["3時間降雪量","snowfall",s=>s.source==="forecast"?s.snowfall:"—"]);
+    if(sources.has("normal"))rows.push(["積雪深 cm","snow",s=>s.source==="normal"?compactSnow(s.snow):"—"]);
+    for(const [label,key,display] of rows){
+      const row=document.createElement("tr"),heading=node("th",label);
+      row.dataset.field=key;heading.scope="row";row.append(heading);
+      for(const index of columns){
+        const sample=samples[index],cell=node("td",display(sample));
+        cell.title=sample[key] ?? cell.textContent;row.append(cell);
+      }
+      body.append(row);
     }
     table.append(head,body);$("driveCards").replaceChildren(table);readout(0);map.resize();
   }

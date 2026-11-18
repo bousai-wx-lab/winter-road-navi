@@ -1,12 +1,13 @@
 import { paletteColor } from "./temperature-layer.js";
 
 const weatherColors = {"晴れ":"weather-sun", "くもり":"weather-cloud", "雨":"weather-rain", "雨または雪":"weather-mix", "雪":"weather-snow"};
-const rainColors = {"1未満":"weather-table-low", "1〜4":"amount-1", "5〜9":"amount-5", "10〜14":"amount-10", "15〜19":"amount-15", "20以上":"amount-20"};
-const snowColors = {"1未満":"weather-table-low", "1〜2":"amount-1", "3〜5":"amount-5", "6以上":"amount-10"};
+const rainColors = {"0〜1":"weather-table-low", "1〜4":"amount-1", "5〜9":"amount-5", "10〜14":"amount-10", "15〜19":"amount-15", "20以上":"amount-20"};
+const snowColors = {"0〜1":"weather-table-low", "1〜2":"amount-1", "3〜5":"amount-5", "6以上":"amount-10"};
 const categoryColors = {weather3h:weatherColors, precip3h:rainColors, snow3h:snowColors};
 
 export function weatherTableAmount(weather, value) {
-  return weather === "晴れ" || weather === "くもり" ? "—" : value;
+  if (weather === "晴れ" || weather === "くもり") return "—";
+  return value === "1未満" ? "0〜1" : value;
 }
 
 export function colorWeatherCell(entry, kind, value) {

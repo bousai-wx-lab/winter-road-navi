@@ -1,4 +1,4 @@
-import { initDrive } from "./drive-control.js?v=20261118-drive-profile1";
+import { initDrive } from "./drive-control.js?v=20261118-drive-readout1";
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=20261110-coast-only1";
 import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20261110-drive4";

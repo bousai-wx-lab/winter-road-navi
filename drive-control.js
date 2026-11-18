@@ -29,18 +29,18 @@ function colorDriveTemperature(cell, content) {
   }));
 }
 
+function driveSnowfallLabel({weather, snowfall}) {
+  return weatherTableAmount(weather, snowfall === "降雪量なし" ? "1cm未満" : snowfall);
+}
+
 function styleDriveWeather(cell, field, sample) {
   if (field === "weather" && sample.source !== "normal") {
     colorWeatherCell(cell, "weather3h", sample.weather === "資料なし" ? null : sample.weather);
   } else if (field === "temperature") {
     colorDriveTemperature(cell, cell.textContent);
   } else if (field === "snowfall" && sample.source === "forecast") {
-    const value = sample.snowfall === "降雪量なし" ? "1未満" : sample.snowfall.replace("cm", "");
-    const display = weatherTableAmount(sample.weather, value);
-    if (display === "—") {
-      cell.textContent = "—";
-      if (value === "1未満") cell.title = "1cm未満";
-    }
+    const display = cell.textContent.replace("cm", "");
+    if (sample.snowfall === "降雪量なし") cell.title = "1cm未満";
     colorWeatherCell(cell, "snow3h", display === "資料なし" ? null : display);
   }
 }
@@ -97,7 +97,7 @@ export function initDrive(map,hooks={}) {
     if(!result)return;index=Math.max(0,Math.min(result.samples.length-1,Math.round(index)));$("drivePosition").value=String(index);
     const s=result.samples[index];$("drivePositionLabel").textContent=`${s.km.toFixed(1)}km · ${timeLabel(s.time).slice(5)}${s.restMinutes?`（休憩${s.restMinutes}分後）`:""}`;
     const heading=node("strong",`${sourceLabel(s.source)} · ${s.riskLabel}`);
-    const snowReadout=s.source==="forecast" ? `3時間降雪量：${s.snowfall}` :
+    const snowReadout=s.source==="forecast" ? `3時間降雪量：${driveSnowfallLabel(s)}` :
       s.source==="normal" ? `積雪深：${s.snow}` : "雪の資料なし";
     const body=node("span",`${s.elevation===null?"標高不明":`${Math.round(s.elevation)}m`}　${s.weather?`${s.weather}　`:""}気温 ${compactTemperature(s.temperature).replace("\n"," / ")}${s.temperature.includes("℃")?"℃":""}　${snowReadout}`);
     const note=node("details",undefined,"drive-point-note");
@@ -167,7 +167,7 @@ export function initDrive(map,hooks={}) {
       ["天気","weather",s=>s.source==="normal"?"—":`${weatherIcon[s.weather]||""} ${s.weather||"資料なし"}`.trim()],
       ["気温 ℃","temperature",s=>compactTemperature(s.temperature)],
     ];
-    if(sources.has("forecast"))rows.push(["3時間降雪量","snowfall",s=>s.source==="forecast"?s.snowfall:"—"]);
+    if(sources.has("forecast"))rows.push(["3時間降雪量","snowfall",s=>s.source==="forecast"?driveSnowfallLabel(s):"—"]);
     if(sources.has("normal"))rows.push(["積雪深 cm","snow",s=>s.source==="normal"?compactSnow(s.snow):"—"]);
     for(const [label,key,display] of rows){
       const row=document.createElement("tr"),heading=node("th",label);

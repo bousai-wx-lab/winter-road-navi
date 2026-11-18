@@ -104,6 +104,7 @@ function syncDriveBackground() {
   drive?.bringToFront();refreshDriveBackgroundStatus();
 }
 const selectedViews = {observed:"temperature",forecast:"risk"};
+const forecastRiskViewLabel = "天気・実況積雪・道路リスク";
 const isDistributionView = view => ["weather","precipitation","snowfall"].includes(view);
 let snow = null, normalRisk = null, normalRoadData = null;
 const normalRoadLegend = document.querySelector("#normalRoadLegend");
@@ -307,7 +308,7 @@ function applyDisplay() {
   const mode = displayMode, live = mode !== "normal", label = mode === "observed" ? "実況" : "予測";
   const riskView=mode==="forecast" && displayView==="risk";
   const temperature = !live || displayView === "temperature", distribution = live && (isDistributionView(displayView) || riskView);
-  const viewName = {risk:"天気・実況積雪・道路",weather:"天気",snow:"積雪深",precipitation:"降水量",snowfall:"降雪量",temperature:"気温"}[displayView];
+  const viewName = {risk:forecastRiskViewLabel,weather:"天気",snow:"積雪深",precipitation:"降水量",snowfall:"降雪量",temperature:"気温"}[displayView];
   normalRisk?.clear(); normalRoadData = null;
   delete mapElement.dataset.normalRiskDay; delete mapElement.dataset.normalRiskCounts;
   document.querySelector("#normalRoadRetry").hidden = true;
@@ -368,7 +369,7 @@ function switchDisplayMode(mode) {
   if(mode!=="drive")restoreTemperatureAppearance(mode);
   if(["observed","forecast"].includes(mode)) {
     displayView=selectedViews[mode];
-    const options=mode === "observed" ? [["temperature","気温"],["weather","天気"],["snow","積雪深"]] : [["risk","天気・実況積雪・道路"],["temperature","気温"],["weather","天気"],["precipitation","3時間降水量"],["snowfall","3時間降雪量"]];
+    const options=mode === "observed" ? [["temperature","気温"],["weather","天気"],["snow","積雪深"]] : [["risk",forecastRiskViewLabel],["temperature","気温"],["weather","天気"],["precipitation","3時間降水量"],["snowfall","3時間降雪量"]];
     document.querySelector("#liveView").replaceChildren(...options.map(([value,label])=>new Option(label,value)));
     document.querySelector("#liveView").value=displayView;
   }

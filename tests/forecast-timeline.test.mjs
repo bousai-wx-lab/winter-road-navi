@@ -34,7 +34,8 @@ test("map forecast timeline and existing weather controls share native slots thr
   globalThis.fetch=async()=>{const held=holdNext;holdNext=null;if(held)await held;return {ok:!fail,text:async()=>JSON.stringify(records)};};
   let timeline=null,controller=null;
   controller=initWeather(map,{onChange:()=>timeline?.render()});
-  timeline=initForecastTimeline(map,()=>controller);
+  let pointTime;
+  timeline=initForecastTimeline(map,()=>controller,state=>{pointTime=state;});
   try {
     timeline.setVisible(true);controller.setActive(true,"forecast");await until(()=>get("map").dataset.weatherReady==="true");
     assert.equal(get("forecastTimeRange").max,"2");assert.equal(get("forecastTimeRange").value,"0");
@@ -44,6 +45,14 @@ test("map forecast timeline and existing weather controls share native slots thr
     assert.equal(get("weatherSlot").value,records[1].validtime);
     await until(()=>get("map").dataset.weatherTarget==="2099-01-01T06:00:00Z");
     assert.equal(get("forecastTimeTicks").children[1]["aria-current"],"true");
+    assert.equal(pointTime.selectedEnd,Date.parse("2099-01-01T06:00:00Z"));
+    assert.equal(pointTime.availableEnds.size,3);
+    timeline.chooseTime(Date.parse("2099-01-01T03:00:00Z"));
+    await until(()=>get("map").dataset.weatherTarget==="2099-01-01T03:00:00Z");
+    assert.equal(get("forecastTimeRange").value,"0");
+    timeline.chooseTime(Date.parse("2099-01-01T04:00:00Z"));
+    assert.equal(get("forecastTimeRange").value,"0","a period that only contains the time must not be substituted");
+    get("forecastTimeRange").value="1";get("forecastTimeRange").emit("input");
     get("forecastTimeNext").emit("click");await until(()=>get("forecastTimeNext").disabled);
     assert.equal(get("weatherSlot").value,records[2].validtime);
     get("weatherSlot").value=records[0].validtime;get("weatherSlot").emit("change");

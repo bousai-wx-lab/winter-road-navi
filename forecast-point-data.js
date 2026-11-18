@@ -21,6 +21,16 @@ export function pointForecastCell(lng, lat) {
   return {col, row, center:[(col + .5) / 16, (row + .5) / 20]};
 }
 
+export function forecastMunicipality(index, cell) {
+  if (index?.row_scale !== 20 || index.col_scale !== 16) return "";
+  const runs = index.rows?.[cell.row] ?? [];
+  for (let i = 0; i < runs.length; i += 3) {
+    const [start, count, label] = runs.slice(i, i + 3);
+    if (cell.col >= start && cell.col < start + count) return index.names?.[label] ?? "";
+  }
+  return "";
+}
+
 function pointForecastSlots(manifest, now) {
   const generated = Date.parse(manifest?.generated_at);
   if (!Number.isFinite(generated) || now - generated > 8 * 3600000 || generated - now > 5 * 60000) {

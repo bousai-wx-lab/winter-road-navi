@@ -15,7 +15,7 @@ export function forecastTickLabel(time) {
   return `${parts.find(p=>p.type==="day").value}日${parts.find(p=>p.type==="hour").value}時`;
 }
 
-export function initForecastTimeline(map, getController) {
+export function initForecastTimeline(map, getController, onTimeChange = () => {}) {
   const $ = id => document.getElementById(id);
   const panel = $("forecastTimeline"), range = $("forecastTimeRange"), ticks = $("forecastTimeTicks"), output = $("forecastTimeLabel");
   const previous = $("forecastTimePrevious"), next = $("forecastTimeNext");
@@ -26,9 +26,19 @@ export function initForecastTimeline(map, getController) {
     const state = snapshot(), slot = state.slots[index];
     if (slot && slot.id !== state.selected) getController().choose(slot.id);
   }
+  function chooseTime(end) {
+    if (!visible || !Number.isFinite(end)) return;
+    const {slots, selected, hourlySlots = []} = snapshot();
+    const slot = slots.find(candidate => candidate.end === end);
+    if (slot && slot.id !== selected) getController().choose(slot.id);
+    if (!slot) {
+      const hourly = hourlySlots.find(candidate => candidate.end === end);
+      if (hourly) getController().chooseHourly(hourly.id);
+    }
+  }
   function render() {
     if (!visible) return;
-    const {slots, selected} = snapshot(), index = slots.findIndex(s=>s.id===selected);
+    const {slots, selected, hourlySlots = []} = snapshot(), index = slots.findIndex(s=>s.id===selected);
     panel.dataset.dense = String(slots.length > 5);
     range.max = String(Math.max(0, slots.length-1));
     range.value = String(Math.max(0,index));
@@ -54,11 +64,15 @@ export function initForecastTimeline(map, getController) {
       }));
     }
     for (const [i,button] of Array.from(ticks.children).entries()) button.setAttribute("aria-current",String(i===index));
+    onTimeChange({
+      selectedEnd: slots[index]?.end ?? null,
+      availableEnds: new Set([...slots, ...hourlySlots].map(slot => slot.end).filter(Number.isFinite)),
+    });
   }
   range.addEventListener("input",()=>choose(Number(range.value)));
   previous.addEventListener("click",()=>choose(snapshot().slots.findIndex(s=>s.id===snapshot().selected)-1));
   next.addEventListener("click",()=>choose(snapshot().slots.findIndex(s=>s.id===snapshot().selected)+1));
-  return {render,setVisible(value) {
+  return {render,chooseTime,setVisible(value) {
     if (visible !== value) {
       visible=value;panel.hidden=!value;
       // The toolbar takes space above the map, so resize the canvas as well.

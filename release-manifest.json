@@ -19,10 +19,10 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "bytes": 42136,
+      "bytes": 43151,
       "mime_type": "text/markdown",
       "path": "README.md",
-      "sha256": "ef9aa04263a1010f4c22f3c245dcc4728de01331b58e6b867f0091fc705cc4fa"
+      "sha256": "daee856f069840e4e0ec4528e2985cd71887e2f2030deba7843956b6696b2f1c"
     },
     {
       "bytes": 1572,
@@ -31,10 +31,10 @@
       "sha256": "8cbef046b7f4a19897d3d698488cf19053e3fb48b9154ba7503c7564f96dbea7"
     },
     {
-      "bytes": 32575,
+      "bytes": 32577,
       "mime_type": "text/javascript",
       "path": "app.js",
-      "sha256": "8942aaea3eed1c14b2f7b8e7578327db5f4241deec95a9781cb5e11cb4231be2"
+      "sha256": "9e2f8df22c6137096a86a65a46876dd41a0d99e368d2109a6dd1cbcc6bd1bdc2"
     },
     {
       "bytes": 266670,
@@ -6127,22 +6127,22 @@
       "sha256": "1c8809c931b681e2912861bffcc2194a9262924ec082c54f92aa2d1f354ded9f"
     },
     {
-      "bytes": 21968,
+      "bytes": 26282,
       "mime_type": "text/javascript",
       "path": "drive-control.js",
-      "sha256": "3aa8df7fc4314e2acd63dcf419602e38c809442bbc13cefa629176c14f98bf13"
+      "sha256": "35107151935bcd508154765ca4dc1f1f4f435dc2637e6fc80de98dadee2ef514"
     },
     {
-      "bytes": 11178,
+      "bytes": 12585,
       "mime_type": "text/javascript",
       "path": "drive-route-data.js",
-      "sha256": "24c4d747263846ce61cc38295bb6e79651aa2cc2e510e78217cc00c9652bdc24"
+      "sha256": "3c18b4b8cfc44bce51f6b84050b59a4787dbaabccc4822bf55c4aced23ddc479"
     },
     {
-      "bytes": 9953,
+      "bytes": 11656,
       "mime_type": "text/javascript",
       "path": "drive-weather-data.js",
-      "sha256": "11c836ac45b48746de1bd1c5a367bef3baff9f10bc25ddd51c835ec59acabf35"
+      "sha256": "ae257e6c1229ae4967b82c042f347799ef98bc3512f3b0432d9c08e434df1dfe"
     },
     {
       "bytes": 431,
@@ -6169,10 +6169,10 @@
       "sha256": "bd0d13717e36c71f9f6a8296f12058c7cc9f6148694dae8d040383326fcb6869"
     },
     {
-      "bytes": 8689,
+      "bytes": 8756,
       "mime_type": "text/javascript",
       "path": "forecast-risk-data.js",
-      "sha256": "f0ae2e4711406623553e4c5913374fea971e19305fc8f166e46885d12bfe9f34"
+      "sha256": "bc115d54b5d234a16ec3a8d4e886555e0ac650cb51328b01eab2e377cab71286"
     },
     {
       "bytes": 5227,
@@ -6187,10 +6187,10 @@
       "sha256": "5f42dba980c8dc8eb3046d241f04e8ca63ef4dc951cbf9446ed61c7bf3ede0eb"
     },
     {
-      "bytes": 38905,
+      "bytes": 40936,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "ef61f8193c45c36b0ec494da0279d31ebd7001b5b413a5bb1f4b810da5ce6ff6"
+      "sha256": "a8c0bceb11ef1ad8eedd1a4282ba605403143f4bddac38602382256da9dbb0de"
     },
     {
       "bytes": 11545,
@@ -6325,10 +6325,10 @@
       "sha256": "f91d96afd3b0ec9d69c5aa41ad3fe6414f8abc26b77feacce13b010ca9762929"
     },
     {
-      "bytes": 39680,
+      "bytes": 40258,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "1f315780419610739aa9535a1f0208b445f938fb6c7ee07f8cd419ce81ea83f5"
+      "sha256": "200769ba6158932832b1abee7a54cd10686a32fd40332ac272551316176400fe"
     },
     {
       "bytes": 25067,
@@ -6349,10 +6349,10 @@
       "sha256": "f7cceac1b76fc45f9f69ae65ff16c11e9a4025c48ed0bf3bc0f685e9886f828a"
     },
     {
-      "bytes": 8635,
+      "bytes": 14486,
       "mime_type": "text/javascript",
       "path": "tests/drive-route.test.mjs",
-      "sha256": "7a2ad29f07eead4f485bd69a3866e277ff71dd530645a9c744c1fc61b9cb285d"
+      "sha256": "24cf8765f6f59c2b836df12895355b79cb0773182a97b6a716df508f86dd4593"
     },
     {
       "bytes": 4647,
@@ -6511,7 +6511,7 @@
       "sha256": "2f306f598df12bce33f5656b6cc14b1e3f502cd02d3a65aaa61132b9230ca7de"
     }
   ],
-  "generated_at_utc": "2026-11-18T07:20:03+00:00",
+  "generated_at_utc": "2026-11-18T11:31:17+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

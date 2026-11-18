@@ -35,7 +35,7 @@ export function riskClass(weather,precipitation,snowfall,temperature,history) {
   return wet?(temperature<=0?4:temperature<=2?3:2):1;
 }
 
-export function riskSlots(manifest,target) {
+export function riskSlots(manifest,target,{includeTemperature=true}={}) {
   if(!target || !/^\d{14}$/.test(target.validtime) || !/^\d{14}$/.test(target.basetime))throw new Error("リスクの対象時刻が不正です");
   const end=Date.parse(utcTime(target.validtime));utcTime(target.basetime);
   const result={},lists={};
@@ -47,10 +47,12 @@ export function riskSlots(manifest,target) {
     if(!matches.length && slots.some(s=>s.validtime===target.validtime && s.status==="available"))throw new Error("天気と道路判定の予報発表・対象時刻が一致しません");
     result[kind]=matches[0] ?? null;lists[kind]=slots;
   }
-  const temperatures=liveSlots(manifest,"temp3h");
-  const matches=temperatures.filter(s=>s.status==="available" && s.basetime===target.basetime && s.validtime===target.validtime);
-  if(matches.length!==1)throw new Error("同じ発表・対象時刻の予想気温がありません");
-  result.temperature=matches[0];
+  if(includeTemperature){
+    const temperatures=liveSlots(manifest,"temp3h");
+    const matches=temperatures.filter(s=>s.status==="available" && s.basetime===target.basetime && s.validtime===target.validtime);
+    if(matches.length!==1)throw new Error("同じ発表・対象時刻の予想気温がありません");
+    result.temperature=matches[0];
+  }
   result.history=Array.from({length:4},(_,i)=>{
     const validtime=new Date(end-i*3*3600000).toISOString().replace(/[-:TZ.]/g,"").slice(0,14);
     const period={validtime};

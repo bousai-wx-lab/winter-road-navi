@@ -1,5 +1,5 @@
-import { LIVE_ROOT, utcTime, liveFile, decodeLiveCSV, timeLabel } from "./live-temperature-data.js";
-import { riskSlots, projectRiskField, riskClass, RISK_RULES } from "./forecast-risk-data.js?v=20261110-risk-colors1";
+import { LIVE_ROOT, utcTime, liveSlots, liveFile, decodeLiveCSV, timeLabel } from "./live-temperature-data.js";
+import { riskSlots, projectRiskField, riskClass, RISK_RULES } from "./forecast-risk-data.js?v=20261118-drive-temperature1";
 import { normalRoadClass, NORMAL_ROAD_RULES } from "./road-risk-data.js?v=20261110-risk-colors1";
 import { expandGrid, lookupCell, binLabel } from "./temperature-layer.js";
 import { decodeDisplayDay, unpackRoadClasses, validRoadClassContract } from "./temperature-display-data.js";
@@ -26,6 +26,12 @@ export function forecastSnowfallLabel(category) {
 
 const unknown=(sample,source,note)=>({...sample,source,rank:0,riskLabel:"資料不足",temperature:"資料なし",snow:"資料なし",snowfall:"資料なし",weather:source==="normal"?null:"資料なし",note});
 
+function temperatureAtPoint(field, coordinate) {
+  if (!field) return NaN;
+  const index = lookupCell(field.grid, ...coordinate);
+  return index < 0 ? NaN : field.values[index];
+}
+
 export function createDriveWeather({fetchImpl=fetch,now=Date.now}={}) {
   return async function analyze(samples,signal,onProgress=()=>{}) {
     const memo=new Map();
@@ -46,6 +52,29 @@ export function createDriveWeather({fetchImpl=fetch,now=Date.now}={}) {
     try{manifest=await manifestNow();periods=forecastPeriods(manifest,now());}catch(error){if(signal?.aborted)throw error;return {samples:samples.map(s=>unknown(s,"unknown","予測期間を確認できないため、平年値への自動切替を止めました")),notices:["予測期間を取得できませんでした。再解析してください。"]};}
     const groups=new Map(),result=new Array(samples.length),notices=[];
     samples.forEach((sample,i)=>{const context=sourceForTime(sample.time,periods),key=context.source+":"+(context.day||context.target?.validtime||"missing");if(!groups.has(key))groups.set(key,{context,items:[]});groups.get(key).items.push({...sample,index:i});});
+    const temperatureGrids = new Map();
+    let temperatureSlots;
+    function forecastTemperature(time, basetime) {
+      if (!temperatureSlots) {
+        try {
+          temperatureSlots = liveSlots(manifest, "temp3h").filter(slot => slot.status === "available");
+        } catch {
+          temperatureSlots = [];
+        }
+      }
+      const slot = temperatureSlots.find(slot => slot.basetime === basetime && Date.parse(utcTime(slot.validtime)) === time);
+      if (!slot) return null;
+      if (!temperatureGrids.has(slot.id)) {
+        const pending = get(LIVE_ROOT + liveFile("temp3h", slot), false)
+          .then(text => decodeLiveCSV(text, "temp3h", slot))
+          .catch(error => {
+            if (signal?.aborted) throw error;
+            return null;
+          });
+        temperatureGrids.set(slot.id, pending);
+      }
+      return temperatureGrids.get(slot.id);
+    }
     let normalPromise;
     function normals(){return normalPromise??=(async()=>{
       const roots=["./data/temperature/","./data/temperature-max/","./data/snow/"],list=await Promise.all(roots.map(root=>get(root+"manifest.json"))),[minimum,maximum,snow]=list;
@@ -68,19 +97,28 @@ export function createDriveWeather({fetchImpl=fetch,now=Date.now}={}) {
     }
     async function forecastGroup(group){
       const target=group.context.target;if(!target)throw new Error("この予測期間は資料がありません");
-      const plan=riskSlots(manifest,target),points=group.items;
+      const plan=riskSlots(manifest,target,{includeTemperature:false}),points=group.items;
+      const start = target.end - STEP;
       const grid={count:points.length,rowScale:20,colScale:16,rows:Uint16Array.from(points,s=>Math.floor(s.coordinate[1]*20)),cols:Uint16Array.from(points,s=>Math.floor(s.coordinate[0]*16))};
       const field=async(slot,kind)=>slot?projectRiskField(await get(LIVE_ROOT+`forecast_${slot.id}_value.geojson`),grid,kind):new Int16Array(grid.count);
-      const [weather,precip,snowfall,temperature,history]=await Promise.all([
+      const [weather,precip,snowfall,startTemperature,endTemperature,history]=await Promise.all([
         field(plan.weather3h,"weather3h"),field(plan.precip3h,"precip3h"),field(plan.snow3h,"snow3h"),
-        get(LIVE_ROOT+liveFile("temp3h",plan.temperature),false).then(text=>decodeLiveCSV(text,"temp3h",plan.temperature)),
+        forecastTemperature(start, target.basetime), forecastTemperature(target.end, target.basetime),
         Promise.all(plan.history.map(async p=>({weather:await field(p.weather3h,"weather3h"),precipitation:await field(p.precip3h,"precip3h")}))),
       ]);
+      let missingTemperature = false;
       points.forEach((s,i)=>{
-        const cell=lookupCell(temperature.grid,...s.coordinate),value=cell<0?NaN:temperature.values[cell];
+        const startValue = temperatureAtPoint(startTemperature, s.coordinate);
+        const endValue = temperatureAtPoint(endTemperature, s.coordinate);
+        const value = Math.min(startValue, endValue);
+        const hasTemperature = Number.isFinite(value);
+        const temperatureTime = hasTemperature ? (startValue < endValue ? start : target.end) : null;
+        missingTemperature ||= !hasTemperature;
         const rank=riskClass(weather[i],precip[i],snowfall[i],value,history.map(h=>({weather:h.weather[i],precipitation:h.precipitation[i]})));
-        result[s.index]={...s,source:"forecast",rank,riskLabel:RISK_RULES[rank].short||RISK_RULES[rank].label,weather:WEATHER[weather[i]]||"資料なし",temperature:Number.isFinite(value)?`${value.toFixed(1)}℃`:"資料なし",snowfall:forecastSnowfallLabel(plan.snow3h ? snowfall[i] : null),forecastEnd:target.end,note:`予測対象 ${timeLabel(target.end-STEP)}〜${timeLabel(target.end)}。枠の終端の気温と、同じ枠の天気・気象庁の3時間降雪量（約5km格子）を使用。`};
+        const temperatureNote = hasTemperature ? "気温は枠の両端の低い方。" : "枠の両端の気温がそろっていません。";
+        result[s.index]={...s,source:"forecast",rank,riskLabel:RISK_RULES[rank].short||RISK_RULES[rank].label,weather:WEATHER[weather[i]]||"資料なし",temperature:hasTemperature?`${value.toFixed(1)}℃`:"資料なし",temperatureTime,snowfall:forecastSnowfallLabel(plan.snow3h ? snowfall[i] : null),forecastEnd:target.end,note:`天気・降雪の予測対象 ${timeLabel(start)}〜${timeLabel(target.end)}。${temperatureNote}`};
       });
+      if (missingTemperature) notices.push("一部の区間で枠の両端の気温がそろわず、気温は資料なしです。");
     }
     let done=0;
     for(const group of groups.values()){

@@ -1,7 +1,9 @@
 import { ROAD_RISK_COLORS } from "./road-risk-data.js?v=20261110-risk-colors1";
 // Route geometry and elapsed time stay independent of weather and the UI.
 export const ROUTE_API = "https://valhalla1.openstreetmap.de/route";
-export const ROUTE_LIMIT_KM = 1000;
+export const ROUTE_LIMIT_KM = 5000;
+export const ROUTE_LIMIT_HOURS = 120;
+const ELEVATION_INTERVAL_METERS = 250;
 export const ROUTE_COLORS = Object.freeze(ROAD_RISK_COLORS.map((color,i)=>i===1?"#197c88":color));
 export const PRIORITIES = {fastest:"時間優先",highway:"高速優先",local:"一般道優先",shortest:"距離優先"};
 export const ROAD_KIND_LABELS = {highway:"高速道路",local:"一般道",unknown:"区分不明"};
@@ -43,12 +45,12 @@ export function returnDepartureTime({method, hours, departure}, arrival) {
 export function routeRequest(start,end,priority,departure) {
   if (!validPoint(start) || !validPoint(end) || !Object.hasOwn(PRIORITIES,priority)) throw new Error("日本付近の始点・終点と検索条件を指定してください");
   const direct=kmBetween(start,end);
-  if (direct < .05 || direct > ROUTE_LIMIT_KM) throw new Error("始点と終点は50m以上、直線で1000km以内にしてください");
+  if (direct < .05 || direct > ROUTE_LIMIT_KM) throw new Error(`始点と終点は50m以上、直線で${ROUTE_LIMIT_KM}km以内にしてください`);
   const options={use_ferry:0,exclude_ferries:true};
   if (priority==="highway") Object.assign(options,{use_highways:1,use_tolls:1});
   if (priority==="local") Object.assign(options,{use_highways:0,use_tolls:0});
   if (priority==="shortest") options.shortest=true;
-  return {locations:[start,end].map(([lon,lat])=>({lon,lat,search_cutoff:1000})),costing:"auto",costing_options:{auto:options},units:"kilometers",language:"ja-JP",elevation_interval:250,
+  return {locations:[start,end].map(([lon,lat])=>({lon,lat,search_cutoff:1000})),costing:"auto",costing_options:{auto:options},units:"kilometers",language:"ja-JP",elevation_interval:ELEVATION_INTERVAL_METERS,
     date_time:{type:1,value:new Date(departure+9*3600000).toISOString().slice(0,16)}};
 }
 export function decodePolyline(text) {
@@ -62,7 +64,7 @@ export function decodeRoute(json) {
   const trip=json?.trip, leg=trip?.legs?.[0];
   if(trip?.status!==0 || trip.legs.length!==1 || !leg || trip.summary?.has_ferry)throw new Error("自動車だけで通る経路を取得できません");
   const distance=leg.summary?.length,seconds=leg.summary?.time;
-  if(!Number.isFinite(distance) || distance<=0 || distance>ROUTE_LIMIT_KM || !Number.isFinite(seconds) || seconds<=0 || seconds>48*3600)throw new Error("無料試作版は1000km・走行48時間以内の経路に対応します");
+  if(!Number.isFinite(distance) || distance<=0 || distance>ROUTE_LIMIT_KM || !Number.isFinite(seconds) || seconds<=0 || seconds>ROUTE_LIMIT_HOURS*3600)throw new Error(`片道${ROUTE_LIMIT_KM}km・走行${ROUTE_LIMIT_HOURS}時間以内の経路に対応します`);
   const coordinates=decodePolyline(leg.shape),distances=[0],times=new Array(coordinates.length).fill(null);
   for(let i=1;i<coordinates.length;i++)distances.push(distances[i-1]+kmBetween(coordinates[i-1],coordinates[i]));
   const geometricLength=distances.at(-1);
@@ -93,7 +95,7 @@ export function decodeRoute(json) {
   // Small serialization rounding is distributed over the full duration.
   for(let i=0;i<times.length;i++)times[i]*=seconds/elapsed;
   const elevation=leg.elevation,interval=leg.elevation_interval;
-  const hasElevation=Array.isArray(elevation) && elevation.length>1 && elevation.length<=10000 && Number.isFinite(interval) && interval>0
+  const hasElevation=Array.isArray(elevation) && elevation.length>1 && elevation.length<=Math.ceil(ROUTE_LIMIT_KM*1000/ELEVATION_INTERVAL_METERS)+2 && Number.isFinite(interval) && interval>0
     && Math.abs((elevation.length-1)*interval-distance*1000)<interval*2+100;
   return {coordinates,distances,times,distance,seconds,roadSections,elevation:hasElevation?elevation:null,elevationInterval:interval,hasHighway:Boolean(trip.summary.has_highway),hasToll:Boolean(trip.summary.has_toll)};
 }

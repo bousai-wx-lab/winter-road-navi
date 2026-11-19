@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {departureTime,returnDepartureTime,routeRequest,decodePolyline,decodeRoute,sampleRoute,routeSegments,estimateSnow,createRouteClient,roadKindAt,kmBetween} from "../drive-route-data.js";
+import {departureTime,returnDepartureTime,routeRequest,decodePolyline,decodeRoute,sampleRoute,routeSegments,estimateSnow,createRouteClient,roadKindAt,kmBetween,ROUTE_LIMIT_KM,ROUTE_LIMIT_HOURS} from "../drive-route-data.js";
 import {forecastPeriods,sourceForTime,createDriveWeather,forecastSnowfallLabel} from "../drive-weather-data.js";
 import {RISK_LEVELS} from "../forecast-risk-data.js";
 
@@ -217,4 +217,41 @@ test("all-local routes accept omitted false flags; absent or inconsistent road m
     assert.deepEqual(r.roadSections.map(s=>s.kind),["unknown"]);
     assert.ok(sampleRoute(r,departure).every(s=>s.roadKind==="unknown"));
   }
+});
+
+function nationalRouteFixture() {
+  const points=[[130,25],[130,40],[130,25],[130,40]],last=[0,0];
+  const encode=n=>{n=n<0?-n*2-1:n*2;let s="";while(n>=32){s+=String.fromCharCode((n%32|32)+63);n=Math.floor(n/32);}return s+String.fromCharCode(n+63);};
+  const shape=points.map(p=>[p[1],p[0]].map((v,i)=>{const n=Math.round(v*1e6),s=encode(n-last[i]);last[i]=n;return s;}).join("")).join("");
+  const summary={length:ROUTE_LIMIT_KM,time:ROUTE_LIMIT_HOURS*3600,has_highway:false,has_ferry:false};
+  return {trip:{status:0,summary,legs:[{shape,summary,elevation_interval:250,
+    elevation:Array.from({length:ROUTE_LIMIT_KM*4+1},(_,i)=>i%500),
+    maneuvers:[{begin_shape_index:0,end_shape_index:3,time:summary.time}]}]}};
+}
+test("national drive requests accept Kagoshima to Aomori and mainland-to-Hokkaido distances",()=>{
+  for(const [from,to] of [[[130.51203,31.58331],[140.68687,40.78849]],[[130.66,31.0],[141.94,45.52]]]) {
+    assert.ok(kmBetween(from,to)>1000);
+    const request=routeRequest(from,to,"fastest",departure);
+    assert.equal(request.costing_options.auto.exclude_ferries,true);
+    assert.equal(request.elevation_interval,250);
+  }
+});
+test("5000km and 120 driving hours retain elevation, 500m weather spacing, rests and endpoint timing",()=>{
+  const r=decodeRoute(nationalRouteFixture());
+  assert.equal(r.elevation.length,20001);
+  const samples=sampleRoute(r,departure,[{km:1234.56,minutes:60}]);
+  assert.equal(samples.at(-1).km,5000);
+  assert.equal(samples.at(-1).time,departure+(120+1)*3600000);
+  assert.equal(samples.at(-1).elevation,r.elevation.at(-1));
+  assert.ok(samples.every((p,i)=>i===0 || p.km-samples[i-1].km<=.500001));
+  assert.equal(samples.filter(p=>p.km===1234.56).length,2);
+  assert.equal(routeSegments(r,samples.map(p=>({...p,rank:2,source:"normal"}))).features.length,samples.length-1);
+});
+test("routes exceeding the expanded distance or driving-time boundary still fail",()=>{
+  for(const [key,value] of [["length",ROUTE_LIMIT_KM+.01],["time",ROUTE_LIMIT_HOURS*3600+1]]) {
+    const json=nationalRouteFixture();json.trip.legs[0].summary[key]=value;
+    assert.throws(()=>decodeRoute(json),/片道5000km・走行120時間/);
+  }
+  const json=nationalRouteFixture();json.trip.summary.has_ferry=true;
+  assert.throws(()=>decodeRoute(json),/自動車だけ/);
 });

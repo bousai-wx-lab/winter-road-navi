@@ -362,7 +362,7 @@ function applyDisplay() {
   appearance.hidden = !temperature;
   document.querySelector(".control-panel").dataset.mode = mode;
   for (const help of document.querySelectorAll("[data-help]")) {
-    help.hidden = !({normal:!live,temperature:live && temperature,weather:distribution,forecastPoint:mode === "forecast",risk:riskView,observedRisk:observedRiskView,snow:riskView || observedSnowView(),snowdepth:displayView === "snowdepth",liveSources:live,observedSources:mode === "observed",forecastSources:mode === "forecast",drive:false}[help.dataset.help]);
+    help.hidden = !({normal:!live,temperature:live && temperature,weather:distribution,forecastPoint:mode === "forecast",risk:riskView,observedRisk:observedRiskView,snow:riskView || observedSnowView(),liveSources:live,observedSources:mode === "observed",forecastSources:mode === "forecast",drive:false}[help.dataset.help]);
   }
   document.querySelector(".road-section .road-temperature-legend").hidden = !live || !temperature;
   document.querySelector("#normalRoadControls").hidden = live;
@@ -379,7 +379,7 @@ function applyDisplay() {
   document.querySelector("#map").dataset.displayView = live ? displayView : "temperature";
   document.querySelector("#dataMeaning").textContent = !live ? "気温・積雪とも平年の推定分布です。予報・実況・路面状態ではありません。" : displayView === "snow" ? "白縁の丸は積雪深の観測点です。点のない場所の積雪深は推定しません。道路上の積雪ではありません。" : displayView === "precipitation" ? "予測降水量は約5kmメッシュ内の平均3時間降水量（mm）です。" : displayView === "snowfall" ? "予測降雪量は約5kmメッシュ内の平均3時間降雪量（cm）です。積雪深ではありません。" : displayView === "weather" ? mode === "observed" ? "実況天気は気象庁の推計気象分布です。各地点の実測値ではありません。" : "予測天気は気象庁の3時間の代表的な天気です。" : `${label}の格子気温です。路面温度・凍結・通行可否を示しません。`;
   if(riskView)document.querySelector("#dataMeaning").textContent="色付きの線は道路の独自リスク区分、背景は予測天気です。白縁の丸は最新の実況積雪深です。";
-  if(displayView === "snowdepth") document.querySelector("#dataMeaning").textContent="気象庁の約5km格子の予想積雪深です。予報の基準時刻から6時間先まで、1時間ごとの公式画像を表示します。";
+  if(mode === "forecast" && displayView === "snowdepth") document.querySelector("#dataMeaning").textContent="気象庁の約5km格子の予想積雪深です。予報の基準時刻から6時間先まで、1時間ごとの公式画像を表示します。";
   if (observedRiskView) {
     document.querySelector("#dataMeaning").textContent="背景は最新の推計天気、線は実況気温と前12時間降水・前3時間降雪による道路の参考色です。";
     document.querySelector(".road-temperature-note").textContent="実況による道路の参考色です。路面状態は道路管理者の情報で確認してください。";

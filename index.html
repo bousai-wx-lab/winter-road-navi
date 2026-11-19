@@ -343,11 +343,10 @@
                 <p id="seasonPreparationStatus" aria-live="polite"></p><p id="snowPreparationStatus" aria-live="polite"></p>
               </div>
               <div data-help="temperature" hidden><p id="liveUpdated"></p><p id="liveSource"></p><p id="liveColorNote"></p><p id="liveUpdateNote"></p></div>
-              <div data-help="weather" hidden><p id="weatherUpdated"></p><p id="weatherDescription"></p><p>降雪量は新たに降る雪の量で、積雪深ではありません。降水・降雪の無色には、降水・降雪なし、海域、資料なしを含みます。</p></div>
+              <div data-help="weather" hidden><p id="weatherUpdated"></p><p id="weatherDescription"></p></div>
               <div data-help="risk" hidden><p id="riskUpdated"></p><p>道路の参考色は、対象時刻の気温、前12時間の降水、3時間の天気・降雪による独自区分です。雪の条件を優先します。欠けた降水・降雪予報を計算上0として扱うため、通常色でも安全や降水なしを保証しません。</p></div>
               <div data-help="observedRisk" hidden><p>実況気温と近隣観測点の前12時間降水・前3時間降雪による道路の参考色です。降雪0cmでも同じ対象時刻の推計天気が雪なら雪の条件を優先します。道路で測った値ではありません。</p></div>
               <div data-help="snow" hidden><p id="liveSnowDisplayHelp" class="section-hint">丸は観測積雪深、面は気象庁の解析積雪深です。</p><p id="liveSnowUpdated"></p><p>観測の0cmは雪なしと1cm未満の積雪を区別せず、資料なしとは異なります。観測点間の積雪深は推定しません。解析積雪深の面は約5km格子の推定値です。予測値モードの丸も最新の実況積雪深で、予報対象時刻の積雪ではありません。</p></div>
-              <div data-help="snowdepth" hidden><p>予想積雪深は気象庁の約5km格子の公式画像です。予報の基準時刻から6時間先までを表示し、3時間降雪量とは異なります。</p></div>
               <div data-help="drive" hidden><p>通過予定時刻が予測期間内なら予測、期間外なら同じ月日の平年値を使います。予測区間の通信失敗を平年値で補いません。所要時間は渋滞・積雪による遅れや通行止めを含まず、到着時刻を保証しません。</p></div>
               <p class="road-temperature-note">道路の色は気象条件による独自区分です。現在の路面状態ではありません。</p>
               <h3>データの出典</h3>

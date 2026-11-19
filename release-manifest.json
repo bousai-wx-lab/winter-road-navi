@@ -6295,10 +6295,10 @@
       "sha256": "e6a504bd0a36b6d58831de6b11a3eefd20fb31b362caf6b632267e9939be1f11"
     },
     {
-      "bytes": 5155,
+      "bytes": 5300,
       "mime_type": "text/x-python",
       "path": "scripts/test_privacy_gate.py",
-      "sha256": "9f544f26670c083702e2b3dbfab18af621d78832b52498cf7e0e819df1909604"
+      "sha256": "7ca05df48b74d963ee4a4b4097ea9334c24cf071a83ffd0d0cbfecd92ced1074"
     },
     {
       "bytes": 12552,
@@ -6535,7 +6535,7 @@
       "sha256": "2f306f598df12bce33f5656b6cc14b1e3f502cd02d3a65aaa61132b9230ca7de"
     }
   ],
-  "generated_at_utc": "2026-11-19T00:34:01+00:00",
+  "generated_at_utc": "2026-11-19T00:40:12+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

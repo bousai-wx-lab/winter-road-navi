@@ -104,8 +104,9 @@ class PageSecurityTests(unittest.TestCase):
         html = (SOURCE_ROOT / "index.html").read_text(encoding="utf-8")
         for directive in ("default-src 'none'", "script-src 'self'", "style-src 'self'", "worker-src 'self'", "form-action 'none'"):
             self.assertIn(directive, html)
-        for phrase in ("現在地を取得せず", "アクセス解析を使用しません", "IPアドレス", "国土地理院"):
+        for phrase in ("現在地を取得せず", "許可された場合だけGoogle Analyticsを使用します", "地点・経路・出発日時・表示設定", "IPアドレス", "国土地理院"):
             self.assertIn(phrase, html)
+        self.assertNotIn("アクセス解析を使用しません", html)
         self.assertNotIn("<script>", html)
 
 

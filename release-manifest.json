@@ -6193,10 +6193,10 @@
       "sha256": "5f42dba980c8dc8eb3046d241f04e8ca63ef4dc951cbf9446ed61c7bf3ede0eb"
     },
     {
-      "bytes": 46241,
+      "bytes": 46466,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "3dea664460316fa2eb7ed4246c1fbd0476a6f69fa409c9e1c68adc2dc0b0ad5d"
+      "sha256": "2fb86be9ea07ed37f5cfcee7f920b652b8b4c4bce279a20dd4d8b4e9b94c6888"
     },
     {
       "bytes": 11702,
@@ -6343,10 +6343,10 @@
       "sha256": "f91d96afd3b0ec9d69c5aa41ad3fe6414f8abc26b77feacce13b010ca9762929"
     },
     {
-      "bytes": 41265,
+      "bytes": 41895,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "92bc387ca2a17b95c1c1b9f39f0999f664b849b7f1a30804cc9d8b7c372294cf"
+      "sha256": "bbec6054b462d9c2480dd5969d9ba3cb3507928d0769dfba24b06132d660ee7b"
     },
     {
       "bytes": 25067,
@@ -6433,10 +6433,10 @@
       "sha256": "06a3f9be6670da6e9a45ff3f11ef6b2da90de9f95f8a6f01d67de2c5135b49f7"
     },
     {
-      "bytes": 4864,
+      "bytes": 5210,
       "mime_type": "text/javascript",
       "path": "tests/page-contract.test.mjs",
-      "sha256": "6a472ffdda827a3e876b663f437197f8ed5656b5914c28f33c613ae737ad958d"
+      "sha256": "d60e5cedb237bc53ff34068caa399de7c5423c0eaecce5532a9599d5df1d4768"
     },
     {
       "bytes": 6090,
@@ -6535,7 +6535,7 @@
       "sha256": "2f306f598df12bce33f5656b6cc14b1e3f502cd02d3a65aaa61132b9230ca7de"
     }
   ],
-  "generated_at_utc": "2026-11-19T00:57:00+00:00",
+  "generated_at_utc": "2026-11-19T01:32:36+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

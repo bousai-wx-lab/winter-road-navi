@@ -238,6 +238,28 @@ label {
   display: none;
 }
 
+.usage-guide-link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border: 1px solid #bdeefa;
+  border-radius: 6px;
+  color: #0a3155;
+  background: #d9f5fb;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.usage-guide-link:hover,
+.usage-guide-link:focus-visible { background: #fff; }
+.usage-guide-link:focus-visible { outline: 3px solid #8de5f6; outline-offset: 2px; }
+
 .header-actions {
   display: flex;
   flex: 0 0 auto;
@@ -306,6 +328,8 @@ main {
   .forecast-timeline[data-dense="true"] .forecast-time-tick { width: 28px; }
 }
 @media (max-width: 760px) {
+  .tool-title-line { gap: 7px; }
+  .usage-guide-link { min-height: 30px; padding: 4px 8px; font-size: 11px; }
   .forecast-timeline { padding: 3px 8px 2px; }
   .forecast-time-heading { font-size: 10px; gap: 2px 7px; }
   .forecast-time-row { gap: 8px; }

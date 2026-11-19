@@ -25,13 +25,17 @@ test("page has no inline event handlers or executable inline scripts", () => {
   assert.equal(html.includes("javascript:"), false);
 });
 
-test("branded winter header and footer link to the blog and X without a usage guide", () => {
+test("branded winter header and footer link to the blog and X with a guide beside the title", () => {
   assert.equal(html.includes('class="topbar-inner"'), true);
   assert.equal(html.includes('src="./assets/bousaiwxlab-site-icon.png"'), true);
   assert.equal(html.includes('class="site-footer"'), true);
   assert.equal(html.includes('href="https://bousai-wx-lab.com/"'), true);
   assert.equal(html.includes('href="https://x.com/bousai_wx_lab"'), true);
-  assert.equal(html.includes("使い方"), false);
+  const titleLine = html.match(/<div class="tool-title-line">([\s\S]*?)<\/div>/)?.[1];
+  assert.match(titleLine, /<h1>冬道そなえナビ<\/h1>\s*<a class="usage-guide-link"/);
+  assert.match(titleLine, /href="https:\/\/bousai-wx-lab\.com\/winter-road-navi-guide\/"/);
+  assert.match(titleLine, /target="_blank" rel="noopener noreferrer"/);
+  assert.match(titleLine, />使い方<\/a>/);
 });
 
 test("header stays compact and map focus does not add a second full frame", () => {

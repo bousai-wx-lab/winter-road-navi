@@ -55,6 +55,12 @@
       "sha256": "d380a9447c9c7c0255a91eed6042157baf08b863779809b893d506559f917688"
     },
     {
+      "bytes": 86671,
+      "mime_type": "image/png",
+      "path": "assets/header-winter-sky.png",
+      "sha256": "75e36073739228f31fb22af43f4522f3a4f24362c4ee69188fe20373b971b240"
+    },
+    {
       "bytes": 1369,
       "mime_type": "image/svg+xml",
       "path": "assets/winter-dawn-road.svg",
@@ -6229,10 +6235,10 @@
       "sha256": "5f42dba980c8dc8eb3046d241f04e8ca63ef4dc951cbf9446ed61c7bf3ede0eb"
     },
     {
-      "bytes": 46594,
+      "bytes": 46593,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "f42f892af4dbea282c4436bb7f239c65e9e6a30e9377d21f733bf95fa13d2131"
+      "sha256": "17c86b6db6abaf05c3303ac999ae9b6ff5ae2e8d00baf4785a74993a544fd9b4"
     },
     {
       "bytes": 11702,
@@ -6271,10 +6277,10 @@
       "sha256": "a4786917a4f317b5aa6c0eec2a2f6f1913095c88abdfe55551c984136c3d52cf"
     },
     {
-      "bytes": 441390,
+      "bytes": 441708,
       "mime_type": "application/json",
       "path": "release-allowlist.json",
-      "sha256": "48ad9c3df6941e8dde81999f7e295ec4cb3ecb8961234be98b1e624d2aebcefe"
+      "sha256": "f18e7b35ec15b435e5440a1f4d5732e25587c3bd8609a25732448c1c789d66e5"
     },
     {
       "bytes": 642,
@@ -6379,10 +6385,10 @@
       "sha256": "f91d96afd3b0ec9d69c5aa41ad3fe6414f8abc26b77feacce13b010ca9762929"
     },
     {
-      "bytes": 41450,
+      "bytes": 41630,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "365d30d36c5c35747216f6e7bb84244e8abef5081f9da30aff355f7e7e085c19"
+      "sha256": "849850a7007ed407075a7d6921293ce016d6e77a566b474f69c344e1ff53299d"
     },
     {
       "bytes": 25067,
@@ -6571,7 +6577,7 @@
       "sha256": "2f306f598df12bce33f5656b6cc14b1e3f502cd02d3a65aaa61132b9230ca7de"
     }
   ],
-  "generated_at_utc": "2026-11-19T08:18:59+00:00",
+  "generated_at_utc": "2026-11-19T08:49:43+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

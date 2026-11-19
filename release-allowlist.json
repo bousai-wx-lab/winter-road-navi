@@ -11,6 +11,7 @@
     "app.js",
     "assets/bousaiwxlab-site-icon.png",
     "assets/coastline-overview.json",
+    "assets/header-winter-sky.png",
     "assets/winter-dawn-road.svg",
     "assets/winter-road-footer-background-extended.png",
     "assets/winter-road-footer-background.png",
@@ -8242,6 +8243,16 @@
       "mime_type": "image/png",
       "width": 1280,
       "height": 129,
+      "bit_depth": 8,
+      "color_type": 2
+    },
+    {
+      "path": "assets/header-winter-sky.png",
+      "bytes": 86671,
+      "sha256": "75e36073739228f31fb22af43f4522f3a4f24362c4ee69188fe20373b971b240",
+      "mime_type": "image/png",
+      "width": 1280,
+      "height": 42,
       "bit_depth": 8,
       "color_type": 2
     }

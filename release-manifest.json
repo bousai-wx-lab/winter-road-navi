@@ -55,6 +55,12 @@
       "sha256": "d380a9447c9c7c0255a91eed6042157baf08b863779809b893d506559f917688"
     },
     {
+      "bytes": 2624955,
+      "mime_type": "image/png",
+      "path": "assets/winter-road-navi-ogp-v2.png",
+      "sha256": "32f6f576cc4c62f94f8883a97aaefb879a399ef6fdb7593afe59ea9c76e382e9"
+    },
+    {
       "bytes": 2759577,
       "mime_type": "image/png",
       "path": "assets/winter-road-navi-ogp.png",
@@ -6199,10 +6205,10 @@
       "sha256": "5f42dba980c8dc8eb3046d241f04e8ca63ef4dc951cbf9446ed61c7bf3ede0eb"
     },
     {
-      "bytes": 48463,
+      "bytes": 48507,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "dd57d3ca436eadd482d19f4c405a74e10efc875376ce3b4ce2a80c7b63fb1dff"
+      "sha256": "4a120ed1d79b8ab1a4bf21287ebdae23277a6e9c74681db5c0481e5e7f022629"
     },
     {
       "bytes": 11702,
@@ -6241,10 +6247,10 @@
       "sha256": "a4786917a4f317b5aa6c0eec2a2f6f1913095c88abdfe55551c984136c3d52cf"
     },
     {
-      "bytes": 439973,
+      "bytes": 440306,
       "mime_type": "application/json",
       "path": "release-allowlist.json",
-      "sha256": "9ee4514614501b801de4e2acf3f275f76b76d4ac6bc355ba73a66a50c5d5cf18"
+      "sha256": "b8cb3f4a2c60eb9f9e10e084f81933d3bb744088b78ad65f4bdfe7dcfa2aa41d"
     },
     {
       "bytes": 642,
@@ -6541,7 +6547,7 @@
       "sha256": "2f306f598df12bce33f5656b6cc14b1e3f502cd02d3a65aaa61132b9230ca7de"
     }
   ],
-  "generated_at_utc": "2026-11-19T02:03:27+00:00",
+  "generated_at_utc": "2026-11-19T03:54:38+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

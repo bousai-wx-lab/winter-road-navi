@@ -61,6 +61,18 @@
       "sha256": "a4eb1cbf071d9e0e5879375f6c52638346d565e7b9a2241492299dc237e64017"
     },
     {
+      "bytes": 334249,
+      "mime_type": "image/png",
+      "path": "assets/winter-road-footer-background.png",
+      "sha256": "a6581cf4cf554d00a4c2dda3a457d1479f491be4c8b23cbfcac81e7bb5025192"
+    },
+    {
+      "bytes": 105258,
+      "mime_type": "image/png",
+      "path": "assets/winter-road-header-background.png",
+      "sha256": "38f9570ec31e158205f63feba1f970e6f0e415ea9a91cbb8f2535721b837ecab"
+    },
+    {
       "bytes": 2624955,
       "mime_type": "image/png",
       "path": "assets/winter-road-navi-ogp-v2.png",
@@ -6211,10 +6223,10 @@
       "sha256": "5f42dba980c8dc8eb3046d241f04e8ca63ef4dc951cbf9446ed61c7bf3ede0eb"
     },
     {
-      "bytes": 46526,
+      "bytes": 46533,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "6998a0df53e404d885310991efceefecf8db6f2ea6afa2f6c1f65f911a2d007b"
+      "sha256": "e6bc7e723c98a968f70f2a48a4b00ce41003cedbed1c4b5c76ae06d3388a2ad3"
     },
     {
       "bytes": 11702,
@@ -6253,10 +6265,10 @@
       "sha256": "a4786917a4f317b5aa6c0eec2a2f6f1913095c88abdfe55551c984136c3d52cf"
     },
     {
-      "bytes": 440341,
+      "bytes": 441028,
       "mime_type": "application/json",
       "path": "release-allowlist.json",
-      "sha256": "4c1787727941a70d2d49ae0e3521cddb19b15668029fe5477ce24af60b239f61"
+      "sha256": "69e7bba7eb6a78dde2be88ad068146e6833adc43d291f0495757b20fcbcaeae0"
     },
     {
       "bytes": 642,
@@ -6361,10 +6373,10 @@
       "sha256": "f91d96afd3b0ec9d69c5aa41ad3fe6414f8abc26b77feacce13b010ca9762929"
     },
     {
-      "bytes": 41458,
+      "bytes": 41245,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "d9900988ba3f439c1d97a2abd5391297f34d67ac077d67985c36207d2e8b9e8f"
+      "sha256": "580650831e2289efc611e8eb999a07c4e81b9df381ec2d5fb1c691247b66089a"
     },
     {
       "bytes": 25067,
@@ -6553,7 +6565,7 @@
       "sha256": "2f306f598df12bce33f5656b6cc14b1e3f502cd02d3a65aaa61132b9230ca7de"
     }
   ],
-  "generated_at_utc": "2026-11-19T06:41:41+00:00",
+  "generated_at_utc": "2026-11-19T07:41:53+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

@@ -318,11 +318,14 @@ main {
   position: relative;
   margin-top: 0;
   color: #d3e0e7;
-  background: #0b2238 url("./assets/winter-road-footer-background.png") center top / 100% auto no-repeat;
+  background: #043c6a;
   border-top: 2px solid #93b7c4;
 }
 .site-footer::before { content: none; }
-.footer-inner { max-width: 1500px; margin: 0 auto; padding: 10px clamp(14px, 2vw, 28px) 8px; }
+.footer-backdrop { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+/* Show source rows 0–244; hide the bright final row and absorb subpixel rounding. */
+.footer-backdrop::before { content: ""; display: block; width: 100%; aspect-ratio: 1280 / 245; background: url("./assets/winter-road-footer-background-extended.png") center top / 100% auto no-repeat; clip-path: inset(0 0 .5px); }
+.footer-inner { position: relative; z-index: 1; max-width: 1500px; margin: 0 auto; padding: 10px clamp(14px, 2vw, 28px) 8px; }
 .footer-top { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 18px; }
 .footer-top::before { content: none; }
 .footer-brand,.footer-links { position: relative; z-index: 1; }
@@ -342,7 +345,7 @@ main {
 .footer-bottom { display: grid; grid-template-columns: minmax(0,1fr); margin-top: 4px; border-top: 1px solid #a5c0cd30; }
 .site-footer .live-data-details { grid-column: 1; grid-row: 1; min-width: 0; padding: 0; margin: 0; border: 0; border-radius: 0; }
 .site-footer .live-data-details summary { width: max-content; max-width: 100%; min-height: 36px; padding: 8px 0; color: #edf3f6; font-size: 12px; cursor: pointer; }
-.footer-detail-content { background: #0b2238; padding: 3px 0 12px; max-width: 100%; line-height: 1.75; }
+.footer-detail-content { padding: 3px 0 12px; max-width: 100%; line-height: 1.75; }
 .site-footer .footer-detail-content h3 { margin: 12px 0 4px; color: #edf3f6; font-size: 14px; }
 .site-footer .footer-detail-content p { margin: 4px 0; color: #c5d8e2; font-size: 13px; }
 .footer-detail-content [hidden] { display: none; }
@@ -356,7 +359,6 @@ main {
 @media (max-width:760px) {
   .footer-top { align-items: flex-start; flex-direction: column; gap: 6px; }
   .topbar { background-position: 66% center; }
-  .site-footer { background-size: auto 129px; background-position: 66% top; }
   .footer-bottom { display: flex; flex-direction: column; }
   .footer-utilities { align-self: stretch; justify-content: flex-start; gap: 2px 12px; }
   .footer-links { margin-top: 0; }

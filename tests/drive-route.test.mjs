@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {departureTime,returnDepartureTime,routeRequest,decodePolyline,decodeRoute,sampleRoute,routeSegments,estimateSnow,createRouteClient,roadKindAt,kmBetween,ROUTE_LIMIT_KM,ROUTE_LIMIT_HOURS} from "../drive-route-data.js";
+import {departureTime,returnDepartureTime,routeRequest,decodePolyline,decodeRoute,sampleRoute,routeSegments,estimateSnow,createRouteClient,roadKindAt,kmBetween,ROUTE_LIMIT_KM,ROUTE_LIMIT_HOURS,WAYPOINT_LIMIT} from "../drive-route-data.js";
 import {forecastPeriods,sourceForTime,createDriveWeather,forecastSnowfallLabel} from "../drive-weather-data.js";
 import {RISK_LEVELS} from "../forecast-risk-data.js";
 
@@ -254,4 +254,37 @@ test("routes exceeding the expanded distance or driving-time boundary still fail
   }
   const json=nationalRouteFixture();json.trip.summary.has_ferry=true;
   assert.throws(()=>decodeRoute(json),/自動車だけ/);
+});
+
+
+test("optional via points keep their order, allow U-turns, and leave the two-endpoint request unchanged",()=>{
+  const a=[135,35],b=[136,36],via=[[135.2,35.1],[135.4,35.3],[135.8,35.7]],before=structuredClone(via);
+  assert.deepEqual(routeRequest(a,b,"fastest",departure).locations,[{lon:135,lat:35,search_cutoff:1000},{lon:136,lat:36,search_cutoff:1000}]);
+  for(const points of [via.slice(0,1),via]){
+    const request=routeRequest(a,b,"fastest",departure,points);
+    assert.deepEqual(request.locations.map(p=>[p.lon,p.lat]),[a,...points,b]);
+    assert.deepEqual(request.locations.map(p=>p.type),[undefined,...points.map(()=>"via"),undefined]);
+  }
+  assert.deepEqual(via,before);
+  assert.equal(WAYPOINT_LIMIT,3);
+});
+
+test("via input rejects a fourth point, missing coordinates, adjacent duplicates, and excessive total distance",()=>{
+  const a=[135,35],b=[136,36],p=[135.5,35.5];
+  for(const via of [[p,p,p,p],[null],[[0,0]],new Array(1)])assert.throws(()=>routeRequest(a,b,"fastest",departure,via),/3か所/);
+  assert.throws(()=>routeRequest(a,b,"fastest",departure,[a]),/50m/);
+  assert.throws(()=>routeRequest(a,a,"fastest",departure),/50m/);
+  assert.doesNotThrow(()=>routeRequest(a,a,"fastest",departure,[p]));
+  assert.throws(()=>routeRequest([122,20],[154,48],"fastest",departure,[[154,48],[122,20]]),/5000km/);
+});
+
+test("a five-location via request decodes as one continuous route with complete timing and geometry",async()=>{
+  const points=[[138,36],[138.01,36],[138.02,36],[138.03,36],[138.04,36]];
+  const request=routeRequest(points[0],points.at(-1),"fastest",departure,points.slice(1,-1));
+  let sent;
+  const client=createRouteClient(async(url,options)=>{sent=JSON.parse(options.body);const fixture=roadFixture();fixture.trip.locations=sent.locations;return Response.json(fixture);});
+  const decoded=await client(request);
+  assert.deepEqual(sent.locations.map(p=>[p.lon,p.lat]),points);
+  assert.deepEqual(decoded.coordinates,points);
+  assert.equal(sampleRoute(decoded,departure).at(-1).time,departure+400000);
 });

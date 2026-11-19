@@ -1,5 +1,5 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
-import { createRouteClient, departureTime, returnDepartureTime, routeRequest, sampleRoute, routeSegments, validPoint, ROUTE_COLORS, PRIORITIES, ROAD_KIND_LABELS } from "./drive-route-data.js?v=20261119-long-drive1";
+import { createRouteClient, departureTime, returnDepartureTime, routeRequest, sampleRoute, routeSegments, validPoint, ROUTE_COLORS, PRIORITIES, ROAD_KIND_LABELS, WAYPOINT_LIMIT } from "./drive-route-data.js?v=20261119-waypoints1";
 import { createDriveWeather } from "./drive-weather-data.js?v=20261118-drive-temperature1";
 import { timeLabel } from "./live-temperature-data.js";
 import { NORMAL_ROAD_RULES } from "./road-risk-data.js";
@@ -55,6 +55,7 @@ export function initDrive(map,hooks={}) {
   const routeClient=createRouteClient(),weather=createDriveWeather();
   let active=false,picking="start",start=null,end=null,token=0,abort=null,trip=null,collapsed=false,direction="outbound";
   const routeCache = {outbound:null, returning:null};
+  let waypoints=[],nextWaypointKey=0;
   const selectedLeg = () => trip?.[direction];
   const markers={},empty={type:"FeatureCollection",features:[]};
   function status(text,state="ready"){$("driveStatus").textContent=text;$("driveStatus").dataset.state=state;}
@@ -75,26 +76,71 @@ export function initDrive(map,hooks={}) {
   function invalidate(){clearResult();status("条件を変更しました。「解析スタート」で更新してください");}
   function pointMarker(key,coordinate,label){
     markers[key]?.remove();delete markers[key];if(!coordinate||!active)return;
-    const element=node("span",label,"drive-marker "+(key==="end"?"drive-marker-end":""));
+    const element=node("span",label,"drive-marker "+(key==="end"?"drive-marker-end":key.startsWith("waypoint-")?"drive-marker-waypoint":""));
+    if(key.startsWith("waypoint-"))element.title=`経由地点 ${label}`;
     markers[key]=new maplibregl.Marker({element}).setLngLat(coordinate).addTo(map);
   }
+  function pointEntries(){
+    return [{key:"start",label:"始点 A",point:start,input:$("driveStart"),pick:$("drivePickStart")},
+      ...waypoints.map((waypoint,i)=>({...waypoint,label:`経由地点 ${i+1}`})),
+      {key:"end",label:"終点 B",point:end,input:$("driveEnd"),pick:$("drivePickEnd")}];
+  }
+  function setPoint(key,point){
+    if(key==="start")start=point;
+    else if(key==="end")end=point;
+    else {const waypoint=waypoints.find(w=>w.key===key);if(waypoint)waypoint.point=point;}
+  }
+  function parsePoint(input){
+    const values=input.value.split(/[,、\s]+/).filter(Boolean).map(Number),point=values.length===2?[values[1],values[0]]:null;
+    return validPoint(point)?point:null;
+  }
+  function firstMissingPoint(){return pointEntries().find(entry=>!entry.point)?.key??null;}
+  function routeOrder(returning=false){const labels=["A",...waypoints.map((_,i)=>String(i+1)),"B"];return (returning?labels.reverse():labels).join(" → ");}
+  function updateWaypointUi(){
+    $("driveWaypoints").hidden=waypoints.length===0;
+    $("driveAddWaypoint").disabled=waypoints.length>=WAYPOINT_LIMIT;
+    $("driveWaypointCount").textContent=waypoints.length?`${waypoints.length} / ${WAYPOINT_LIMIT}か所`:`最大${WAYPOINT_LIMIT}か所`;
+    $("driveWaypointHint").hidden=waypoints.length===0;
+    $("driveWaypointHint").textContent=`${routeOrder()} の順に通ります。${$("driveReturnToggle").checked?"復路は逆順です。":""}`;
+    waypoints.forEach((waypoint,i)=>{
+      waypoint.pick.textContent=`${i+1} 経由を選ぶ`;
+      waypoint.pick.setAttribute("aria-label",`経由地点${i+1}を地図で選ぶ`);
+      waypoint.input.setAttribute("aria-label",`経由地点${i+1}の緯度, 経度`);
+      waypoint.remove.setAttribute("aria-label",`経由地点${i+1}を削除`);
+    });
+  }
   function updateSelection(){
-    $("drivePickStart").setAttribute("aria-pressed",String(picking==="start"));$("drivePickEnd").setAttribute("aria-pressed",String(picking==="end"));
-    pointMarker("start",start,"A");pointMarker("end",end,"B");
-    $("drivePickHint").textContent=picking?(picking==="start"?"地図をクリックして始点 A を選択":"地図をクリックして終点 B を選択"):"始点・終点を変更するときは A・B のボタンを選択";
+    const entries=pointEntries(),keys=new Set(entries.map(entry=>entry.key));
+    for(const key of Object.keys(markers))if(key.startsWith("waypoint-")&&!keys.has(key)){markers[key].remove();delete markers[key];}
+    entries.forEach(entry=>{
+      entry.pick.setAttribute("aria-pressed",String(picking===entry.key));
+      pointMarker(entry.key,entry.point,entry.key==="start"?"A":entry.key==="end"?"B":String(waypoints.findIndex(w=>w.key===entry.key)+1));
+    });
+    const selected=entries.find(entry=>entry.key===picking);
+    $("drivePickHint").textContent=selected?`地図をクリックして${selected.label}を選択`:"地点を変更するときは、各地点のボタンを選択";
     if(active)map.getCanvas().style.cursor=picking?"crosshair":"";
   }
   function pick(key){picking=key;updateSelection();if(matchMedia("(max-width:760px)").matches){document.querySelector(".control-panel").classList.add("is-collapsed");$("panelToggle").textContent="設定を開く";$("panelToggle").setAttribute("aria-expanded","false");}}
-  $("drivePickStart").addEventListener("click",()=>pick("start"));$("drivePickEnd").addEventListener("click",()=>pick("end"));
-  for(const key of ["start","end"]){
-    $(key==="start"?"driveStart":"driveEnd").addEventListener("change",event=>{
-      const values=event.target.value.split(/[,、\s]+/).filter(Boolean).map(Number),point=[values[1],values[0]];
-      invalidate();
-      if(!validPoint(point)){if(key==="start")start=null;else end=null;status("座標は日本付近の「緯度, 経度」で指定してください","error");}
-      else {if(key==="start")start=point;else end=point;picking=start&&end?null:!start?"start":"end";}
+  function bindPointInput(input,key){
+    input.addEventListener("change",()=>{
+      invalidate();const point=parsePoint(input);setPoint(key,point);picking=firstMissingPoint();
+      if(!point)status("座標は日本付近の「緯度, 経度」で指定してください","error");
       updateSelection();
     });
   }
+  $("drivePickStart").addEventListener("click",()=>pick("start"));$("drivePickEnd").addEventListener("click",()=>pick("end"));
+  bindPointInput($("driveStart"),"start");bindPointInput($("driveEnd"),"end");
+  $("driveAddWaypoint").addEventListener("click",()=>{
+    if(waypoints.length>=WAYPOINT_LIMIT)return;
+    const key=`waypoint-${++nextWaypointKey}`,row=node("div",undefined,"drive-endpoint drive-waypoint"),button=node("button"),input=document.createElement("input"),remove=node("button","×","drive-waypoint-remove");
+    button.type=remove.type="button";input.id=`driveWaypoint${nextWaypointKey}`;input.placeholder="緯度, 経度";input.autocomplete="off";
+    const waypoint={key,point:null,row,input,pick:button,remove};waypoints.push(waypoint);
+    button.addEventListener("click",()=>pick(key));bindPointInput(input,key);
+    remove.addEventListener("click",()=>{
+      waypoints=waypoints.filter(w=>w!==waypoint);row.remove();invalidate();picking=firstMissingPoint();updateWaypointUi();updateSelection();
+    });
+    row.append(button,input,remove);$("driveWaypoints").append(row);invalidate();picking=key;updateWaypointUi();updateSelection();button.focus();
+  });
   for(const id of ["driveDeparture","drivePriority","driveStayHours","driveReturnDeparture"])$(id).addEventListener("change",invalidate);
   function updateReturnFields() {
     const requested = $("driveReturnToggle").checked;
@@ -103,6 +149,7 @@ export function initDrive(map,hooks={}) {
     $("driveStayField").hidden = !byStay;
     $("driveReturnDepartureField").hidden = byStay;
     $("driveOutboundBreakHeading").textContent = requested ? "往路の休憩" : "休憩";
+    updateWaypointUi();
   }
   for (const id of ["driveReturnToggle","driveReturnMethod"]) $(id).addEventListener("change",() => {updateReturnFields(); invalidate();});
   updateReturnFields();
@@ -154,7 +201,7 @@ export function initDrive(map,hooks={}) {
     const sourceSummary = sources.size === 1 && sources.has("normal")
       ? "全区間 平年値（予測期間外）" : [...sources].map(sourceLabel).join("／");
     $("driveSummary").textContent=`${route.distance.toFixed(1)}km · 走行 約${Math.round(route.seconds/60)}分${stops?` ＋ 休憩${stops}分`:""} · ${PRIORITIES[priority]} · ${sourceSummary}`;
-    $("driveTripTiming").textContent=`出発 ${timeLabel(departure).slice(5)} → 到着 ${timeLabel(endTime).slice(5)}`;
+    $("driveTripTiming").textContent=`${waypoints.length?`${routeOrder(direction==="returning")} · `:""}出発 ${timeLabel(departure).slice(5)} → 到着 ${timeLabel(endTime).slice(5)}`;
     $("driveTripTiming").title=`出発 ${timeLabel(departure)} → 到着予定 ${timeLabel(endTime)}`;
     $("driveNotices").textContent=[...trip.notices,!route.elevation?"標高を取得できませんでした。経路の気象は下に表示します。":"",priority==="local"&&route.hasHighway?"一般道優先ですが、一部に高速道路を含む経路です。":"",route.hasToll?"有料道路を含みます。":""].filter(Boolean).join(" ");
     $("driveProfileHelpLabel").textContent=$("driveNotices").textContent?"説明・注意あり":"表示の説明";
@@ -236,8 +283,8 @@ export function initDrive(map,hooks={}) {
       showLeg(true);
     });
   }
-  async function planLeg(leg, from, to, departure, priority, breaks, signal) {
-    const request = routeRequest(from,to,priority,departure);
+  async function planLeg(leg, from, to, via, departure, priority, breaks, signal) {
+    const request = routeRequest(from,to,priority,departure,via);
     const key = JSON.stringify(request);
     const cached = routeCache[leg];
     const route = cached?.key === key ? cached.route : await routeClient(request,signal,{waitForCooldown:leg==="returning"});
@@ -250,7 +297,7 @@ export function initDrive(map,hooks={}) {
   $("driveProfileToggle").addEventListener("click",()=>{collapsed=!collapsed;updateProfileVisibility();map.resize();});
   $("driveReset").addEventListener("click",()=>{
     clearResult();
-    start=end=null;routeCache.outbound=routeCache.returning=null;picking="start";collapsed=false;
+    start=end=null;waypoints=[];$("driveWaypoints").replaceChildren();routeCache.outbound=routeCache.returning=null;picking="start";collapsed=false;
     $("driveStart").value=$("driveEnd").value=$("driveDeparture").value=$("driveReturnDeparture").value="";
     $("driveBreaks").replaceChildren();$("driveReturnBreaks").replaceChildren();
     $("drivePriority").value="fastest";$("driveReturnMethod").value="stay";$("driveStayHours").value="2";$("driveReturnToggle").checked=false;
@@ -262,19 +309,23 @@ export function initDrive(map,hooks={}) {
     const timeout=setTimeout(()=>{if(current===token){abort.abort();status("解析が時間内に終わりませんでした。時間をおいて再実行してください","error");}},roundTrip?180000:90000);
     try{
       // Read the visible fields again: autofill/accessibility input may not emit change.
-      const parsePoint=id=>{const v=$(id).value.split(/[,、\s]+/).filter(Boolean).map(Number);return v.length===2?[v[1],v[0]]:null;};
-      start=parsePoint("driveStart");end=parsePoint("driveEnd");
+      start=parsePoint($("driveStart"));end=parsePoint($("driveEnd"));
+      for(const waypoint of waypoints)waypoint.point=parsePoint(waypoint.input);
+      updateSelection();
+      const missing=waypoints.findIndex(waypoint=>!waypoint.point);
+      if(missing>=0){picking=waypoints[missing].key;updateSelection();throw new Error(`経由地点${missing+1}を選んでください。使わない場合は「×」で削除できます。`);}
+      const via=waypoints.map(waypoint=>waypoint.point);
       const departure=departureTime($("driveDeparture").value),priority=$("drivePriority").value;
       $("driveAnalyze").disabled=true;picking=null;updateSelection();
       status(roundTrip?"往路の経路と標高を取得しています":"自動車の経路と標高を取得しています","loading");
-      const outbound = await planLeg("outbound",start,end,departure,priority,readBreaks("driveBreaks"),signal);
+      const outbound = await planLeg("outbound",start,end,via,departure,priority,readBreaks("driveBreaks"),signal);
       let returning = null, returnError = null;
       if (roundTrip) {
         try {
           const options = {method:$("driveReturnMethod").value,hours:$("driveStayHours").value,departure:$("driveReturnDeparture").value};
           const returnDeparture = returnDepartureTime(options,outbound.points.at(-1).time);
           status("復路の経路と標高を取得しています","loading");
-          returning = await planLeg("returning",end,start,returnDeparture,priority,readBreaks("driveReturnBreaks"),signal);
+          returning = await planLeg("returning",end,start,[...via].reverse(),returnDeparture,priority,readBreaks("driveReturnBreaks"),signal);
         } catch (error) {
           signal.throwIfAborted();
           returnError = errorMessage(error);
@@ -303,8 +354,9 @@ export function initDrive(map,hooks={}) {
   map.on("click",event=>{
     if(!active)return;
     if(picking){const point=[event.lngLat.lng,event.lngLat.lat];if(!validPoint(point)){status("日本付近の道路上を選んでください","error");return;}invalidate();
-      if(picking==="start"){start=point;$("driveStart").value=`${point[1].toFixed(5)}, ${point[0].toFixed(5)}`;picking="end";}else{end=point;$("driveEnd").value=`${point[1].toFixed(5)}, ${point[0].toFixed(5)}`;picking=null;}
-      updateSelection();status(start&&end?"始点・終点を選びました。「解析スタート」を押してください":"終点 B を地図で選んでください");
+      const entry=pointEntries().find(entry=>entry.key===picking);
+      setPoint(picking,point);entry.input.value=`${point[1].toFixed(5)}, ${point[0].toFixed(5)}`;picking=firstMissingPoint();
+      updateSelection();status(!picking?"地点を選びました。「解析スタート」を押してください":$("drivePickHint").textContent);
     }else if(selectedLeg() && map.getLayer("drive-route-line")){const hit=map.queryRenderedFeatures([[event.point.x-8,event.point.y-8],[event.point.x+8,event.point.y+8]],{layers:["drive-route-line"]})[0];if(hit)readout(Number(hit.properties.index));}
   });
   return {bringToFront(){if(active)for(const id of ["drive-route-halo","drive-route-line"])if(map.getLayer(id))map.moveLayer(id);},setActive(value){active=value;$("driveControls").hidden=!value;$("driveProfile").hidden=!value||!trip;if(!value){if(!trip && $("driveAnalyze").disabled)status("解析を中止しました。「解析スタート」で再実行できます");++token;abort?.abort();$("driveAnalyze").disabled=false;for(const marker of Object.values(markers))marker.remove();}else{layers();updateSelection();showLeg();}for(const id of ["drive-route-halo","drive-route-line"])if(map.getLayer(id))map.setLayoutProperty(id,"visibility",value?"visible":"none");map.resize();},isPicking:()=>Boolean(picking)};

@@ -612,6 +612,10 @@ main {
 .drive-controls input { min-width:0; max-width:100%; width:100%; border:1px solid #bdcfd9; border-radius:5px; padding:7px; font:inherit; color:#153d58; background:#fff; }
 .drive-endpoint { display:grid; grid-template-columns:115px minmax(0,1fr); gap:6px; margin:6px 0; }
 .drive-endpoint button[aria-pressed="true"],.drive-endpoint button[aria-pressed="true"]:hover,#driveAnalyze,#driveAnalyze:hover { background:#155c72; color:#fff; }
+.drive-waypoint { grid-template-columns:115px minmax(0,1fr) 28px; }
+.drive-waypoint-actions { display:flex; align-items:center; gap:8px; margin:6px 0; }
+.drive-waypoint-actions span { color:#5a727f; font-size:11px; white-space:nowrap; }
+.drive-waypoint .drive-waypoint-remove { padding:0; font-size:18px; }
 .drive-rest-heading { display:flex; justify-content:space-between; align-items:center; }
 .drive-break { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; gap:5px; margin:6px 0; }
 .drive-actions { display:grid; grid-template-columns:2fr 1fr; gap:8px; margin-top:12px; }
@@ -627,6 +631,7 @@ main {
 .drive-legend-row i { height:5px; border:1px solid #8ca1ad; }
 .drive-marker { display:flex; align-items:center; justify-content:center; width:26px; height:26px; background:#155c72; color:white; border:2px solid white; border-radius:50%; font:700 14px sans-serif; box-shadow:0 1px 5px #152d4460; }
 .drive-marker-end { background:#a34a2c; }
+.drive-marker-waypoint { background:#596b9b; }
 @media (max-width:760px) {
   .tool-layout[data-mode="drive"] .control-panel { max-height:48%; }
   .tool-layout[data-mode="drive"] .map-column { display:flex; flex-direction:column; }

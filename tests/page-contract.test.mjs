@@ -13,7 +13,7 @@ test("page explains independent climate estimates and safety limits", () => {
     "道路上の雪・凍結・通行規制や安全は判定しません",
     "公式の日別1kmメッシュではありません",
     "現在地を取得せず",
-    "アクセス解析を使用しません",
+    "許可された場合だけGoogle Analyticsを使用します",
   ]) {
     assert.equal(html.includes(phrase), true, phrase);
   }

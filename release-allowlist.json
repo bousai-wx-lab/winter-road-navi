@@ -7,6 +7,7 @@
     ".nojekyll",
     "README.md",
     "SECURITY.md",
+    "analytics-consent.js",
     "app.js",
     "assets/bousaiwxlab-site-icon.png",
     "assets/coastline-overview.json",
@@ -1063,6 +1064,7 @@
     "temperature-control.js",
     "temperature-display-data.js",
     "temperature-layer.js",
+    "tests/analytics-consent.test.mjs",
     "tests/drive-route.test.mjs",
     "tests/forecast-point.test.mjs",
     "tests/forecast-risk.test.mjs",
@@ -1102,17 +1104,31 @@
     "maps.gsi.go.jp",
     "nature-wx-lab.github.io",
     "nlftp.mlit.go.jp",
+    "region1.google-analytics.com",
     "registry.npmjs.org",
     "valhalla.github.io",
     "valhalla.openstreetmap.de",
     "valhalla1.openstreetmap.de",
     "www.data.jma.go.jp",
+    "www.google-analytics.com",
+    "www.googletagmanager.com",
     "www.gsi.go.jp",
     "www.jma.go.jp",
     "www.openstreetmap.org",
     "x.com"
   ],
-  "allowed_browser_api_fragments": {},
+  "allowed_browser_api_fragments": {
+    "analytics-consent.js": {
+      "localStorage": [
+        "window.localStorage.getItem(CONSENT_KEY)",
+        "window.localStorage.setItem(CONSENT_KEY, value)"
+      ],
+      "document.cookie": [
+        "document.cookie = `${name}=; Max-Age=0; Path=${COOKIE_PATH}; SameSite=Lax; Secure`;",
+        "document.cookie = `${name}=; Max-Age=0; Path=${COOKIE_PATH}; Domain=bousai-wx-lab.github.io; SameSite=Lax; Secure`;"
+      ]
+    }
+  },
   "allowed_binary_assets": [
     {
       "path": "assets/bousaiwxlab-site-icon.png",

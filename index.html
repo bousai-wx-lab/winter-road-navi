@@ -4,13 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp https://www.jma.go.jp; connect-src 'self' https://cyberjapandata.gsi.go.jp https://nature-wx-lab.github.io https://www.jma.go.jp https://valhalla1.openstreetmap.de; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://www.googletagmanager.com; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: https://cyberjapandata.gsi.go.jp https://www.jma.go.jp https://www.google-analytics.com https://region1.google-analytics.com; connect-src 'self' https://cyberjapandata.gsi.go.jp https://nature-wx-lab.github.io https://www.jma.go.jp https://valhalla1.openstreetmap.de https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com; worker-src 'self'; font-src 'self'; manifest-src 'none'; media-src 'none';">
     <title>冬道そなえナビ | Bousai Wx Lab</title>
     <meta name="description" content="9月15日から翌6月15日まで、日別の最低気温・最高気温を切り替え、日最深積雪の平年推定値と道路を同じ地図で確認できます。実況・予想気温、実況・予測の天気、白縁の丸で示す実況積雪深にも切り替えられます。路面の安全判定ではありません。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261118-drive-roundtrip1">
+    <link rel="stylesheet" href="./styles.css?v=20261119-analytics1">
     <script type="module" src="./app.js?v=20261119-snowdepth1" referrerpolicy="no-referrer"></script>
+    <script type="module" src="./analytics-consent.js?v=20261119-1" referrerpolicy="no-referrer"></script>
   </head>
   <body>
     <header class="topbar">
@@ -339,10 +340,22 @@
           <p>天気：実況は気象庁の<a href="https://www.jma.go.jp/jma/kishou/know/suikei_kishou/kaisetsu.html" target="_blank" rel="noopener noreferrer">推計気象分布</a>（約1km・毎時）、予測は<a href="https://www.jma.go.jp/jma/kishou/know/kurashi/bunpu.html" target="_blank" rel="noopener noreferrer">天気分布予報</a>（約5km・3時間の代表的な天気）の公式画像です。実況天気も観測点の値そのものではありません。</p>
           <p>予測の3時間降水量・3時間降雪量：気象庁の天気分布予報の公式画像を約5kmの元格子・元の色で表示します。降水量は1〜4・5〜9・10〜14・15〜19・20mm以上、降雪量は1〜2・3〜5・6cm以上の階級です。対象時刻は3時間の終端です。降雪量は新たに降る雪の量で、積雪深や道路上の雪ではありません。無色は降水・降雪なし、海域、資料なしを含みます。</p>
           <p>実況積雪深：<a href="https://www.jma.go.jp/bosai/amedas/" target="_blank" rel="noopener noreferrer">気象庁アメダス等</a>の正時の観測値を白縁の丸で表示します。資料なしは斜線、0cmは薄いグレー、1cm以上は積雪深に応じて色分けします。数値は地図を拡大したときに表示します。観測点間の補間や推定面・等値線は使用しません。0cmは雪なしと1cm未満の積雪を区別しない共通表示です。予測値モードの丸も最新の正時の実況積雪深を表示し、予報の対象時刻とは別に更新されます。</p>
-          <p class="privacy-note">このツールは現在地を取得せず、住所入力・Cookie・ブラウザ保存・アクセス解析を使用しません。通常の地図の地点選択は画面内で処理します。ドライブの「解析スタート」では、選択した始点・終点と出発日時をFOSSGISのValhallaサービスへ送信します。経路・日時をこのツールで永続保存しません。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。実況値・予測値モードでは、気温データを天気分布予報プラスの配信元（GitHub Pages）、天気画像・観測データを気象庁へ要求します。</p>
+          <p class="privacy-note">このツールは現在地を取得せず、住所入力はありません。通常の地図の地点選択は画面内で処理します。ドライブの「解析スタート」では、選択した始点・終点と出発日時をFOSSGISのValhallaサービスへ送信します。経路・日時をこのツールで永続保存しません。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。実況値・予測値モードでは、気温データを天気分布予報プラスの配信元（GitHub Pages）、天気画像・観測データを気象庁へ要求します。</p>
+          <p class="privacy-note">アクセス人数を把握するため、許可された場合だけGoogle Analyticsを使用します。送信するページ情報はこのツールの固定URLとタイトルです。地点・経路・出発日時・表示設定・URLのクエリやフラグメント・参照元は送信しません。端末・ブラウザに関する一般的な情報が送信され、通信先にはIPアドレスが伝わります。広告用の計測とパーソナライズは無効です。同意の選択だけをWeb Storageへ保存し、許可後の解析Cookieはこのツール専用で最長60日です。拒否しても全機能を利用でき、後から設定を変更できます。<a href="https://bousai-wx-lab.com/privacy-policy/" target="_blank" rel="noopener noreferrer">プライバシーポリシー</a></p>
+          <p><button id="analyticsSettingsButton" class="analytics-settings-button" type="button">アクセス解析の設定</button></p>
         </div>
         <p class="footer-copyright">© 2026 Bousai Wx Lab.</p>
       </div>
     </footer>
+    <section id="analyticsConsentPanel" class="analytics-consent" role="dialog" aria-modal="false" aria-labelledby="analyticsConsentTitle" aria-describedby="analyticsConsentDescription" hidden>
+      <div>
+        <strong id="analyticsConsentTitle">アクセス解析について</strong>
+        <p id="analyticsConsentDescription">許可された場合だけGoogle Analyticsでアクセス人数を計測します。地点・経路・出発日時は送信しません。拒否しても全機能を利用できます。<a href="https://bousai-wx-lab.com/privacy-policy/" target="_blank" rel="noopener noreferrer">詳しい説明</a></p>
+      </div>
+      <div class="analytics-consent-actions">
+        <button id="analyticsDeclineButton" type="button">許可しない</button>
+        <button id="analyticsAcceptButton" type="button">許可する</button>
+      </div>
+    </section>
   </body>
 </html>

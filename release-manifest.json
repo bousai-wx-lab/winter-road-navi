@@ -19,16 +19,22 @@
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
-      "bytes": 45297,
+      "bytes": 46218,
       "mime_type": "text/markdown",
       "path": "README.md",
-      "sha256": "4f37811d2e100cb637eb37f2e4cea88aa92123404e568e6c8c769c5823dca2bb"
+      "sha256": "1e6d3567448b6b528be5d1a1a470574b48a03f225673cb6a34e8b4fb618e3113"
     },
     {
-      "bytes": 1572,
+      "bytes": 2138,
       "mime_type": "text/markdown",
       "path": "SECURITY.md",
-      "sha256": "8cbef046b7f4a19897d3d698488cf19053e3fb48b9154ba7503c7564f96dbea7"
+      "sha256": "a7f1b98937cd0ac10979e9ac3a6f9214b977f1949252d89d7fab62ee64d43173"
+    },
+    {
+      "bytes": 4010,
+      "mime_type": "text/javascript",
+      "path": "analytics-consent.js",
+      "sha256": "8f26be96d9d18f85096a8081a1a127a76649dbd85d43046620ea3dd29afd30c6"
     },
     {
       "bytes": 37674,
@@ -6187,10 +6193,10 @@
       "sha256": "5f42dba980c8dc8eb3046d241f04e8ca63ef4dc951cbf9446ed61c7bf3ede0eb"
     },
     {
-      "bytes": 44107,
+      "bytes": 46241,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "e2a9482c76ca04c116b69cc33730ffedb8f3732d4269d00242a81b55cdaa5a40"
+      "sha256": "48195fa67b2888ca57ff30cf38d293d5d3898eeb0f0ca60d76ba4ec07c74f5dd"
     },
     {
       "bytes": 11702,
@@ -6229,10 +6235,10 @@
       "sha256": "a4786917a4f317b5aa6c0eec2a2f6f1913095c88abdfe55551c984136c3d52cf"
     },
     {
-      "bytes": 439040,
+      "bytes": 439646,
       "mime_type": "application/json",
       "path": "release-allowlist.json",
-      "sha256": "cb086e577152c2e83fe6637c3e61b1979f7bd412f72d5a39c9b0ee26a127544c"
+      "sha256": "86c4c302ded6241ff08030c149566a9612157aa99b27a94fe245cc24cc7226d5"
     },
     {
       "bytes": 642,
@@ -6289,10 +6295,10 @@
       "sha256": "e6a504bd0a36b6d58831de6b11a3eefd20fb31b362caf6b632267e9939be1f11"
     },
     {
-      "bytes": 5155,
+      "bytes": 5300,
       "mime_type": "text/x-python",
       "path": "scripts/test_privacy_gate.py",
-      "sha256": "9f544f26670c083702e2b3dbfab18af621d78832b52498cf7e0e819df1909604"
+      "sha256": "7ca05df48b74d963ee4a4b4097ea9334c24cf071a83ffd0d0cbfecd92ced1074"
     },
     {
       "bytes": 12552,
@@ -6337,10 +6343,10 @@
       "sha256": "f91d96afd3b0ec9d69c5aa41ad3fe6414f8abc26b77feacce13b010ca9762929"
     },
     {
-      "bytes": 40258,
+      "bytes": 41265,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "200769ba6158932832b1abee7a54cd10686a32fd40332ac272551316176400fe"
+      "sha256": "92bc387ca2a17b95c1c1b9f39f0999f664b849b7f1a30804cc9d8b7c372294cf"
     },
     {
       "bytes": 25067,
@@ -6359,6 +6365,12 @@
       "mime_type": "text/javascript",
       "path": "temperature-layer.js",
       "sha256": "f7cceac1b76fc45f9f69ae65ff16c11e9a4025c48ed0bf3bc0f685e9886f828a"
+    },
+    {
+      "bytes": 5437,
+      "mime_type": "text/javascript",
+      "path": "tests/analytics-consent.test.mjs",
+      "sha256": "1a15e8bcfd3a94e1715117bd46d26b795769473682f43bff383767a290a4829f"
     },
     {
       "bytes": 14486,
@@ -6421,10 +6433,10 @@
       "sha256": "06a3f9be6670da6e9a45ff3f11ef6b2da90de9f95f8a6f01d67de2c5135b49f7"
     },
     {
-      "bytes": 4842,
+      "bytes": 4864,
       "mime_type": "text/javascript",
       "path": "tests/page-contract.test.mjs",
-      "sha256": "8980ad7150b96239999f83ab9d93024cf775aec81c94a4367e828f6537f530f1"
+      "sha256": "6a472ffdda827a3e876b663f437197f8ed5656b5914c28f33c613ae737ad958d"
     },
     {
       "bytes": 6090,
@@ -6523,7 +6535,7 @@
       "sha256": "2f306f598df12bce33f5656b6cc14b1e3f502cd02d3a65aaa61132b9230ca7de"
     }
   ],
-  "generated_at_utc": "2026-11-18T22:30:02+00:00",
+  "generated_at_utc": "2026-11-19T00:40:12+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

@@ -354,7 +354,7 @@ main {
 .footer-copyright { margin: 0; color: #edf3f6; font-size: 11px; letter-spacing: .02em; }
 .site-footer summary:focus-visible,.site-footer a:focus-visible,.site-footer button:focus-visible { outline: 2px solid #b9e0ed; outline-offset: 2px; }
 .site-footer summary:hover,.site-footer .analytics-settings-button:hover { color: #fff; }
-.site-footer .footer-brand,.site-footer .footer-links a,.site-footer .footer-utilities { text-shadow: 0 1px 2px #0b2238; }
+.site-footer,.site-footer button { text-shadow: 0 1px 2px #0b2238; }
 @media (max-width:1100px) { .topbar::before { display: none; } }
 @media (max-width:760px) {
   .footer-top { align-items: flex-start; flex-direction: column; gap: 6px; }

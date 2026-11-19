@@ -25,8 +25,8 @@
     <meta name="twitter:image:alt" content="Bousai Wx Lab「冬道そなえナビ」。雪道を走る車と地図を背景に「路面凍結・積雪リスクを地図で確認」と表示。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261119-usage1">
-    <script type="module" src="./app.js?v=20261119-snowdepth1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261119-dawn1">
+    <script type="module" src="./app.js?v=20261119-dawn1" referrerpolicy="no-referrer"></script>
     <script type="module" src="./analytics-consent.js?v=20261119-2" referrerpolicy="no-referrer"></script>
   </head>
   <body>
@@ -315,53 +315,56 @@
 
     <footer class="site-footer">
       <div class="footer-inner">
-        <details id="panelDetails" class="live-data-details"><summary>データと計算の詳細</summary>
-          <div data-help="normal"><h4>選択日の平年値</h4><p>気温は1℃ごとの色分け。欠測・未収録は無色です。</p><p>1991〜2020年を基に独自算出・内挿。気温と日最深積雪は、選択した同じ月日の平年推定値です。9月15日から翌6月15日までの275日に対応します。</p><p>積雪なし・欠測は無色。積雪あり0cmは白で、「1cm以上のみ」を選ぶと無色になります。細い実線は推定した1km格子境界に沿います。</p><p id="seasonPreparationStatus" aria-live="polite"></p><p id="snowPreparationStatus" aria-live="polite"></p></div>
-          <div data-help="temperature" hidden><h4>気温</h4><p id="liveUpdated"></p><p id="liveSource"></p><p id="liveColorNote"></p><p id="liveUpdateNote"></p></div>
-          <div data-help="forecastPoint" hidden><h4>地点の予測</h4><p>地点名は、<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2026.html" target="_blank" rel="noopener noreferrer">国土交通省の国土数値情報（2026年1月1日の行政区域データ）</a>を基に、Bousai Wx Labが予測メッシュの中心位置で集計しています。晴れ・くもりでは、3時間降水量と3時間降雪量の欄を横線で表示します。</p></div>
-          <div data-help="weather" hidden><h4>天気・降水・降雪</h4><p id="weatherUpdated"></p><p id="weatherDescription"></p></div>
-          <div data-help="risk" hidden><h4>道路の気象条件</h4><p id="riskUpdated"></p><p>対象時刻の気温と前12時間の降水、3時間の天気・降雪から色分けします。降水後の低温は黄・オレンジ、雪は降雪量に応じてピンク・赤・紫・黒を優先。欠けた降水・降雪予報は、計算上0として扱います。</p></div>
-          <div data-help="observedRisk" hidden><h4>実況の道路リスク</h4><p>実況気温は約5km格子、降水・降雪は最寄りの有効な気象庁観測点を15km以内で参照します。前12時間は3時間降水量を4枠、前3時間降雪は1時間降雪量を3枠使います。</p><p>降雪が0cmでも、同じ対象時刻の推計天気が「雪」ならピンクです。雪の条件は低温・降水より優先します。道路の色は気象条件の目安です。</p></div>
-          <div data-help="snow" hidden><h4>積雪深</h4><p id="liveSnowDisplayHelp" class="section-hint">拡大すると数値を表示。丸を押すと地点の詳細。</p><p id="liveSnowUpdated"></p><p>気象庁アメダス等の観測。0cmは雪なしと1cm未満の積雪を区別しません。斜線は実況の資料なしです。観測地点以外の積雪深は推定しません。</p><p>予測値モードの丸も、最新の正時の実況積雪深を表示します。</p><p>実況は過去24時間の正時を選択できます。10分ごと・タブ復帰時に配信を確認します。</p></div>
-          <p class="road-temperature-note">線の色は1km格子の気温・積雪平年値による独自区分です。積雪面の表示と独立し、より悪い条件を優先します。現在の路面状態ではありません。</p><p>高速道路は太線、一般道路は細線。拡大すると細街路も表示します。気温で着色する場合、0℃以下・0℃超〜2℃・2℃超〜5℃で区分し、5℃超は道路区分色です。</p>
-        </details>
-
-        <section class="scope-note" aria-label="データの意味と注意">
-          <span class="scope-icon" aria-hidden="true">i</span>
-          <div>
-            <strong id="dataMeaning">気温・積雪とも平年の推定分布です。予報・実況・路面状態ではありません。</strong>
-            <span>道路上の雪・凍結・通行規制や安全は判定しません。出発前は最新の気象情報と道路管理者の情報を確認してください。</span>
-          </div>
-        </section>
         <div class="footer-top">
           <a class="footer-brand" href="https://bousai-wx-lab.com/" target="_blank" rel="noopener noreferrer" aria-label="Bousai Wx Labブログを新しいタブで開く">
             <img class="footer-logo" src="./assets/bousaiwxlab-site-icon.png" width="512" height="512" alt="">
-            <span>
-              <strong>Bousai Wx Lab</strong>
-              <small>冬道そなえナビ</small>
-            </span>
+            <span><strong>Bousai Wx Lab</strong><small>冬道そなえナビ</small></span>
           </a>
           <nav class="footer-links" aria-label="関連リンク">
-            <a href="https://bousai-wx-lab.com/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">↗</span> ブログ</a>
-            <a href="https://x.com/bousai_wx_lab" target="_blank" rel="noopener noreferrer"><span class="footer-x" aria-hidden="true">X</span> @bousai_wx_lab</a>
+            <a href="https://bousai-wx-lab.com/" target="_blank" rel="noopener noreferrer">ブログ ↗</a>
+            <a href="https://bousai-wx-lab.com/winter-road-navi-guide/" target="_blank" rel="noopener noreferrer">使い方 ↗</a>
+            <a href="https://x.com/bousai_wx_lab" target="_blank" rel="noopener noreferrer"><span class="footer-x" aria-hidden="true">X</span> 公式X ↗</a>
           </nav>
         </div>
-        <div class="footer-copy">
-          <p>道路・海岸線・都府県境・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a>。中間の拡大段階の海岸線は<a href="https://github.com/gsi-cyberjapan/optimal_bvmap" target="_blank" rel="noopener noreferrer">国土地理院最適化ベクトルタイル</a>の海水域を使用。</p>
-          <p>国土地理院のデータをBousai Wx Labが独自に区分・着色して表示しています。データは試験提供で、最新状況と異なる場合があります。</p>
-          <p>平年の気温：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年日別平年値</a>・国土数値情報標高データを基に独自算出・独自内挿。最高気温は地点の日別変化と月別1km推定値を組み合わせています。公式の日別1kmメッシュではありません。</p>
-          <p>積雪：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年の日最深積雪平年値</a>と月別1km推定値から独自推定。地上観測の「現象なし」と「現象あり0cm」を分け、アメダスの曖昧な0cmは不在の根拠にしていません。全国の雪域境界も独自推定であり、公式の日別1kmメッシュではありません。細い実線は現象の有無、および1・5・10・20・50・100cmの各閾値をまたぐ格子境界です。</p>
-          <p>気温の1km格子は局所的な精度を保証しません。最低気温は917地点、最高気温は916地点から推定し、各383,497格子を着色、4,220格子は欠測。最低気温の地点除外検証の日別RMSEは約0.49〜1.30℃。最高気温の日別変化の検証は気温全体の独立した精度保証ではありません。盆地・沿岸・高標高などでは数℃の誤差が残り、全陸地の網羅は保証しません。</p>
-          <p>9月15日から翌6月15日までの275日を、年末年始をまたいで連続表示します。2月29日を含み、気象庁の元の2月29日値は前後日の平均です。一部の観測地点は30年未満の統計を含みます。<a href="https://www.jma.go.jp/bosai/" target="_blank" rel="noopener noreferrer">最新の気象情報（気象庁）</a></p>
-          <p>実況・予想気温：<a href="https://nature-wx-lab.github.io/weather-distribution-plus/" target="_blank" rel="noopener noreferrer">Nature Wx Lab「天気分布予報プラス」</a>の数値配信を使用。予想は気象庁の約5km天気分布予報、実況は気象庁のアメダス10分値・日別値から内挿した約5kmメッシュです。元ツールの実況気温の約1km色タイルとは異なり、2℃境界を数値で判定します。実況は地点の実測値そのものではなく、更新・配信の遅れがあり得ます。予想は日最低・日最高と3時間気温、実況の日別値は過去7日を含みます。いずれも路面温度・凍結・通行可否を示しません。</p>
-          <p>天気：実況は気象庁の<a href="https://www.jma.go.jp/jma/kishou/know/suikei_kishou/kaisetsu.html" target="_blank" rel="noopener noreferrer">推計気象分布</a>（約1km・毎時）、予測は<a href="https://www.jma.go.jp/jma/kishou/know/kurashi/bunpu.html" target="_blank" rel="noopener noreferrer">天気分布予報</a>（約5km・3時間の代表的な天気）の公式画像です。実況天気も観測点の値そのものではありません。</p>
-          <p>予測の3時間降水量・3時間降雪量：気象庁の天気分布予報の公式画像を約5kmの元格子・元の色で表示します。降水量は1〜4・5〜9・10〜14・15〜19・20mm以上、降雪量は1〜2・3〜5・6cm以上の階級です。対象時刻は3時間の終端です。降雪量は新たに降る雪の量で、積雪深や道路上の雪ではありません。無色は降水・降雪なし、海域、資料なしを含みます。</p>
-          <p>実況積雪深：<a href="https://www.jma.go.jp/bosai/amedas/" target="_blank" rel="noopener noreferrer">気象庁アメダス等</a>の正時の観測値を白縁の丸で表示します。資料なしは斜線、0cmは薄いグレー、1cm以上は積雪深に応じて色分けします。数値は地図を拡大したときに表示します。観測点間の補間や推定面・等値線は使用しません。0cmは雪なしと1cm未満の積雪を区別しない共通表示です。予測値モードの丸も最新の正時の実況積雪深を表示し、予報の対象時刻とは別に更新されます。</p>
-          <p class="privacy-note">このツールは現在地を取得せず、住所入力はありません。通常の地図の地点選択は画面内で処理します。ドライブの「解析スタート」では、選択した始点・終点と出発日時をFOSSGISのValhallaサービスへ送信します。経路・日時をこのツールで永続保存しません。地図を動かすと、表示範囲のタイル要求とIPアドレス等の通信情報が国土地理院および配信元に伝わります。実況値・予測値モードでは、気温データを天気分布予報プラスの配信元（GitHub Pages）、天気画像・観測データを気象庁へ要求します。</p>
-          <p class="privacy-note">アクセス人数を把握するため、許可された場合だけGoogle Analyticsを使用します。送信するページ情報はこのツールの固定URLとタイトルです。地点・経路・出発日時・表示設定・URLのクエリやフラグメント・参照元は送信しません。端末・ブラウザに関する一般的な情報が送信され、通信先にはIPアドレスが伝わります。広告用の計測とパーソナライズは無効です。同意の選択だけをWeb Storageへ保存し、許可後の解析Cookieはこのツール専用で最長60日です。拒否しても全機能を利用でき、後から設定を変更できます。<a href="https://bousai-wx-lab.com/privacy-policy/" target="_blank" rel="noopener noreferrer">プライバシーポリシー</a></p>
-          <p><button id="analyticsSettingsButton" class="analytics-settings-button" type="button">アクセス解析の設定</button></p>
+        <section class="scope-note" aria-label="データの意味と注意">
+          <div><strong id="dataMeaning">気温・積雪とも平年の推定分布です。予報・実況・路面状態ではありません。</strong>
+            <span>表示は気象情報に基づく目安です。実際の路面状態・通行可否は判定しません。出発前に最新の気象・道路情報を確認してください。</span>
+          </div>
+        </section>
+        <p class="footer-attribution">地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">地理院地図Vector・地理院タイル</a>（Bousai Wx Lab加工）</p>
+        <div class="footer-bottom">
+          <details id="panelDetails" class="live-data-details">
+            <summary>データ・出典・利用上の注意</summary>
+            <div class="footer-detail-content">
+              <h3>表示の意味と注意</h3>
+              <div data-help="normal">
+                <p>気温・日最深積雪は1991〜2020年を基に独自算出・独自内挿した平年推定値です。公式の日別1kmメッシュではありません。9月15日から翌6月15日までの同じ月日を比較でき、当日の予報・実況ではありません。局所的な誤差や未収録の場所があります。</p>
+                <p>積雪なし・欠測は無色、積雪現象あり0cmは白です。地上観測の「現象なし」と「現象あり0cm」を区別し、曖昧な0cmから雪の不在を判断しません。道路上の積雪を示すものではありません。</p>
+                <p id="seasonPreparationStatus" aria-live="polite"></p><p id="snowPreparationStatus" aria-live="polite"></p>
+              </div>
+              <div data-help="temperature" hidden><p id="liveUpdated"></p><p id="liveSource"></p><p id="liveColorNote"></p><p id="liveUpdateNote"></p></div>
+              <div data-help="weather" hidden><p id="weatherUpdated"></p><p id="weatherDescription"></p></div>
+              <div data-help="risk" hidden><p id="riskUpdated"></p><p>道路の参考色は、対象時刻の気温、前12時間の降水、3時間の天気・降雪による独自区分です。雪の条件を優先します。欠けた降水・降雪予報を計算上0として扱うため、通常色でも安全や降水なしを保証しません。</p></div>
+              <div data-help="observedRisk" hidden><p>実況気温と近隣観測点の前12時間降水・前3時間降雪による道路の参考色です。降雪0cmでも同じ対象時刻の推計天気が雪なら雪の条件を優先します。道路で測った値ではありません。</p></div>
+              <div data-help="snow" hidden><p id="liveSnowDisplayHelp" class="section-hint">丸は観測積雪深、面は気象庁の解析積雪深です。</p><p id="liveSnowUpdated"></p><p>観測の0cmは雪なしと1cm未満の積雪を区別せず、資料なしとは異なります。観測点間の積雪深は推定しません。解析積雪深の面は約5km格子の推定値です。予測値モードの丸も最新の実況積雪深で、予報対象時刻の積雪ではありません。</p></div>
+              <div data-help="drive" hidden><p>通過予定時刻が予測期間内なら予測、期間外なら同じ月日の平年値を使います。予測区間の通信失敗を平年値で補いません。所要時間は渋滞・積雪による遅れや通行止めを含まず、到着時刻を保証しません。</p></div>
+              <p class="road-temperature-note">道路の色は気象条件による独自区分です。現在の路面状態ではありません。</p>
+              <h3>データの出典</h3>
+              <p>道路・境界・背景地図：<a href="https://maps.gsi.go.jp/development/vt.html" target="_blank" rel="noopener noreferrer">国土地理院 地理院地図Vector・地理院タイル</a>。一部の海岸線は<a href="https://github.com/gsi-cyberjapan/optimal_bvmap" target="_blank" rel="noopener noreferrer">国土地理院最適化ベクトルタイル</a>の海水域を使用しています。独自に区分・着色しており、試験提供のデータは最新状況と異なる場合があります。</p>
+              <div data-help="normal"><p>平年値：<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁1991〜2020年日別平年値・日最深積雪平年値</a>、国土数値情報標高データを基に独自推定しています。</p></div>
+              <div data-help="liveSources" hidden><p>気温：<a href="https://nature-wx-lab.github.io/weather-distribution-plus/" target="_blank" rel="noopener noreferrer">Nature Wx Lab「天気分布予報プラス」</a>の数値配信。実況は気象庁アメダス等から内挿した約5kmメッシュで、地点の実測値そのものではありません。予測は気象庁の約5km天気分布予報です。更新・配信に遅れがあり得ます。</p></div>
+              <div data-help="observedSources" hidden><p>実況天気：気象庁の<a href="https://www.jma.go.jp/jma/kishou/know/suikei_kishou/kaisetsu.html" target="_blank" rel="noopener noreferrer">推計気象分布</a>。実況積雪：<a href="https://www.jma.go.jp/bosai/amedas/" target="_blank" rel="noopener noreferrer">アメダス等</a>の観測、または気象庁の解析積雪深です。</p></div>
+              <div data-help="forecastSources" hidden><p>予測の天気・3時間降水量・3時間降雪量：気象庁の<a href="https://www.jma.go.jp/jma/kishou/know/kurashi/bunpu.html" target="_blank" rel="noopener noreferrer">天気分布予報</a>の公式画像です。実況積雪の丸は<a href="https://www.jma.go.jp/bosai/amedas/" target="_blank" rel="noopener noreferrer">アメダス等</a>の最新観測です。</p></div>
+              <div data-help="forecastPoint" hidden><p>地点名は<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2026.html" target="_blank" rel="noopener noreferrer">国土数値情報の行政区域データ</a>から予測メッシュごとに集計しています。</p></div>
+              <div data-help="drive" hidden><p>経路・標高：<a href="https://valhalla.github.io/valhalla/" target="_blank" rel="noopener noreferrer">FOSSGISのValhalla</a>。気温は<a href="https://nature-wx-lab.github.io/weather-distribution-plus/" target="_blank" rel="noopener noreferrer">天気分布予報プラス</a>の数値配信、天気・降水・降雪は<a href="https://www.jma.go.jp/jma/kishou/know/kurashi/bunpu.html" target="_blank" rel="noopener noreferrer">気象庁の天気分布予報</a>、期間外は<a href="https://www.data.jma.go.jp/stats/data/mdrr/normal/index.html" target="_blank" rel="noopener noreferrer">気象庁の平年値</a>を基にした独自推定値です。区間ごとの出典は結果の表で確認できます。</p></div>
+              <p><a href="https://www.jma.go.jp/bosai/" target="_blank" rel="noopener noreferrer">最新の気象情報（気象庁）</a>も確認してください。</p>
+              <h3>通信・アクセス解析</h3>
+              <p>現在地を取得せず、通常の地点選択は画面内で処理します。ドライブ解析では始点・終点と出発日時をFOSSGISのValhallaへ送信します。経路・日時をこのツールで永続保存しません。地図タイルの要求範囲とIPアドレス等は国土地理院・配信元へ、実況・予測データの要求は気象庁・気温配信元へ伝わります。</p>
+              <p>許可された場合だけGoogle Analyticsを使用します。ページ情報は固定URLとタイトルのみで、地点・経路・出発日時・表示設定・URLのクエリやフラグメント・参照元は送信しません。一般的な端末・ブラウザ情報と通信先へのIPアドレスの伝達を伴います。広告用計測・パーソナライズは無効です。同意の選択をWeb Storageへ保存し、許可後の解析Cookieはツール専用で最長60日です。拒否しても全機能を利用でき、下の設定から変更できます。</p>
+            </div>
+          </details>
+          <div class="footer-utilities"><a href="https://bousai-wx-lab.com/privacy-policy/" target="_blank" rel="noopener noreferrer">プライバシーポリシー</a><button id="analyticsSettingsButton" class="analytics-settings-button" type="button">アクセス解析の設定</button><span class="footer-copyright">© 2026 Bousai Wx Lab.</span></div>
         </div>
-        <p class="footer-copyright">© 2026 Bousai Wx Lab.</p>
       </div>
     </footer>
     <section id="analyticsConsentPanel" class="analytics-consent" role="dialog" aria-modal="false" aria-labelledby="analyticsConsentTitle" aria-describedby="analyticsConsentDescription" hidden>

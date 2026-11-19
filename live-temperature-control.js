@@ -71,8 +71,8 @@ export function initLiveTemperature(map,hooks={}) {
     const label=mode==="observed"?"実況":"予測";
     $("liveControls").setAttribute("aria-label",`${label}気温の設定`);
     $("liveKindLabel").textContent="気温の種類";
-    $("liveColorNote").textContent="気温表示の面は全モード共通の1℃ごとの配色。差の表示は低い側が青、高い側が赤です。道路は選択日の気温で0・2・5℃を境に着色します。";
-    $("liveUpdateNote").textContent="天気分布予報プラスと同じ数値を使用。10分ごと・タブ復帰時に更新を確認します。"+(mode==="observed"?"実況の最新枠を選択中は最新時刻へ進み、過去の対象を選んだ場合はその対象を保ちます。":"選択した予想の対象日時を保ちます。実況値は実況値モードで確認できます。");
+    $("liveColorNote").textContent="気温は格子の推定値です。路面温度ではありません。";
+    $("liveUpdateNote").textContent="表示中の対象日時と発表・更新時刻を確認してください。"+(mode==="observed"?"実況の最新枠を選択中は最新時刻へ進み、過去の対象を選んだ場合はその対象を保ちます。":"選択した予想の対象日時を保ちます。実況値は実況値モードで確認できます。");
     controls();
   }
   function setStatus(text,state) {status.textContent=text;status.dataset.state=state;$("liveRefresh").hidden=state!=="error";hooks.onChange?.();}

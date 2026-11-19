@@ -4,8 +4,8 @@ import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=2026
 import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20261110-drive4";
 import { createRoadTemperature } from "./road-temperature.js?v=20261023-zoomcolor1";
 import { initSnow } from "./snow-control.js?v=20261118-observed-snow2";
-import { initLiveTemperature } from "./live-temperature-control.js?v=20261118-point-time1";
-import { initWeather } from "./weather-control.js?v=20261119-snowdepth1";
+import { initLiveTemperature } from "./live-temperature-control.js?v=20261119-dawn1";
+import { initWeather } from "./weather-control.js?v=20261119-dawn1";
 import { initLiveSnow } from "./live-snow-control.js?v=20261118-observed-snow2";
 import { initSnowAnalysis } from "./snow-analysis-control.js?v=20261118-observed-snow2";
 import { initObservedRoadRisk, OBSERVED_ROAD_RULES } from "./observed-road-risk.js?v=20261118-observed-snow2";
@@ -324,6 +324,8 @@ function applyDisplay() {
     document.querySelector("#map-heading").textContent="ドライブの経路と通過時刻の気象";
     document.querySelector("#map").setAttribute("aria-label","ドライブの始点と終点を選ぶ地図");
     document.querySelector("#dataMeaning").textContent="通過予定時刻の予測、期間外は平年値を使う気象の目安です。所要時間は渋滞・積雪による遅れを含みません。";
+    for (const help of document.querySelectorAll("[data-help]")) help.hidden = help.dataset.help !== "drive";
+    document.querySelector(".road-temperature-note").textContent = "気象条件による参考色です。実際の路面状態・通行可否は判定しません。";
     drive?.setActive(true);
     details.hidden=true; syncDriveBackground(); refreshTooltip(); return;
   }
@@ -360,7 +362,7 @@ function applyDisplay() {
   appearance.hidden = !temperature;
   document.querySelector(".control-panel").dataset.mode = mode;
   for (const help of document.querySelectorAll("[data-help]")) {
-    help.hidden = !({normal:!live,temperature:live && temperature,weather:distribution,forecastPoint:mode === "forecast",risk:riskView,observedRisk:observedRiskView,snow:riskView || observedSnowView()}[help.dataset.help]);
+    help.hidden = !({normal:!live,temperature:live && temperature,weather:distribution,forecastPoint:mode === "forecast",risk:riskView,observedRisk:observedRiskView,snow:riskView || observedSnowView(),liveSources:live,observedSources:mode === "observed",forecastSources:mode === "forecast",drive:false}[help.dataset.help]);
   }
   document.querySelector(".road-section .road-temperature-legend").hidden = !live || !temperature;
   document.querySelector("#normalRoadControls").hidden = live;
@@ -377,7 +379,7 @@ function applyDisplay() {
   document.querySelector("#map").dataset.displayView = live ? displayView : "temperature";
   document.querySelector("#dataMeaning").textContent = !live ? "気温・積雪とも平年の推定分布です。予報・実況・路面状態ではありません。" : displayView === "snow" ? "白縁の丸は積雪深の観測点です。点のない場所の積雪深は推定しません。道路上の積雪ではありません。" : displayView === "precipitation" ? "予測降水量は約5kmメッシュ内の平均3時間降水量（mm）です。" : displayView === "snowfall" ? "予測降雪量は約5kmメッシュ内の平均3時間降雪量（cm）です。積雪深ではありません。" : displayView === "weather" ? mode === "observed" ? "実況天気は気象庁の推計気象分布です。各地点の実測値ではありません。" : "予測天気は気象庁の3時間の代表的な天気です。" : `${label}の格子気温です。路面温度・凍結・通行可否を示しません。`;
   if(riskView)document.querySelector("#dataMeaning").textContent="色付きの線は道路の独自リスク区分、背景は予測天気です。白縁の丸は最新の実況積雪深です。";
-  if(displayView === "snowdepth") document.querySelector("#dataMeaning").textContent="気象庁の約5km格子の予想積雪深です。予報の基準時刻から6時間先まで、1時間ごとの公式画像を表示します。";
+  if(mode === "forecast" && displayView === "snowdepth") document.querySelector("#dataMeaning").textContent="気象庁の約5km格子の予想積雪深です。予報の基準時刻から6時間先まで、1時間ごとの公式画像を表示します。";
   if (observedRiskView) {
     document.querySelector("#dataMeaning").textContent="背景は最新の推計天気、線は実況気温と前12時間降水・前3時間降雪による道路の参考色です。";
     document.querySelector(".road-temperature-note").textContent="実況による道路の参考色です。路面状態は道路管理者の情報で確認してください。";

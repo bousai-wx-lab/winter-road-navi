@@ -18,10 +18,10 @@ export function initWeather(map,hooks={}) {
     $("weatherLegend").hidden=view!=="weather";$("precipitationLegend").hidden=view!=="precipitation";$("snowfallLegend").hidden=view!=="snowfall";
     $("snowDepthLegend").hidden=view!=="snowdepth";
     $("weatherDescription").textContent=view==="snowdepth"
-      ? "気象庁の降雪短時間予報による積雪深を、約5km格子の公式画像のまま表示します。予報の基準時刻から6時間先まで、1時間ごとの積雪深です。10分ごと・タブ復帰時に更新を確認します。"
+      ? "気象庁の降雪短時間予報による積雪深を、約5km格子の公式画像のまま表示します。予報の基準時刻から6時間先まで、1時間ごとの積雪深です。"
       : view==="weather"
-      ? "気象庁の天気画像をそのまま表示。無色は海域・資料なしです。10分ごと・タブ復帰時に更新を確認します。"
-      : `気象庁の約5kmメッシュ・3時間の合計を公式画像のまま表示。${view==="snowfall"?"降雪量は期間中に新たに降る雪の量で、積雪深ではありません。":""}無色は${view==="snowfall"?"降雪":"降水"}なし・海域・資料なしを含み、無色だけで資料の有無は判別できません。10分ごと・タブ復帰時に更新を確認します。`;
+      ? "気象庁の天気画像をそのまま表示。無色は海域・資料なしです。"
+      : `気象庁の約5kmメッシュ・3時間の合計を公式画像のまま表示。${view==="snowfall"?"降雪量は期間中に新たに降る雪の量で、積雪深ではありません。":""}無色は${view==="snowfall"?"降雪":"降水"}なし・海域・資料なしを含み、無色だけで資料の有無は判別できません。`;
   }
   function clear() {
     for(const id of layers.splice(0)) if(map.getLayer(id))map.removeLayer(id);

@@ -10,7 +10,7 @@ test("page explains independent climate estimates and safety limits", () => {
   for (const phrase of [
     "独自算出・独自内挿",
     "予報・実況・路面状態ではありません",
-    "道路上の雪・凍結・通行規制や安全は判定しません",
+    "実際の路面状態・通行可否は判定しません",
     "公式の日別1kmメッシュではありません",
     "現在地を取得せず",
     "許可された場合だけGoogle Analyticsを使用します",
@@ -60,7 +60,7 @@ test("road controls and mesh calendar exist, old station blur remains absent", (
 test("winter calendar and background preparation are visible without exposing summer controls", () => {
   assert.equal(html.includes('id="dateSlider" type="range" min="0" max="274" value="0"'), true);
   assert.equal(html.includes('id="seasonPreparationStatus"'), true);
-  assert.equal(html.includes("9月15日から翌6月15日までの275日"), true);
+  assert.equal(html.includes("9月15日から翌6月15日まで"), true);
   assert.equal(html.includes("1年を再生"), false);
 });
 
@@ -72,8 +72,7 @@ test("snow shares the same map and calendar with independent visibility, opacity
   assert.equal(html.includes("＋雪域</span>"), true);
   assert.equal(html.includes('id="snowPositiveOnly" type="button" aria-pressed="false"'), true);
   assert.equal(html.includes("積雪なし・欠測は無色"), true);
-  assert.equal(html.includes("細い実線"), true);
-  assert.equal(html.includes("推定した1km格子境界"), true);
+  assert.equal(html.includes("積雪現象あり0cmは白"), true);
   assert.equal(app.includes("initSnow(map, grid, manifest, refreshTooltip)"), true);
 });
 

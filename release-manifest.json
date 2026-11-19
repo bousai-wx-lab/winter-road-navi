@@ -37,10 +37,10 @@
       "sha256": "81cb64a8bc620f70ab7ff9ba12a470fc9b06656c48c87636ff1f9a940982e27f"
     },
     {
-      "bytes": 37674,
+      "bytes": 38082,
       "mime_type": "text/javascript",
       "path": "app.js",
-      "sha256": "0fbfc60df6890f2e9074484ef490b3577d3e47ff45e481aa66937a3e473cf54b"
+      "sha256": "5668212e539186ec68eb7e6b2114b5b238c26e527d8e108a5d776dea749aae08"
     },
     {
       "bytes": 266670,
@@ -53,6 +53,12 @@
       "mime_type": "application/json",
       "path": "assets/coastline-overview.json",
       "sha256": "d380a9447c9c7c0255a91eed6042157baf08b863779809b893d506559f917688"
+    },
+    {
+      "bytes": 1369,
+      "mime_type": "image/svg+xml",
+      "path": "assets/winter-dawn-road.svg",
+      "sha256": "a4eb1cbf071d9e0e5879375f6c52638346d565e7b9a2241492299dc237e64017"
     },
     {
       "bytes": 2624955,
@@ -6205,10 +6211,10 @@
       "sha256": "5f42dba980c8dc8eb3046d241f04e8ca63ef4dc951cbf9446ed61c7bf3ede0eb"
     },
     {
-      "bytes": 48507,
+      "bytes": 46930,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "4a120ed1d79b8ab1a4bf21287ebdae23277a6e9c74681db5c0481e5e7f022629"
+      "sha256": "15c3f11e757ec1cf3aaa191f9ef57faa8c8726aeca46eb3c52da9cf9d19edb55"
     },
     {
       "bytes": 11702,
@@ -6223,10 +6229,10 @@
       "sha256": "0cca7e3526800d1937fedbd766afba5a2d0542d8a79b3b6b30c83519867e990a"
     },
     {
-      "bytes": 17714,
+      "bytes": 17561,
       "mime_type": "text/javascript",
       "path": "live-temperature-control.js",
-      "sha256": "3c7e047551077d67a162b393d09514778ae2f52153ec124ff4617c26705c477f"
+      "sha256": "c7f1218a427b9ea9a55274f07f5ba9ea665ccb495044bac9d9cbcb496fedd1bb"
     },
     {
       "bytes": 10971,
@@ -6247,10 +6253,10 @@
       "sha256": "a4786917a4f317b5aa6c0eec2a2f6f1913095c88abdfe55551c984136c3d52cf"
     },
     {
-      "bytes": 440306,
+      "bytes": 440341,
       "mime_type": "application/json",
       "path": "release-allowlist.json",
-      "sha256": "b8cb3f4a2c60eb9f9e10e084f81933d3bb744088b78ad65f4bdfe7dcfa2aa41d"
+      "sha256": "4c1787727941a70d2d49ae0e3521cddb19b15668029fe5477ce24af60b239f61"
     },
     {
       "bytes": 642,
@@ -6355,10 +6361,10 @@
       "sha256": "f91d96afd3b0ec9d69c5aa41ad3fe6414f8abc26b77feacce13b010ca9762929"
     },
     {
-      "bytes": 41895,
+      "bytes": 41458,
       "mime_type": "text/css",
       "path": "styles.css",
-      "sha256": "bbec6054b462d9c2480dd5969d9ba3cb3507928d0769dfba24b06132d660ee7b"
+      "sha256": "d9900988ba3f439c1d97a2abd5391297f34d67ac077d67985c36207d2e8b9e8f"
     },
     {
       "bytes": 25067,
@@ -6445,10 +6451,10 @@
       "sha256": "06a3f9be6670da6e9a45ff3f11ef6b2da90de9f95f8a6f01d67de2c5135b49f7"
     },
     {
-      "bytes": 5210,
+      "bytes": 5136,
       "mime_type": "text/javascript",
       "path": "tests/page-contract.test.mjs",
-      "sha256": "d60e5cedb237bc53ff34068caa399de7c5423c0eaecce5532a9599d5df1d4768"
+      "sha256": "95ac27bd41d709c697a566b5e591089c2daab6b28a52a2ff5b03b603a01cbdb8"
     },
     {
       "bytes": 6090,
@@ -6529,10 +6535,10 @@
       "sha256": "454e0bbb16c721cfbf952a92ff3e4362130346ed59a5bff56ae5d6fbebb651f7"
     },
     {
-      "bytes": 9134,
+      "bytes": 8957,
       "mime_type": "text/javascript",
       "path": "weather-control.js",
-      "sha256": "e61fbd134df166990504ce4eb70dca95562871daef0ee88943b6c35c8f3e7800"
+      "sha256": "4dbed2dd980253abff2ad9e591471de3e9d8b6e574cba98b7157256520c67995"
     },
     {
       "bytes": 4420,
@@ -6547,7 +6553,7 @@
       "sha256": "2f306f598df12bce33f5656b6cc14b1e3f502cd02d3a65aaa61132b9230ca7de"
     }
   ],
-  "generated_at_utc": "2026-11-19T03:54:38+00:00",
+  "generated_at_utc": "2026-11-19T06:38:34+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

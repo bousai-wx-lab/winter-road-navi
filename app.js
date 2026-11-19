@@ -4,8 +4,8 @@ import { JAPAN_VIEW, classifyRoad, createMapStyle } from "./road-style.js?v=2026
 import { initTemperature, TEMPERATURE_MODES } from "./temperature-control.js?v=20261110-drive4";
 import { createRoadTemperature } from "./road-temperature.js?v=20261023-zoomcolor1";
 import { initSnow } from "./snow-control.js?v=20261118-observed-snow2";
-import { initLiveTemperature } from "./live-temperature-control.js?v=20261118-point-time1";
-import { initWeather } from "./weather-control.js?v=20261119-snowdepth1";
+import { initLiveTemperature } from "./live-temperature-control.js?v=20261119-dawn1";
+import { initWeather } from "./weather-control.js?v=20261119-dawn1";
 import { initLiveSnow } from "./live-snow-control.js?v=20261118-observed-snow2";
 import { initSnowAnalysis } from "./snow-analysis-control.js?v=20261118-observed-snow2";
 import { initObservedRoadRisk, OBSERVED_ROAD_RULES } from "./observed-road-risk.js?v=20261118-observed-snow2";
@@ -324,6 +324,8 @@ function applyDisplay() {
     document.querySelector("#map-heading").textContent="ドライブの経路と通過時刻の気象";
     document.querySelector("#map").setAttribute("aria-label","ドライブの始点と終点を選ぶ地図");
     document.querySelector("#dataMeaning").textContent="通過予定時刻の予測、期間外は平年値を使う気象の目安です。所要時間は渋滞・積雪による遅れを含みません。";
+    for (const help of document.querySelectorAll("[data-help]")) help.hidden = help.dataset.help !== "drive";
+    document.querySelector(".road-temperature-note").textContent = "気象条件による参考色です。実際の路面状態・通行可否は判定しません。";
     drive?.setActive(true);
     details.hidden=true; syncDriveBackground(); refreshTooltip(); return;
   }
@@ -360,7 +362,7 @@ function applyDisplay() {
   appearance.hidden = !temperature;
   document.querySelector(".control-panel").dataset.mode = mode;
   for (const help of document.querySelectorAll("[data-help]")) {
-    help.hidden = !({normal:!live,temperature:live && temperature,weather:distribution,forecastPoint:mode === "forecast",risk:riskView,observedRisk:observedRiskView,snow:riskView || observedSnowView()}[help.dataset.help]);
+    help.hidden = !({normal:!live,temperature:live && temperature,weather:distribution,forecastPoint:mode === "forecast",risk:riskView,observedRisk:observedRiskView,snow:riskView || observedSnowView(),snowdepth:displayView === "snowdepth",liveSources:live,observedSources:mode === "observed",forecastSources:mode === "forecast",drive:false}[help.dataset.help]);
   }
   document.querySelector(".road-section .road-temperature-legend").hidden = !live || !temperature;
   document.querySelector("#normalRoadControls").hidden = live;

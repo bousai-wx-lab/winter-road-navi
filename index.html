@@ -26,7 +26,7 @@
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
     <link rel="stylesheet" href="./styles.css?v=20261119-winter-sky1">
-    <script type="module" src="./app.js?v=20261119-dawn1" referrerpolicy="no-referrer"></script>
+    <script type="module" src="./app.js?v=20261119-long-drive1" referrerpolicy="no-referrer"></script>
     <script type="module" src="./analytics-consent.js?v=20261119-2" referrerpolicy="no-referrer"></script>
   </head>
   <body>
@@ -89,12 +89,12 @@
           <div class="drive-actions"><button id="driveAnalyze" type="button">解析スタート</button><button id="driveReset" type="button">リセット</button></div>
           <p id="driveStatus" role="status" aria-live="polite">始点 A と終点 B を地図で選んでください</p>
           <div class="drive-background-control">
-            <label class="check-label"><input id="driveBackgroundToggle" type="checkbox">予測・平年値の地図を重ねる</label>
+            <label class="check-label"><input id="driveBackgroundToggle" type="checkbox" checked>予測・平年値の地図を重ねる</label>
             <p class="section-hint">表示項目・レイヤーの重ね順・濃さは、予測値モード／平年値モードで調整してください。各モードの設定をそのまま使います。</p>
             <p class="section-hint">下の距離バーで選ぶ通過時刻に連動。予測期間外は、その月日の平年値に切り替わります。</p>
             <p id="driveBackgroundStatus" class="section-hint" role="status" aria-live="polite">解析後に重ねて表示できます。</p>
           </div>
-          <p class="drive-service-note">解析時に選択座標・出発日時を無料の経路サービスへ送信します。この画面では保存しません。片道につき最大1000km・走行48時間・休憩12か所。渋滞・通行止めは反映しません。</p>
+          <p class="drive-service-note">解析時に選択座標・出発日時を無料の経路サービスへ送信します。この画面では保存しません。片道につき最大5000km・走行120時間・休憩12か所。渋滞・通行止めは反映しません。</p>
           <details class="drive-details"><summary>色の条件・計算方法</summary>
             <div class="drive-legend-head"><span>色</span><strong>平年値</strong><strong>予測</strong></div><div id="driveLegend"></div>
             <p>青緑は指定条件に該当なし、灰色は資料不足。重なる条件は雪を優先してより悪い色を使います。路面の安全・通行可否ではありません。</p>

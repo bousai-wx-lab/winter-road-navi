@@ -1,5 +1,5 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
-import { createRouteClient, departureTime, returnDepartureTime, routeRequest, sampleRoute, routeSegments, validPoint, ROUTE_COLORS, PRIORITIES, ROAD_KIND_LABELS } from "./drive-route-data.js?v=20261118-drive-roundtrip1";
+import { createRouteClient, departureTime, returnDepartureTime, routeRequest, sampleRoute, routeSegments, validPoint, ROUTE_COLORS, PRIORITIES, ROAD_KIND_LABELS } from "./drive-route-data.js?v=20261119-long-drive1";
 import { createDriveWeather } from "./drive-weather-data.js?v=20261118-drive-temperature1";
 import { timeLabel } from "./live-temperature-data.js";
 import { NORMAL_ROAD_RULES } from "./road-risk-data.js";

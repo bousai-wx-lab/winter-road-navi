@@ -25,8 +25,8 @@
     <meta name="twitter:image:alt" content="Bousai Wx Lab「冬道そなえナビ」。雪道を走る車と地図を背景に「路面凍結・積雪リスクを地図で確認」と表示。">
     <link rel="icon" href="./assets/bousaiwxlab-site-icon.png" type="image/png">
     <link rel="stylesheet" href="./vendor/maplibre-gl.css">
-    <link rel="stylesheet" href="./styles.css?v=20261119-header-buttons1">
-    <script type="module" src="./app.js?v=20261119-long-drive1" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="./styles.css?v=20261119-waypoints1">
+    <script type="module" src="./app.js?v=20261119-waypoints1" referrerpolicy="no-referrer"></script>
     <script type="module" src="./analytics-consent.js?v=20261119-2" referrerpolicy="no-referrer"></script>
   </head>
   <body>
@@ -73,7 +73,10 @@
         <section id="driveControls" class="drive-controls" aria-label="ドライブのルート解析" hidden>
           <p class="section-hint">地図で A・B を選び、通過時刻ごとの気象を確認</p>
           <div class="drive-endpoint"><button id="drivePickStart" type="button" aria-pressed="true">A 始点を選ぶ</button><input id="driveStart" aria-label="始点の緯度, 経度" placeholder="緯度, 経度（地図でも選択可）" autocomplete="off"></div>
+          <div id="driveWaypoints" hidden></div>
           <div class="drive-endpoint"><button id="drivePickEnd" type="button" aria-pressed="false">B 終点を選ぶ</button><input id="driveEnd" aria-label="終点の緯度, 経度" placeholder="緯度, 経度（地図でも選択可）" autocomplete="off"></div>
+          <div class="drive-waypoint-actions"><button id="driveAddWaypoint" type="button">＋ 経由地点を追加</button><span id="driveWaypointCount">最大3か所</span></div>
+          <p id="driveWaypointHint" class="section-hint" hidden></p>
           <p id="drivePickHint" class="section-hint">地図をクリックして始点 A を選択</p>
           <label class="drive-field" for="driveDeparture">出発日時（日本時間・空欄なら今すぐ）<input id="driveDeparture" type="datetime-local"></label>
           <label class="drive-field" for="drivePriority">経路の条件<select id="drivePriority"><option value="fastest">時間優先</option><option value="highway">高速優先</option><option value="local">一般道優先</option><option value="shortest">距離優先</option></select></label>

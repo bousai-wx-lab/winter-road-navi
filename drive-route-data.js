@@ -3,6 +3,7 @@ import { ROAD_RISK_COLORS } from "./road-risk-data.js?v=20261110-risk-colors1";
 export const ROUTE_API = "https://valhalla1.openstreetmap.de/route";
 export const ROUTE_LIMIT_KM = 5000;
 export const ROUTE_LIMIT_HOURS = 120;
+export const WAYPOINT_LIMIT = 3;
 const ELEVATION_INTERVAL_METERS = 250;
 export const ROUTE_COLORS = Object.freeze(ROAD_RISK_COLORS.map((color,i)=>i===1?"#197c88":color));
 export const PRIORITIES = {fastest:"時間優先",highway:"高速優先",local:"一般道優先",shortest:"距離優先"};
@@ -42,15 +43,17 @@ export function returnDepartureTime({method, hours, departure}, arrival) {
   if (time < arrival) throw new Error("復路は往路の到着予定時刻以降に出発してください");
   return time;
 }
-export function routeRequest(start,end,priority,departure) {
+export function routeRequest(start,end,priority,departure,waypoints=[]) {
   if (!validPoint(start) || !validPoint(end) || !Object.hasOwn(PRIORITIES,priority)) throw new Error("日本付近の始点・終点と検索条件を指定してください");
-  const direct=kmBetween(start,end);
-  if (direct < .05 || direct > ROUTE_LIMIT_KM) throw new Error(`始点と終点は50m以上、直線で${ROUTE_LIMIT_KM}km以内にしてください`);
+  if (!Array.isArray(waypoints) || waypoints.length>WAYPOINT_LIMIT || !Array.from(waypoints).every(validPoint)) throw new Error(`経由地点は日本付近で${WAYPOINT_LIMIT}か所まで指定してください`);
+  const points=[start,...waypoints,end],distances=points.slice(1).map((point,i)=>kmBetween(points[i],point));
+  if (distances.some(km=>km<.05)) throw new Error("隣り合う地点は50m以上離して指定してください");
+  if (distances.reduce((sum,km)=>sum+km,0)>ROUTE_LIMIT_KM) throw new Error(`経由地点を含む直線距離の合計を${ROUTE_LIMIT_KM}km以内にしてください`);
   const options={use_ferry:0,exclude_ferries:true};
   if (priority==="highway") Object.assign(options,{use_highways:1,use_tolls:1});
   if (priority==="local") Object.assign(options,{use_highways:0,use_tolls:0});
   if (priority==="shortest") options.shortest=true;
-  return {locations:[start,end].map(([lon,lat])=>({lon,lat,search_cutoff:1000})),costing:"auto",costing_options:{auto:options},units:"kilometers",language:"ja-JP",elevation_interval:ELEVATION_INTERVAL_METERS,
+  return {locations:points.map(([lon,lat],i)=>({lon,lat,search_cutoff:1000,...(i>0&&i<points.length-1?{type:"via"}:{})})),costing:"auto",costing_options:{auto:options},units:"kilometers",language:"ja-JP",elevation_interval:ELEVATION_INTERVAL_METERS,
     date_time:{type:1,value:new Date(departure+9*3600000).toISOString().slice(0,16)}};
 }
 export function decodePolyline(text) {

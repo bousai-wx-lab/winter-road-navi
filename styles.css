@@ -180,6 +180,10 @@ label {
 
 .title-row {
   min-width: 0;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  column-gap: 12px;
+  align-items: center;
   padding-left: 12px;
   border-left: 1px solid rgba(185, 231, 243, 0.36);
 }
@@ -190,6 +194,8 @@ label {
 }
 
 .product-kicker {
+  grid-column: 1;
+  grid-row: 1;
   margin-bottom: 0 !important;
   color: #8fe6f3;
   font-size: 7px;
@@ -197,13 +203,11 @@ label {
   letter-spacing: 0.18em;
 }
 
-.tool-title-line {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.tool-title-line { display: contents; }
 
 .tool-title-line h1 {
+  grid-column: 1;
+  grid-row: 2;
   color: #fff;
   font-size: clamp(20px, 1.55vw, 24px);
   line-height: 1;
@@ -217,17 +221,20 @@ label {
 }
 
 .usage-guide-link {
+  grid-column: 2;
+  grid-row: 1 / 3;
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  min-height: 28px;
-  padding: 4px 10px;
+  min-width: 80px;
+  min-height: 34px;
+  padding: 6px 18px;
   border: 1px solid #a5c0cd70;
-  border-radius: 6px;
+  border-radius: 999px;
   color: #f3f7fa;
   background: #f3f7fa08;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
   line-height: 1.2;
   text-decoration: none;
@@ -270,14 +277,15 @@ label {
 .x-mark {
   width: 24px;
   height: 24px;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  background: transparent;
-  border: 1px solid transparent;
-  font-size: 15px;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #000;
 }
+.x-mark svg { display: block; width: 24px; height: 24px; }
+.x-mark rect { fill: #000; }
+.x-mark path { fill: #fff; }
 
 main {
   padding: 0;
@@ -306,8 +314,10 @@ main {
   .forecast-timeline[data-dense="true"] .forecast-time-tick { width: 28px; }
 }
 @media (max-width: 760px) {
-  .tool-title-line { gap: 7px; }
-  .usage-guide-link { min-height: 30px; padding: 4px 8px; font-size: 11px; }
+  .title-row { column-gap: 7px; }
+  .tool-title-line h1 { grid-row: 1; }
+  .usage-guide-link { grid-row: 1; }
+  .usage-guide-link { min-width: 76px; min-height: 34px; padding: 6px 14px; font-size: 13px; }
   .forecast-timeline { padding: 3px 8px 2px; }
   .forecast-time-heading { font-size: 10px; gap: 2px 7px; }
   .forecast-time-row { gap: 8px; }

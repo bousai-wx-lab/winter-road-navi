@@ -6193,10 +6193,10 @@
       "sha256": "5f42dba980c8dc8eb3046d241f04e8ca63ef4dc951cbf9446ed61c7bf3ede0eb"
     },
     {
-      "bytes": 46247,
+      "bytes": 46241,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "7b8551db711b9aa5ee18585c5ae75a6a1922f242b0faaa7ea80b324119bb8354"
+      "sha256": "48195fa67b2888ca57ff30cf38d293d5d3898eeb0f0ca60d76ba4ec07c74f5dd"
     },
     {
       "bytes": 11702,
@@ -6535,7 +6535,7 @@
       "sha256": "2f306f598df12bce33f5656b6cc14b1e3f502cd02d3a65aaa61132b9230ca7de"
     }
   ],
-  "generated_at_utc": "2026-11-19T00:30:22+00:00",
+  "generated_at_utc": "2026-11-19T00:34:01+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

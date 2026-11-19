@@ -93,7 +93,7 @@ label {
 
 .topbar::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: url("./assets/header-winter-sky.png") center / cover no-repeat;
+  background: url("./assets/header-winter-sky.png?v=20261119-2") center / cover no-repeat;
   /* Uniform overscan hides the source image’s final bright column and its fringe. */
   transform: scale(1.0012); transform-origin: left center;
 }

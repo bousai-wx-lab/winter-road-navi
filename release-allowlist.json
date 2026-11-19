@@ -8248,11 +8248,11 @@
     },
     {
       "path": "assets/header-winter-sky.png",
-      "bytes": 86671,
-      "sha256": "75e36073739228f31fb22af43f4522f3a4f24362c4ee69188fe20373b971b240",
+      "bytes": 93379,
+      "sha256": "be7c3a52f5b0987f9edc83c8491b50393e55d9b4b7996034cb00ef4862b0c759",
       "mime_type": "image/png",
       "width": 1280,
-      "height": 42,
+      "height": 49,
       "bit_depth": 8,
       "color_type": 2
     }
@@ -12744,6 +12744,16 @@
       "bytes": 102,
       "sha256": "1427d50370040e18ba5824f36377d68e150802ac810017a4afb6e171fc977f96",
       "uncompressed_bytes": 114
+    },
+    {
+      "path": "assets/header-winter-sky.png",
+      "bytes": 86671,
+      "sha256": "75e36073739228f31fb22af43f4522f3a4f24362c4ee69188fe20373b971b240",
+      "mime_type": "image/png",
+      "width": 1280,
+      "height": 42,
+      "bit_depth": 8,
+      "color_type": 2
     }
   ],
   "allowed_vendored_files": [

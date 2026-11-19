@@ -76,14 +76,15 @@ test("consent sends one pageview with fixed page information, never user inputs 
   const commands = s.commands();
   const config = commands.find((c) => c[0] === "config");
   assert.equal(config[1], id);
-  assert.equal(config[2].send_page_view, false);
+  assert.equal(config[2].send_page_view, true);
   assert.equal(config[2].page_location, pageUrl);
   assert.equal(config[2].page_referrer, "");
   assert.equal(config[2].allow_google_signals, false);
   assert.equal(config[2].allow_ad_personalization_signals, false);
   assert.equal(config[2].cookie_path, "/winter-road-navi/");
   assert.equal(config[2].cookie_expires, 5184000);
-  assert.equal(commands.filter((c) => c[0] === "event" && c[1] === "page_view").length, 1);
+  assert.equal(commands.filter((c) => c[0] === "config").length, 1);
+  assert.equal(commands.filter((c) => c[0] === "event" && c[1] === "page_view").length, 0);
   assert.equal(/lat=|lon=|route=|departure=|synthetic/.test(JSON.stringify(commands)), false);
   const consent = commands.find((c) => c[0] === "consent")[2];
   assert.equal(consent.analytics_storage, "granted");

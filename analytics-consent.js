@@ -38,7 +38,7 @@ function loadTag() {
   gtag("js", new Date());
   gtag("config", MEASUREMENT_ID, {
     ...page,
-    send_page_view: false,
+    send_page_view: true,
     allow_google_signals: false,
     allow_ad_personalization_signals: false,
     cookie_prefix: COOKIE_PREFIX,
@@ -48,7 +48,6 @@ function loadTag() {
     cookie_update: false,
     cookie_flags: "SameSite=Lax;Secure",
   });
-  gtag("event", "page_view", { ...page, send_to: MEASUREMENT_ID });
   const script = document.createElement("script");
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;

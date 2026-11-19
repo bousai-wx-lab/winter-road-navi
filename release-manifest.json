@@ -31,10 +31,10 @@
       "sha256": "a7f1b98937cd0ac10979e9ac3a6f9214b977f1949252d89d7fab62ee64d43173"
     },
     {
-      "bytes": 4010,
+      "bytes": 3941,
       "mime_type": "text/javascript",
       "path": "analytics-consent.js",
-      "sha256": "8f26be96d9d18f85096a8081a1a127a76649dbd85d43046620ea3dd29afd30c6"
+      "sha256": "81cb64a8bc620f70ab7ff9ba12a470fc9b06656c48c87636ff1f9a940982e27f"
     },
     {
       "bytes": 37674,
@@ -6196,7 +6196,7 @@
       "bytes": 46241,
       "mime_type": "text/html",
       "path": "index.html",
-      "sha256": "48195fa67b2888ca57ff30cf38d293d5d3898eeb0f0ca60d76ba4ec07c74f5dd"
+      "sha256": "3dea664460316fa2eb7ed4246c1fbd0476a6f69fa409c9e1c68adc2dc0b0ad5d"
     },
     {
       "bytes": 11702,
@@ -6367,10 +6367,10 @@
       "sha256": "f7cceac1b76fc45f9f69ae65ff16c11e9a4025c48ed0bf3bc0f685e9886f828a"
     },
     {
-      "bytes": 5437,
+      "bytes": 5505,
       "mime_type": "text/javascript",
       "path": "tests/analytics-consent.test.mjs",
-      "sha256": "1a15e8bcfd3a94e1715117bd46d26b795769473682f43bff383767a290a4829f"
+      "sha256": "37d043f8a72695e3aa55547fcc71ffa81515ddd4e314475c038cdc7d95be1fe0"
     },
     {
       "bytes": 14486,
@@ -6535,7 +6535,7 @@
       "sha256": "2f306f598df12bce33f5656b6cc14b1e3f502cd02d3a65aaa61132b9230ca7de"
     }
   ],
-  "generated_at_utc": "2026-11-19T00:40:12+00:00",
+  "generated_at_utc": "2026-11-19T00:57:00+00:00",
   "schema_version": 1,
   "tool_slug": "winter-road-navi"
 }

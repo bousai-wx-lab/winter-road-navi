@@ -11,6 +11,7 @@
     "app.js",
     "assets/bousaiwxlab-site-icon.png",
     "assets/coastline-overview.json",
+    "assets/winter-road-navi-ogp.png",
     "data/forecast-municipalities.json",
     "data/snow/01-01.json.gz",
     "data/snow/01-02.json.gz",
@@ -1137,6 +1138,16 @@
       "mime_type": "image/png",
       "width": 512,
       "height": 512,
+      "bit_depth": 8,
+      "color_type": 2
+    },
+    {
+      "path": "assets/winter-road-navi-ogp.png",
+      "bytes": 2759577,
+      "sha256": "142152b917c3fbf7e75ba73f75324b58dc2e33666198b05b0ccc59cc3e1dbe2d",
+      "mime_type": "image/png",
+      "width": 1672,
+      "height": 941,
       "bit_depth": 8,
       "color_type": 2
     },
